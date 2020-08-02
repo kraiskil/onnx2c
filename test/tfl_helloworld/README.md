@@ -1,0 +1,1 @@
+The model in this test is the ["Hello World"-sine generating example from TensorFlow Lite micro](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/micro/examples/hello_world/train/train_hello_world_model.ipynb).

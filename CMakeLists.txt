@@ -4,7 +4,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(onnx2c
 	VERSION 0.0.1
-	LANGUAGES CXX
+	LANGUAGES C CXX
 	) 
 set (CMAKE_CXX_STANDARD 11)
 
@@ -22,3 +22,7 @@ target_compile_options(onnx2c
 		-Wall
 	)
 target_link_libraries(onnx2c protobuf)
+
+enable_testing()
+add_subdirectory(test)
+
