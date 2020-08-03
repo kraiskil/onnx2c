@@ -40,10 +40,9 @@ private:
 	std::vector<Node*> nodes;
 	std::vector<const Op*> ops;
 
-	/* Helper for print_tensors() */
-	void print_tensor_initializer(std::ostream &dst, Tensor *t, int dim, int dimidx);
-
 	void initializeOpArray(void);
+
+	static int anonymous_nodes;
 };
 
 }

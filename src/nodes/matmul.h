@@ -58,8 +58,8 @@ class MatMul : public Op {
 	
 
 		Tensor *rv = new Tensor;
-		rv->data_dim[0] = rows;
-		rv->data_dim[1] = cols;
+		rv->data_dim.push_back(rows);
+		rv->data_dim.push_back(cols);
 		rv->data_type = A->data_type;
 		rv->data_num_elem = rows*cols;
 		outputs.push_back(rv);

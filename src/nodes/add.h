@@ -51,8 +51,9 @@ class Add : public Op {
 			ERROR("Unimplemented or wrong input - input dimensions to Add do not match");
 
 		Tensor *rv = new Tensor;
-		rv->data_dim[0] = A->data_dim[0];
-		rv->data_dim[1] = A->data_dim[1];
+		// TODO: what if B has more dimensions? Check ONNX semantics
+		for( auto d : A->data_dim )
+			rv->data_dim.push_back(d);
 		rv->data_type = A->data_type;
 		rv->data_num_elem = A->data_num_elem;
 		outputs.push_back(rv);

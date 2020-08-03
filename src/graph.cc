@@ -7,6 +7,8 @@
 
 using namespace toC;
 
+int Graph::anonymous_nodes=0;
+
 Graph::Graph(onnx::ModelProto &onnx_model)
 	:model(onnx_model)
 {
@@ -39,62 +41,7 @@ void Graph::addResolvedTensor(onnx::TensorProto &tensor)
 	// create Tensor object
 	Tensor *t = new Tensor;
 
-	t->generate=true;
-	t->initialize=true;
-
-	// assert tensor is resolvable
-	if( onnx::TensorProto_DataLocation() != onnx::TensorProto_DataLocation_DEFAULT )
-		ERROR("unhandled: non-default data location in tensor " << tensor.name());
-	if( tensor.has_segment() )
-		ERROR("unhandled: segmented data in tensor" << tensor.name());
-
-	// populate tensor
-	int data_dimensions = tensor.dims_size();
-	if( data_dimensions < 1 || data_dimensions > tensor_max_dim )
-		ERROR("unhandled number of dimensions: " << data_dimensions);
-	for( auto &i : t->data_dim )
-		i=0;
-	for( int i=0; i<data_dimensions; i++)
-		t->data_dim[i] = tensor.dims(i);
-
-	int32_t datatype = tensor.data_type();
-	if( onnx::TensorProto_DataType_IsValid(datatype) == false )
-		ERROR("Non-valid data type " << datatype << " in tensor " << tensor.name());
-	t->data_type = static_cast<onnx::TensorProto_DataType>(datatype);
-
-	int64_t data_num_elem; // Can data size be negative? onnx.pb.h encodes size into 'signed int'
-	switch( datatype )
-	{
-		case onnx::TensorProto_DataType_FLOAT:
-			data_num_elem = tensor.float_data_size(); break;
-
-		case onnx::TensorProto_DataType_INT32:
-			data_num_elem = tensor.int32_data_size(); break;
-		default:
-			ERROR("unhandled tensor data type in tensor " << tensor.name());
-			break;
-	};
-	t->data_num_elem = data_num_elem;
-	t->data_buffer = malloc(data_num_elem * t->data_elem_size());
-	if( t->data_buffer == NULL )
-		ERROR("memory allocation failed for tensor " << tensor.name());
-	switch( datatype )
-	{
-		case onnx::TensorProto_DataType_FLOAT:
-			for( int i=0; i<data_num_elem; i++  )
-				((float*)t->data_buffer)[i] = tensor.float_data(i);
-			break;
-		case onnx::TensorProto_DataType_INT32:
-			for( int i=0; i<data_num_elem; i++  )
-				((int32_t*)t->data_buffer)[i] = tensor.int32_data(i);
-			break;
-		default:
-			ERROR("unhandled tensor data type in tensor " << tensor.name());
-			break;
-	};
-
-	t->name = tensor.name();
-	t->doc = tensor.doc_string();
+	t->parse_onnx_tensor(tensor);
 
 	// add Tensor to database
 	tensors.push_back(t);
@@ -121,23 +68,25 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 		ERROR("Non-valid data type " << datatype << " in tensor " << t->name);
 	t->data_type = static_cast<onnx::TensorProto_DataType>(datatype);
 
+	int64_t num_elem=1;
 	for( onnx::TensorShapeProto_Dimension d : tsp.dim() ) {
 
-		// TODO: too much fail in the next 5 lines to warrant any better comment!
-		int dim_param;
+		// dim_param is a string that defines this dimension's variable name
+		// e.g. "N=1". Used for variable size batches.
+		// When the dimension is fixed, the 'param=value' becomes "1=1".
+		// For now, all batch sizes are set to 1 in onnx2c generated code
+
+		int dim_size;
 		if( isalpha(d.dim_param()[0]) )
-			dim_param=1;
+			dim_size=1;
 		else
-			dim_param=atoi(d.dim_param().c_str());
+			dim_size=d.dim_value();
 
-		if( d.has_dim_param() == false )
-			dim_param=1;
-		if( d.dim_value() >= tensor_max_dim )
-			ERROR("Unimplmeneted - input of too many dimensions");
-
-		t->data_dim[d.dim_value()] = dim_param;
+		num_elem *=dim_size;
+		t->data_dim.push_back(dim_size);
 	}
 
+	t->data_num_elem = num_elem;
 	return t;
 }
 
@@ -180,10 +129,16 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 
 	Node *n = new Node;
 	n->isResolved = false;
-	n->name = node.name();
 	n->op_name = node.op_type();
 	n->inputs = inputs;
+	n->name = node.name();
 
+	if( n->name == "" ) {
+		std::string name = "anonymous_";
+		name += n->op_name;
+		name +=  "_" + std::to_string(anonymous_nodes);
+		n->name = name;
+	}
 
 
 	n->op = findOp(n->op_name);

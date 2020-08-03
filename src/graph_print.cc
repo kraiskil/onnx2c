@@ -40,55 +40,6 @@ void Graph::print_file_frontmatter(std::ostream &dst)
 	dst << "/*" << std::endl << model.doc_string() << std::endl << "*/" << std::endl;
 }
 
-void Graph::print_tensor_initializer(std::ostream &dst, Tensor *t, int dim, int offs)
-{
-	if( t->data_dim[dim] == 0 )
-		return; 
-
-	for( int i=0; i<dim; i++)
-		dst << "  ";
-
-	dst << "{" ;
-
-	if(   dim < (tensor_max_dim-1)
-	   && t->data_dim[dim+1] != 0 ) {
-		dst << std::endl;
-		for( int i=0; i<t->data_dim[dim]; i++ )
-		{
-			print_tensor_initializer(dst, t, dim+1, offs+i*t->data_dim[dim+1]);
-			if( i <(t->data_dim[dim]-1) )
-				dst << ",";
-			dst << std::endl;
-		}
-	}
-
-	else
-		for( int i=0; i<t->data_dim[dim]; i++)
-		{
-			int element=offs+i;
-			switch(t->data_type)
-			{
-				case onnx::TensorProto_DataType_FLOAT:
-				{
-					float *f = static_cast<float*>(t->data_buffer);
-					dst << std::showpoint << f[element]<< "f";
-					break;
-				}
-				case onnx::TensorProto_DataType_INT32:
-				{
-					int32_t *f = static_cast<int32_t*>(t->data_buffer);
-					dst << f[element];
-					break;
-				}
-				default:
-					ERROR("unimplemented printing of initialized datatype " << t->data_type_str());
-			
-			}
-			if( i <(t->data_dim[dim]-1) )
-				dst << ", ";
-		}
-	dst << "}";
-}
 
 void Graph::print_global_tensors(std::ostream &dst)
 {
@@ -102,7 +53,7 @@ void Graph::print_global_tensors(std::ostream &dst)
 		print_tensor(dst, t);
 		if( t->initialize ) {
 			dst << " = "<<std::endl;
-			print_tensor_initializer(dst, t, 0, 0);
+			t->print_tensor_initializer(dst);
 		}
 
 		dst << ";" << std::endl;
@@ -114,11 +65,8 @@ void Graph::print_tensor(std::ostream &dst, const Tensor *t)
 {
 	dst << t->data_type_str() << " ";
 	dst << t->cname();
-	for(int i=0; i<tensor_max_dim; i++) {
-		if( t->data_dim[i] == 0 )
-			break;
-		dst << "[" << t->data_dim[i] << "]";
-	}
+	for( unsigned i : t->data_dim )
+		dst << "[" << i << "]";
 }
 
 void Graph::print_functions(std::ostream &dst)
@@ -146,6 +94,7 @@ void Graph::print_functions(std::ostream &dst)
 
 void Graph::print_includes(std::ostream &dst)
 {
+	dst << "#include <math.h>" << std::endl;
 	dst << "#include <stdint.h>" << std::endl;
 }
 
