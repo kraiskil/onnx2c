@@ -8,20 +8,27 @@ project(onnx2c
 	) 
 set (CMAKE_CXX_STANDARD 11)
 
-
-add_executable( onnx2c 
+add_library(onnx2c_lib STATIC
 	src/graph.cc
 	src/graph_print.cc
-	src/main.cc
 	src/onnx.pb.cc
 	src/op.cc
+	src/tensor.cc
+)
+target_compile_options(onnx2c_lib
+	PRIVATE
+		-Isrc
+		-Wall
+	)
+add_executable( onnx2c
+	src/main.cc
 	)
 target_compile_options(onnx2c
 	PRIVATE
 		-Isrc
 		-Wall
 	)
-target_link_libraries(onnx2c protobuf)
+target_link_libraries(onnx2c onnx2c_lib protobuf)
 
 enable_testing()
 add_subdirectory(test)
