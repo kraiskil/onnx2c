@@ -1,32 +1,32 @@
 
 namespace toC {
 
-class Add : public Op {
+class Add : public Node {
 	public:
 	Add() {
-		name = "Add";
+		op_name = "Add";
 	}
 
-	virtual void print(std::ostream &dst, const Node *node) const
+	virtual void print(std::ostream &dst) const
 	{
-		if( node->inputs.size() != 2 )
+		if( inputs.size() != 2 )
 			ERROR("wrong number of inputs to Add");
-		if( node->outputs.size() != 1 )
+		if( outputs.size() != 1 )
 			ERROR("wrong number of outputs from Add");
-		std::string type = node->inputs[0]->data_type_str();
+		std::string type = inputs[0]->data_type_str();
 
 		dst << "\t/*Add*/" << std::endl;
 		
-		dst << "\t" << type << " *A = (" << type << "*)" << node->inputs[0]->cname() << ";" << std::endl;
-		dst << "\t" << type << " *B = (" << type << "*)" << node->inputs[1]->cname() << ";" << std::endl;
-		dst << "\t" << type << " *C = (" << type << "*)" << node->outputs[0]->cname() << ";" << std::endl;
+		dst << "\t" << type << " *A = (" << type << "*)" << inputs[0]->cname() << ";" << std::endl;
+		dst << "\t" << type << " *B = (" << type << "*)" << inputs[1]->cname() << ";" << std::endl;
+		dst << "\t" << type << " *C = (" << type << "*)" << outputs[0]->cname() << ";" << std::endl;
 
-		dst << "\t" << "for( uint32_t i=0; i<" << node->inputs[0]->data_num_elem << "; i++ )" << std::endl;
+		dst << "\t" << "for( uint32_t i=0; i<" << inputs[0]->data_num_elem << "; i++ )" << std::endl;
 		dst << "\t\tC[i] = A[i] + B[i];" << std::endl;
 		dst << std::endl;
 	}
  
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) const
+	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
 	{
 		const Tensor *A = inputs[0];
 		const Tensor *B = inputs[1];

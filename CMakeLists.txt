@@ -11,8 +11,8 @@ set (CMAKE_CXX_STANDARD 11)
 add_library(onnx2c_lib STATIC
 	src/graph.cc
 	src/graph_print.cc
+	src/node.cc
 	src/onnx.pb.cc
-	src/op.cc
 	src/tensor.cc
 )
 target_compile_options(onnx2c_lib

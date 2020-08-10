@@ -12,8 +12,6 @@ int Graph::anonymous_nodes=0;
 Graph::Graph(onnx::ModelProto &onnx_model)
 	:model(onnx_model)
 {
-	initializeOpArray();
-
 	onnx::GraphProto onnx_graph = onnx_model.graph();
 
 	// 1. add initializers as resolved tensors
@@ -21,8 +19,17 @@ Graph::Graph(onnx::ModelProto &onnx_model)
 		addResolvedTensor( i );
 
 	// 2. add graph inputs as resolved tensors
-	for ( auto i : onnx_graph.input() )
-		tensors.push_back(getIoTensor( i ));
+	for ( auto i : onnx_graph.input() ) {
+		Tensor *n = getIoTensor( i );
+		/* ONNX allows (but does not require - or there are bugs out there)
+		 * for initializer tensors to be listed as inputs. Those have been
+		 * processed elsewhere already. */
+		for( auto t : tensors)
+			if( t->name == n->name )
+				continue;
+
+		tensors.push_back(n);
+	}
 
 	// while exists unresolved nodes
 	//   search in unresolved nodes for a resolvable node (i.e. has resolved inputs)
@@ -49,6 +56,7 @@ void Graph::addResolvedTensor(onnx::TensorProto &tensor)
 
 Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 {
+
 	onnx::TypeProto tp = vi.type();
 	onnx::TypeProto::ValueCase vc = tp.value_case();
 
@@ -120,29 +128,28 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 	std::vector<const Tensor*> inputs;
 	std::vector<Tensor*> outputs;
 
-	if( node.attribute_size() != 0 )
-		ERROR("unhandled: node attributes in " << node.name() );
 
 	if( nodeInputsResolved(node, inputs) == false )
 		return;
 
 
-	Node *n = new Node;
+	Node *n = findNode(node.op_type());
 	n->isResolved = false;
 	n->op_name = node.op_type();
+	n->onnx_name = node.name();
 	n->inputs = inputs;
-	n->name = node.name();
 
-	if( n->name == "" ) {
+	if( n->onnx_name == "" ) {
 		std::string name = "anonymous_";
 		name += n->op_name;
 		name +=  "_" + std::to_string(anonymous_nodes);
-		n->name = name;
+		n->onnx_name = name;
 	}
 
+	if( node.attribute_size() != 0 )
+		n->parseAttributes( node );
 
-	n->op = findOp(n->op_name);
-	n->op->resolveOutput(inputs, outputs );
+	n->resolveOutput(inputs, outputs );
 
 	// TODO: looking at onnx.proto, seems a node can have multiple outputs
 	//       but how to map output names to the outputs?
@@ -170,12 +177,17 @@ bool Graph::hasUnresolvedNodes(void)
 }
 
 
-const Op* Graph::findOp(std::string opName)
+#include "nodes/add.h"
+#include "nodes/matmul.h"
+#include "nodes/relu.h"
+
+Node* Graph::findNode(std::string opName)
 {
-	for( auto o: ops )
-		if( o->name == opName )
-			return o;
+	if( opName == "Add" )return new Add;
+	if( opName == "MatMul" )return new MatMul;
+	if( opName == "Relu" )return new Relu;
 
 	ERROR("Unimplemented: node operation " << opName);
 	return NULL;
 }
+

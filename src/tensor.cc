@@ -104,6 +104,8 @@ int Tensor::data_elem_size(void)const
 			return sizeof(float); break;
 		case onnx::TensorProto_DataType_INT32:
 			return sizeof(int32_t); break;
+		case onnx::TensorProto_DataType_INT64:
+			return sizeof(int64_t); break;
 		default:
 			ERROR("unhandled tensor data type in tensor " << name);
 			break;
@@ -118,6 +120,8 @@ std::string Tensor::data_type_str(void) const
 			return "float"; break;
 		case onnx::TensorProto_DataType_INT32:
 			return "int32_t"; break;
+		case onnx::TensorProto_DataType_INT64:
+			return "int64_t"; break;
 		default:
 			ERROR("unhandled tensor data type in tensor " << name);
 			break;

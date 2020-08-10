@@ -2,7 +2,6 @@
 #include "onnx.pb.h"
 
 #include "node.h"
-#include "op.h"
 #include "tensor.h"
 
 namespace toC {
@@ -32,15 +31,12 @@ public:
 	void tryResolveNode(onnx::NodeProto &node);
 	bool hasUnresolvedNodes(void);
 	bool nodeInputsResolved(const onnx::NodeProto &node, std::vector<const Tensor*> &inputs);
-	const Op* findOp(std::string opName);
+	Node* findNode(std::string opName);
 
 private:
 	onnx::ModelProto &model;
 	std::vector<Tensor*> tensors;
 	std::vector<Node*> nodes;
-	std::vector<const Op*> ops;
-
-	void initializeOpArray(void);
 
 	static int anonymous_nodes;
 };

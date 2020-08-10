@@ -1,6 +1,5 @@
 #include "error.h"
 #include "graph.h"
-#include "op.h"
 #include "util.h"
 #include <iostream>
 
@@ -73,7 +72,7 @@ void Graph::print_functions(std::ostream &dst)
 {
 	for( auto n : nodes ) {
 		dst << "static inline void ";
-		dst << n->name << "( ";
+		dst << n->c_name() << "( ";
 		for( auto t : n->inputs ){
 			print_tensor(dst, t);
 			// TODO: print this only N-1 first times
@@ -86,7 +85,7 @@ void Graph::print_functions(std::ostream &dst)
 		dst << " )";
 		dst <<  std::endl << "{" << std::endl;
 
-		n->op->print(dst, n);
+		n->print(dst);
 
 		dst << "}" << std::endl << std::endl;
 	}
@@ -96,6 +95,8 @@ void Graph::print_includes(std::ostream &dst)
 {
 	dst << "#include <math.h>" << std::endl;
 	dst << "#include <stdint.h>" << std::endl;
+
+	dst << "#define MAX(X,Y) ( X > Y ? X : Y)" << std::endl;
 }
 
 void Graph::print_interface_function(std::ostream &dst)
@@ -105,11 +106,31 @@ void Graph::print_interface_function(std::ostream &dst)
 	dst << "void entry(" ;
 	for ( auto i : model.graph().input() ) {
 		Tensor *t = getIoTensor(i);
-		print_tensor(dst, t);
-		dst << ", ";
+		/* TODO: FIXME: separate input tensors that are initialized
+		 * or re-initializable (and therefore count as input), from
+		 * the "actual" input data */
+		bool printit=true;
+		for( auto o : tensors)
+			if( o->name == t->name )
+				if( o->generate )
+				{
+					printit=false;
+					break;
+				}
+
+		if( printit ) {
+			print_tensor(dst, t);
+			dst << ", ";
+		}
 	}
 	for ( auto i : model.graph().output() ) {
 		Tensor *t = getIoTensor(i);
+		/* TODO: when there are more than one output, see above for how
+		 * inputs are handled */
+		for( auto o : tensors)
+			if( o->name == t->name )
+				if( o->initialize )
+					continue;
 		print_tensor(dst, t);
 	}
 	dst << ") {" << std::endl;
@@ -119,7 +140,7 @@ void Graph::print_interface_function(std::ostream &dst)
 	// we don't need to check dependancies :)
 	for( auto n : nodes )
 	{
-		dst << "\t" << cify_name(n->name) << "( ";
+		dst << "\t" << n->c_name() << "( ";
 		for( auto i : n->inputs ) {
 			dst << i->cname();
 			dst << ", ";

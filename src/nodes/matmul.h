@@ -1,24 +1,24 @@
 
 namespace toC {
 
-class MatMul : public Op {
+class MatMul : public Node {
 	public:
 	MatMul() {
-		name = "MatMul";
+		op_name = "MatMul";
 	}
 
-	virtual void print(std::ostream &dst, const Node *node) const
+	virtual void print(std::ostream &dst) const
 	{
-		if( node->inputs.size() != 2 )
+		if( inputs.size() != 2 )
 			ERROR("wrong number of inputs to MatMul");
-		if( node->outputs.size() != 1 )
+		if( outputs.size() != 1 )
 			ERROR("wrong number of outputs from MatMul");
-		std::string type = node->inputs[0]->data_type_str();
+		std::string type = inputs[0]->data_type_str();
 
-		int32_t rows = node->inputs[0]->data_dim[0];
-		int32_t cols = node->inputs[1]->data_dim[1];
-		int32_t inner = node->inputs[0]->data_dim[1];
-		int32_t inner2 = node->inputs[1]->data_dim[0];
+		int32_t rows = inputs[0]->data_dim[0];
+		int32_t cols = inputs[1]->data_dim[1];
+		int32_t inner = inputs[0]->data_dim[1];
+		int32_t inner2 = inputs[1]->data_dim[0];
 		if( inner == 0 ) inner=1;
 
 		// TODO: handle the case of [N] * [Nx1] multiplication,
@@ -31,9 +31,9 @@ class MatMul : public Op {
 	
 		dst << "\t/*MatMul*/" << std::endl;
 		
-		dst << "\t" << type << " *A = (" << type << "*)" << node->inputs[0]->cname() << ";" << std::endl;
-		dst << "\t" << type << " *B = (" << type << "*)" << node->inputs[1]->cname() << ";" << std::endl;
-		dst << "\t" << type << " *Y = (" << type << "*)" << node->outputs[0]->cname() << ";" << std::endl;
+		dst << "\t" << type << " *A = (" << type << "*)" << inputs[0]->cname() << ";" << std::endl;
+		dst << "\t" << type << " *B = (" << type << "*)" << inputs[1]->cname() << ";" << std::endl;
+		dst << "\t" << type << " *Y = (" << type << "*)" << outputs[0]->cname() << ";" << std::endl;
 
 		dst << "\t" << "for( uint32_t r=0; r<" << rows << "; r++ )" << std::endl;
 		dst << "\t\t" << "for( uint32_t c=0; c<" << cols << "; c++ ) {" << std::endl;
@@ -44,7 +44,7 @@ class MatMul : public Op {
 		dst << std::endl;
 
 	} 
-	virtual void resolveOutput( const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) const
+	virtual void resolveOutput( const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
 	{
 		const Tensor *A = inputs[0];
 		const Tensor *B = inputs[1];

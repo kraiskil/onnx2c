@@ -2,33 +2,33 @@
 
 namespace toC {
 
-class Relu : public Op {
+class Relu : public Node {
 	public:
 	Relu() {
-		name = "Relu";
+		op_name = "Relu";
 	}
 
-	virtual void print(std::ostream &dst, const Node *node) const
+	virtual void print(std::ostream &dst) const
 	{
-		if( node->inputs.size() != 1 )
+		if( inputs.size() != 1 )
 			ERROR("wrong number of inputs to Relu");
-		if( node->outputs.size() != 1 )
+		if( outputs.size() != 1 )
 			ERROR("wrong number of outputs from Relu");
-		std::string type = node->inputs[0]->data_type_str();
+		std::string type = inputs[0]->data_type_str();
 
 		dst << "\t/*Relu*/" << std::endl;
 		
-		dst << "\t" << type << " *X = (" << type << "*)" << node->inputs[0]->cname() << ";" << std::endl;
-		dst << "\t" << type << " *Y = (" << type << "*)" << node->outputs[0]->cname() << ";" << std::endl;
+		dst << "\t" << type << " *X = (" << type << "*)" << inputs[0]->cname() << ";" << std::endl;
+		dst << "\t" << type << " *Y = (" << type << "*)" << outputs[0]->cname() << ";" << std::endl;
 
-		dst << "\t" << "for( uint32_t i=0; i<" << node->inputs[0]->data_num_elem << "; i++ )" << std::endl;
+		dst << "\t" << "for( uint32_t i=0; i<" << inputs[0]->data_num_elem << "; i++ )" << std::endl;
 		dst << "\t\tY[i] = X[i] > 0 ? X[i] : 0;" << std::endl;
 		dst << std::endl;
 	} 
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) const
+	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
 	{
 		const Tensor *A = inputs[0];
-		if(  typeConstraint_floatingPoints(A) == false )
+		if(  typeConstraint_allFloatingPoints(A) == false )
 			ERROR("Incorrect input for Relu"); 
 
 		if( A->data_dim[1] != 0 && !(A->data_dim[0]!=1 || A->data_dim[1]!=1) )
