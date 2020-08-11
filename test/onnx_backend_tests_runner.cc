@@ -98,10 +98,11 @@ int main(int argc, char *argv[])
 	}
 
 	onnx_model.ParseFromIstream(&model_ifs);
-	Graph toCgraph(onnx_model);
+	Graph toCgraph(onnx_model, inputs);
 	toCgraph.print_source(std::cout);
 
 
+#if 0
 	for( auto i : inputs ) {
 		std::cout << "static ";
 		i->print_type_name_dimensions(std::cout);
@@ -109,7 +110,7 @@ int main(int argc, char *argv[])
 		i->print_tensor_initializer(std::cout);
 		std::cout << ";" << std::endl;
 	}
-
+#endif
 
 	for( auto o : references ) {
 		std::string refname = "reference_" + o->cname();

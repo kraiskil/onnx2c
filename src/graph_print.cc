@@ -106,22 +106,8 @@ void Graph::print_interface_function(std::ostream &dst)
 	dst << "void entry(" ;
 	for ( auto i : model.graph().input() ) {
 		Tensor *t = getIoTensor(i);
-		/* TODO: FIXME: separate input tensors that are initialized
-		 * or re-initializable (and therefore count as input), from
-		 * the "actual" input data */
-		bool printit=true;
-		for( auto o : tensors)
-			if( o->name == t->name )
-				if( o->generate )
-				{
-					printit=false;
-					break;
-				}
-
-		if( printit ) {
-			print_tensor(dst, t);
-			dst << ", ";
-		}
+		print_tensor(dst, t);
+		dst << ", ";
 	}
 	for ( auto i : model.graph().output() ) {
 		Tensor *t = getIoTensor(i);

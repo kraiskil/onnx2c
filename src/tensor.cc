@@ -20,7 +20,6 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 		ERROR("Non-valid data type " << datatype << " in tensor " << tensor.name());
 	data_type = static_cast<onnx::TensorProto_DataType>(datatype);
 
-	int64_t data_num_elem; // Can data size be negative? onnx.pb.h encodes size into 'signed int'
 	switch( datatype )
 	{
 		case onnx::TensorProto_DataType_FLOAT:
@@ -142,6 +141,12 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 		case onnx::TensorProto_DataType_INT32:
 		{
 			int32_t *f = static_cast<int32_t*>(data_buffer);
+			dst << f[element];
+			break;
+		}
+		case onnx::TensorProto_DataType_INT64:
+		{
+			int64_t *f = static_cast<int64_t*>(data_buffer);
 			dst << f[element];
 			break;
 		}

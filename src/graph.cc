@@ -9,10 +9,17 @@ using namespace toC;
 
 int Graph::anonymous_nodes=0;
 
-Graph::Graph(onnx::ModelProto &onnx_model)
+Graph::Graph(
+	onnx::ModelProto &onnx_model,
+	std::vector<Tensor*> ext_inputs
+	)
 	:model(onnx_model)
 {
 	onnx::GraphProto onnx_graph = onnx_model.graph();
+
+	// 0. add provided external initializers (from test bench
+	for( auto t : ext_inputs )
+		tensors.push_back(t);
 
 	// 1. add initializers as resolved tensors
 	for( auto i : onnx_graph.initializer() )
@@ -24,11 +31,13 @@ Graph::Graph(onnx::ModelProto &onnx_model)
 		/* ONNX allows (but does not require - or there are bugs out there)
 		 * for initializer tensors to be listed as inputs. Those have been
 		 * processed elsewhere already. */
+		bool pushit = true;
 		for( auto t : tensors)
 			if( t->name == n->name )
-				continue;
-
-		tensors.push_back(n);
+				pushit = false;
+	
+		if( pushit )
+			tensors.push_back(n);
 	}
 
 	// while exists unresolved nodes
@@ -180,12 +189,14 @@ bool Graph::hasUnresolvedNodes(void)
 #include "nodes/add.h"
 #include "nodes/matmul.h"
 #include "nodes/relu.h"
+#include "nodes/reshape.h"
 
 Node* Graph::findNode(std::string opName)
 {
 	if( opName == "Add" )return new Add;
 	if( opName == "MatMul" )return new MatMul;
 	if( opName == "Relu" )return new Relu;
+	if( opName == "Reshape" )return new Reshape;
 
 	ERROR("Unimplemented: node operation " << opName);
 	return NULL;

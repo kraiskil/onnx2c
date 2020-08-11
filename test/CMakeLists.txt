@@ -33,4 +33,13 @@ ONNX_backend_node_test(add)
 ONNX_backend_node_test(add_bcast)
 ONNX_backend_node_test(matmul_2d)
 ONNX_backend_node_test(relu)
+ONNX_backend_node_test(reshape_extended_dims)
+#ONNX_backend_node_test(reshape_negative_extended_dims)  # zero and negative dimensions TBD
+ONNX_backend_node_test(reshape_reduced_dims)
+ONNX_backend_node_test(reshape_reordered_last_dims)
+#ONNX_backend_node_test(reshape_zero_dim)
+#ONNX_backend_node_test(reshape_negative_dim)
+ONNX_backend_node_test(reshape_one_dim)
+ONNX_backend_node_test(reshape_reordered_all_dims)
+#ONNX_backend_node_test(reshape_zero_and_negative_dim)
 

@@ -8,7 +8,10 @@ namespace toC {
 
 class Graph {
 public:
-	Graph(onnx::ModelProto &onnx_model);
+	Graph(
+		onnx::ModelProto &onnx_model,
+		std::vector<Tensor*> inputs={}
+	);
 
 	/* print the entire .h and .cc file contents */
 	void print_header(std::ostream &destination);
