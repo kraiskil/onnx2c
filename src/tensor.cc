@@ -129,6 +129,27 @@ std::string Tensor::data_type_str(void) const
 }
 
 
+void Tensor::print_element(std::ostream &dst, uint64_t element) const
+{
+	switch(data_type)
+	{
+		case onnx::TensorProto_DataType_FLOAT:
+		{
+			float *f = static_cast<float*>(data_buffer);
+			dst << std::showpoint << f[element]<< "f";
+			break;
+		}
+		case onnx::TensorProto_DataType_INT32:
+		{
+			int32_t *f = static_cast<int32_t*>(data_buffer);
+			dst << f[element];
+			break;
+		}
+		default:
+			ERROR("unimplemented printing of initialized datatype " << data_type_str());
+	}
+}
+
 /* Print the tensor initializer.
  * Default values are for "external callers". Override only when this recurses
  * back to itself. */
@@ -148,7 +169,10 @@ void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs)
 		dst << std::endl;
 		for( int i=0; i<data_dim[dim]; i++ )
 		{
-			print_tensor_initializer(dst, dim+1, offs+i*data_dim[dim+1]);
+			int remaining_dims=1;
+			for(unsigned j = dim+1; j<data_dim.size(); j++)
+				remaining_dims *= data_dim[j];
+			print_tensor_initializer(dst, dim+1, offs+i*remaining_dims);
 			if( i <(data_dim[dim]-1) )
 				dst << ",";
 			dst << std::endl;
@@ -159,24 +183,7 @@ void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs)
 		for( int i=0; i<data_dim[dim]; i++)
 		{
 			int element=offs+i;
-			switch(data_type)
-			{
-				case onnx::TensorProto_DataType_FLOAT:
-				{
-					float *f = static_cast<float*>(data_buffer);
-					dst << std::showpoint << f[element]<< "f";
-					break;
-				}
-				case onnx::TensorProto_DataType_INT32:
-				{
-					int32_t *f = static_cast<int32_t*>(data_buffer);
-					dst << f[element];
-					break;
-				}
-				default:
-					ERROR("unimplemented printing of initialized datatype " << data_type_str());
-
-			}
+			print_element(dst, element);
 			if( i <(data_dim[dim]-1) )
 				dst << ", ";
 		}

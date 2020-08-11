@@ -9,53 +9,103 @@ class Add : public Node {
 
 	virtual void print(std::ostream &dst) const
 	{
-		if( inputs.size() != 2 )
-			ERROR("wrong number of inputs to Add");
-		if( outputs.size() != 1 )
-			ERROR("wrong number of outputs from Add");
-		std::string type = inputs[0]->data_type_str();
-
-		dst << "\t/*Add*/" << std::endl;
-		
-		dst << "\t" << type << " *A = (" << type << "*)" << inputs[0]->cname() << ";" << std::endl;
-		dst << "\t" << type << " *B = (" << type << "*)" << inputs[1]->cname() << ";" << std::endl;
-		dst << "\t" << type << " *C = (" << type << "*)" << outputs[0]->cname() << ";" << std::endl;
-
-		dst << "\t" << "for( uint32_t i=0; i<" << inputs[0]->data_num_elem << "; i++ )" << std::endl;
-		dst << "\t\tC[i] = A[i] + B[i];" << std::endl;
-		dst << std::endl;
-	}
- 
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
-	{
 		const Tensor *A = inputs[0];
 		const Tensor *B = inputs[1];
-		int dimA = A->data_dim[0];
-		int dimB = B->data_dim[0];
+		const Tensor *C = outputs[0];
+		std::string type = A->data_type_str();
+
+		dst << "\t/* Add*/" << std::endl;
+
+		/* Simple case where no broadcasting is needed */
+		/* TODO: This check is not sufficient: [1][1] and [1][8] needs a broadcast */
+		if( inputs[0]->data_num_elem == inputs[1]->data_num_elem) {
+			dst << "\t" << type << " *A = (" << type << "*)" << A->cname() << ";" << std::endl;
+			dst << "\t" << type << " *B = (" << type << "*)" << B->cname() << ";" << std::endl;
+			dst << "\t" << type << " *C = (" << type << "*)" << C->cname() << ";" << std::endl;
+
+			dst << "\t" << "for( uint32_t i=0; i<" << A->data_num_elem << "; i++ )" << std::endl;
+			dst << "\t\tC[i] = A[i] + B[i];" << std::endl;
+			dst << std::endl;
+		}
+		else {
+		dst << "\t/* multidimensional broadcast */" << std::endl;
+			std::vector<int> result_dim;
+			multidirectional_broadcast_size(A->data_dim, B->data_dim, result_dim);
+			uint32_t apad = result_dim.size() - A->data_dim.size();
+			uint32_t bpad = result_dim.size() - B->data_dim.size();
+			std::string indent="\t";
+			// save the indices into the tensors. Must do this, when
+			// adding tensors of different dimensionality.
+			std::vector<std::string> cloops;
+			std::vector<std::string> aloops;
+			std::vector<std::string> bloops;
+			for( uint32_t dim=0; dim<result_dim.size(); dim++) {
+				std::string loop = "i" + std::to_string(dim);
+				cloops.push_back(loop);
+				dst << indent << "for( uint32_t " << loop<<"=0; ";
+				dst <<             loop << "<" << result_dim[dim] <<"; ";
+				dst <<             loop<<"++ ) {" << std::endl;
+				indent +="\t";
+
+				if( dim >= apad ) {
+					std::string aloop = (A->data_dim[dim-apad] == 1 ? "0" : loop);
+					aloops.push_back( aloop );
+				}
+				else
+					aloops.push_back("-");
+				if( dim >= bpad ) {
+					std::string bloop = (B->data_dim[dim-bpad] == 1 ? "0" : loop);
+					bloops.push_back( bloop );
+				}
+				else
+					bloops.push_back("-");
+			}
+
+			/* Print the line with addition */
+			dst << indent << C->cname();
+			for( std::string cloop : cloops )
+				dst << "[" << cloop << "]";
+			dst << " = " << A->cname();
+			for( std::string aloop : aloops )
+				if( aloop != "-" )
+					dst << "[" << aloop << "]";
+			dst << " + " << B->cname();
+			for( std::string bloop : bloops )
+				if( bloop != "-" )
+					dst << "[" << bloop << "]";
+			dst << ";" << std::endl;
+
+			for( uint32_t dim=0; dim<result_dim.size(); dim++) {
+				dst << "\t}" << std::endl;
+			}
+		}
+	}
+
+
+
+	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+	{
+		if( inputs.size() != 2 )
+			ERROR("wrong number of inputs to Add");
+
+		const Tensor *A = inputs[0];
+		const Tensor *B = inputs[1];
 		if(  typeConstraint_highPrecisionNumeric(A) == false
 		   ||typeConstraint_highPrecisionNumeric(B) == false)
 			ERROR("Incorrect input for node"); 
 
-		// TODO: mess. Add allows to add [N] + [N], [1xN]+[N] and who
-		// knows what other permutations... For now, [1xN] and [N] are stored
-		// with identical data layout, so this kludge works. For now. For the first
-		// test network.
-		if( A->data_dim[1] != 0 || B->data_dim[1] != 0 ) {
-			if( A->data_dim[0] == 1 )
-				dimA = A->data_dim[1];
-			else if( B->data_dim[0] == 1 )
-				dimB = B->data_dim[1];
-		}
 
-		if( dimA != dimB )
-			ERROR("Unimplemented or wrong input - input dimensions to Add do not match");
+		std::vector<int> result_dim;
+		multidirectional_broadcast_size(A->data_dim, B->data_dim, result_dim);
+
+		uint64_t total_elems=1;
+		for( auto d : result_dim )
+			total_elems *= d;
 
 		Tensor *rv = new Tensor;
-		// TODO: what if B has more dimensions? Check ONNX semantics
-		for( auto d : A->data_dim )
-			rv->data_dim.push_back(d);
+		rv->data_dim = result_dim;
 		rv->data_type = A->data_type;
-		rv->data_num_elem = A->data_num_elem;
+		rv->data_num_elem = total_elems;
 		outputs.push_back(rv);
 	}
 };

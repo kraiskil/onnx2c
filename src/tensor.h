@@ -43,6 +43,9 @@ class Tensor {
 	 * i.e. everything after the "=" in "float foo[43] = { 42, 42, ... };"
 	 * Do not override dim and offs - used only by the function when it recurses into itself. */
 	void print_tensor_initializer(std::ostream &destination, int dim=0, int offs=0);
+
+	/* Print the i:th element in data_buffer */
+	void print_element(std::ostream &dst, uint64_t i) const;
 };
 
 }

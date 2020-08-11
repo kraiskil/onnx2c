@@ -30,6 +30,7 @@ function( ONNX_backend_node_test node_name)
 endfunction()
 
 ONNX_backend_node_test(add)
+ONNX_backend_node_test(add_bcast)
 ONNX_backend_node_test(matmul_2d)
 ONNX_backend_node_test(relu)
 
