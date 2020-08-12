@@ -81,6 +81,9 @@ int main(int argc, char *argv[])
 		Tensor *t = get_input_from_file(partial, input_number);
 		if( t == NULL )
 			break;
+		// TODO: rest of the framework does not handle multiple outputs yet
+		if( input_number == 1 )
+			break;
 		references.push_back(t);
 		input_number++;
 	}

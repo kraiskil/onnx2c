@@ -32,7 +32,11 @@ endfunction()
 ONNX_backend_node_test(add)
 ONNX_backend_node_test(add_bcast)
 ONNX_backend_node_test(matmul_2d)
+
+ONNX_backend_node_test(maxpool_2d_default)
+
 ONNX_backend_node_test(relu)
+
 ONNX_backend_node_test(reshape_extended_dims)
 #ONNX_backend_node_test(reshape_negative_extended_dims)  # zero and negative dimensions TBD
 ONNX_backend_node_test(reshape_reduced_dims)

@@ -188,6 +188,7 @@ bool Graph::hasUnresolvedNodes(void)
 
 #include "nodes/add.h"
 #include "nodes/matmul.h"
+#include "nodes/maxpool.h"
 #include "nodes/relu.h"
 #include "nodes/reshape.h"
 
@@ -195,6 +196,7 @@ Node* Graph::findNode(std::string opName)
 {
 	if( opName == "Add" )return new Add;
 	if( opName == "MatMul" )return new MatMul;
+	if( opName == "MaxPool" )return new MaxPool;
 	if( opName == "Relu" )return new Relu;
 	if( opName == "Reshape" )return new Reshape;
 
