@@ -31,6 +31,11 @@ endfunction()
 
 ONNX_backend_node_test(add)
 ONNX_backend_node_test(add_bcast)
+
+ONNX_backend_node_test(conv_with_strides_no_padding)
+ONNX_backend_node_test(conv_with_strides_padding)
+ONNX_backend_node_test(conv_with_strides_and_asymmetric_padding)
+
 ONNX_backend_node_test(matmul_2d)
 
 ONNX_backend_node_test(maxpool_2d_default)
