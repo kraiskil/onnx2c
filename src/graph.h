@@ -41,6 +41,10 @@ private:
 	std::vector<Tensor*> tensors;
 	std::vector<Node*> nodes;
 
+	/* Add new tensor to set of known tensors,
+	 * if it is not already there (checked by name) */
+	bool addTensor(Tensor *t);
+
 	static int anonymous_nodes;
 };
 

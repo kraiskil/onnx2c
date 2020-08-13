@@ -28,16 +28,7 @@ Graph::Graph(
 	// 2. add graph inputs as resolved tensors
 	for ( auto i : onnx_graph.input() ) {
 		Tensor *n = getIoTensor( i );
-		/* ONNX allows (but does not require - or there are bugs out there)
-		 * for initializer tensors to be listed as inputs. Those have been
-		 * processed elsewhere already. */
-		bool pushit = true;
-		for( auto t : tensors)
-			if( t->name == n->name )
-				pushit = false;
-	
-		if( pushit )
-			tensors.push_back(n);
+		addTensor( n );
 	}
 
 	// while exists unresolved nodes
@@ -59,8 +50,7 @@ void Graph::addResolvedTensor(onnx::TensorProto &tensor)
 
 	t->parse_onnx_tensor(tensor);
 
-	// add Tensor to database
-	tensors.push_back(t);
+	addTensor(t);
 }
 
 Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
@@ -170,7 +160,7 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 	t->name = node.output(0); 
 	t->generate=true;
 	t->initialize=false;
-	tensors.push_back(t);
+	addTensor(t);
 
 	for( auto o : outputs)
 		n->outputs.push_back(o);
@@ -204,5 +194,21 @@ Node* Graph::findNode(std::string opName)
 
 	ERROR("Unimplemented: node operation " << opName);
 	return NULL;
+}
+
+bool Graph::addTensor(Tensor *t)
+{
+	/* ONNX allows (but does not require - or there are bugs out there)
+	 * for initializer tensors to be listed as inputs. Those have been
+	 * processed elsewhere already. */
+	bool pushit = true;
+	for( auto o : tensors)
+		if( t->name == o->name )
+			pushit = false;
+
+	if( pushit )
+		tensors.push_back(t);
+	return pushit;
+
 }
 
