@@ -70,4 +70,5 @@ ONNX_backend_node_test(reshape_reordered_all_dims)
 
 # More end-to-end kind of tests here
 add_subdirectory(tfl_helloworld)
+ONNX_type_test(mnist ${CMAKE_CURRENT_SOURCE_DIR}/mnist mnist 0.01)
 
