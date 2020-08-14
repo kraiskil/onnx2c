@@ -71,6 +71,10 @@ int main(int argc, char *argv[])
 		Tensor *t = get_input_from_file(partial, input_number);
 		if( t == NULL )
 			break;
+		t->isIO = true;
+		if( t->name == "" )
+			t->name = std::string("input_") + std::to_string(input_number);
+	
 		inputs.push_back(t);
 		input_number++;
 	}
@@ -81,6 +85,12 @@ int main(int argc, char *argv[])
 		Tensor *t = get_input_from_file(partial, input_number);
 		if( t == NULL )
 			break;
+		t->generate=true;
+		t->initialize=false;
+		t->isIO = true;
+		if( t->name == "" )
+			t->name = std::string("output_") + std::to_string(input_number);
+
 		// TODO: rest of the framework does not handle multiple outputs yet
 		if( input_number == 1 )
 			break;
@@ -100,20 +110,14 @@ int main(int argc, char *argv[])
 		exit(1); //TODO: check out error numbers for a more accurate one
 	}
 
+	std::vector <Tensor *> tensors_to_parser;
+	for( auto i : inputs) tensors_to_parser.push_back(i);
+	for( auto i : references) tensors_to_parser.push_back(i);
+
 	onnx_model.ParseFromIstream(&model_ifs);
-	Graph toCgraph(onnx_model, inputs);
+	Graph toCgraph(onnx_model, tensors_to_parser);
 	toCgraph.print_source(std::cout);
 
-
-#if 0
-	for( auto i : inputs ) {
-		std::cout << "static ";
-		i->print_type_name_dimensions(std::cout);
-		std::cout << " = ";
-		i->print_tensor_initializer(std::cout);
-		std::cout << ";" << std::endl;
-	}
-#endif
 
 	for( auto o : references ) {
 		std::string refname = "reference_" + o->cname();

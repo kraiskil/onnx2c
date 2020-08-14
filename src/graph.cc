@@ -67,6 +67,8 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 
 	Tensor *t = new Tensor;
 	t->generate=false;
+	t->initialize=false;
+	t->isIO = true;
 	t->name = vi.name();
 	t->doc  = vi.doc_string();
 

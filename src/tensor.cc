@@ -7,6 +7,7 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 
 	generate=true;
 	initialize=true;
+	isIO = false;
 
 	// assert tensor is resolvable
 	if( onnx::TensorProto_DataLocation() != onnx::TensorProto_DataLocation_DEFAULT )

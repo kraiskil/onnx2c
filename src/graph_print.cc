@@ -105,19 +105,34 @@ void Graph::print_interface_function(std::ostream &dst)
 	// TODO: take the interface function name from the ONNX file name
 	dst << "void entry(" ;
 	for ( auto i : model.graph().input() ) {
-		Tensor *t = getIoTensor(i);
-		print_tensor(dst, t);
-		dst << ", ";
+		/* TODO: FIXME: separate input tensors that are initialized
+		 * or re-initializable (and therefore count as input), from
+		 * the "actual" input data */
+		Tensor *t=NULL;
+		for( auto o : tensors)
+			if( o->name == i.name() )
+				if( o->isIO ) {
+					t=o;
+					break;
+				}
+
+		if( t ) {
+			print_tensor(dst, t);
+			dst << ", ";
+		}
 	}
 	for ( auto i : model.graph().output() ) {
-		Tensor *t = getIoTensor(i);
 		/* TODO: when there are more than one output, see above for how
 		 * inputs are handled */
+		Tensor *t = NULL;
 		for( auto o : tensors)
-			if( o->name == t->name )
-				if( o->initialize )
-					continue;
-		print_tensor(dst, t);
+			if( o->name == i.name() )
+				if( o->isIO ) {
+					t=o;
+					break;
+				}
+		if( t )
+			print_tensor(dst, t);
 	}
 	dst << ") {" << std::endl;
 

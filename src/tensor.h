@@ -10,8 +10,9 @@ namespace toC {
 // i.e. the data buffers a ONNX node produces or consumes
 class Tensor {
 	public:
-	bool generate; // generate code for this Tensor? (false for inputs)
+	bool generate;   // generate code for this Tensor? (false for inputs)
 	bool initialize; // generate initialization from data in data_buffer
+	bool isIO;       // is parameter passed to the entry function of the graph. 
 	std::vector<int> data_dim;
 	int data_num_elem;
 	onnx::TensorProto_DataType data_type;
