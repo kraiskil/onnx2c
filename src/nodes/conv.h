@@ -149,6 +149,11 @@ class Conv : public Node {
 		dst << "\t"       << type << " scratch[" << scr_s[0] << "]["<< scr_s[1];
 		dst <<               "]["<< scr_s[2] << "];" << std::endl;
 
+		/* ONNX manual doesn't say explicitly (or I don't find it), but padding is
+		 * always with zeros, not copying the border values. This is known because
+		 * tests (well, the MNIST sample from ONNX zoo) passes only with zero padding */
+		dst << "\tmemset((void*)scratch, 0, sizeof(scratch));" << std::endl;
+
 		dst << "\t"       << "for( uint32_t c=0; c<" << x->data_dim[1] <<"; c++) {" << std::endl;
 
 		dst << "\t\t"     << "for( uint32_t i1=" << pads[0] << ";";
@@ -158,72 +163,7 @@ class Conv : public Node {
 		dst <<                   "i2<" << scr_s[2]-pads[1+num_data_dim] << ";";
 		dst <<                   " i2++ ) {" << std::endl;
 
-		/* TODO: batch size is fixed to 1 here */
 		dst << "\t\t\t\t" << "scratch[c][i1][i2] = " << x->cname() << "[b][c][i1-"<<pads[0]<<"][i2-"<<pads[1]<<"];" << std::endl;
-		dst << "\t\t\t}"  << std::endl;
-		dst << "\t\t}"    << std::endl;
-		dst << "\t}"      << std::endl;
-
-		dst << "\t/* Pad the scratch pad memory */" << std::endl;
-		dst << "\t"       << "for( uint32_t c=0; c<" << x->data_dim[1] <<"; c++) {" << std::endl;
-
-		dst << "\t\t"     << "/*'Top' of 1st dimension */" << std::endl;
-		dst << "\t\t"     << "for( uint32_t i1=0; i1<" << pads[0] << "; i1++) {" << std::endl;
-		dst << "\t\t\t"   << "for( uint32_t i2=" << pads[1] << "; ";
-		dst <<                   "i2<" << scr_s[2]-pads[1+num_data_dim] << ";";
-		dst <<                   "i2++ ) {" << std::endl;
-
-		dst << "\t\t\t\t" << "scratch[c][i1][i2] = ";
-		if( auto_pad == "NOTSET" )
-			dst << "0;" << std::endl;
-		else // SAME_*
-			dst << x->cname() << "[b][c]["<< pads[0] << "][i2-"<<pads[1]<<"];" << std::endl;
-
-		dst << "\t\t\t}"  << std::endl;
-		dst << "\t\t}"    << std::endl;
-
-		dst << "\t\t"     << "/*'Bottom' of 1st dimension */" << std::endl;
-		dst << "\t\t"     << "for( uint32_t i1="<<scr_s[1]-pads[0+num_data_dim]<< "; i1<" << scr_s[1] << "; i1++) {" << std::endl;
-		dst << "\t\t\t"   << "for( uint32_t i2=" << pads[1] << "; ";
-		dst <<                   "i2<" << scr_s[2]-pads[1+num_data_dim] << ";";
-		dst <<                   "i2++ ) {" << std::endl;
-
-		dst << "\t\t\t\t" << "scratch[c][i1][i2] = ";
-		if( auto_pad == "NOTSET" )
-			dst << "0;" << std::endl;
-		else // SAME_*
-			dst << x->cname() << "[b][c]["<< x->data_dim[3]-1 << "][i2-"<<pads[1]<<"];" << std::endl;
-
-
-		dst << "\t\t\t}"  << std::endl;
-		dst << "\t\t}"    << std::endl;
-
-
-		dst << "\t\t"     << "/*'Top' of 2nd dimension */" << std::endl;
-		dst << "\t\t"     << "for( uint32_t i1=0; i1<" << scr_s[1] << "; i1++) {" << std::endl;
-		dst << "\t\t\t"   << "for( uint32_t i2=0; i2<" << pads[1] << "; i2++) {" << std::endl;
-
-		dst << "\t\t\t\t" << "scratch[c][i1][i2] = ";
-		if( auto_pad == "NOTSET" )
-			dst << "0;" << std::endl;
-		else // SAME_*
-			dst << "scratch[c][i1]["<< pads[1] <<"];" << std::endl;
-		dst << "\t\t\t}"  << std::endl;
-		dst << "\t\t}"    << std::endl;
-
-		dst << "\t\t"     << "/*'Bottom' of 2nd dimension */" << std::endl;
-		dst << "\t\t"     << "for( uint32_t i1=0; i1<" << scr_s[1] << "; i1++) {" << std::endl;
-		dst << "\t\t\t"   << "for( uint32_t i2=" << scr_s[2] - pads[1+num_data_dim] << "; ";
-		dst <<                   "i2<" << scr_s[2] << ";";
-		dst <<                   "i2++ ) {" << std::endl;
-
-		dst << "\t\t\t\t" << "scratch[c][i1][i2] = ";
-		if( auto_pad == "NOTSET" )
-			dst << "0;" << std::endl;
-		else // SAME_*
-			dst << "scratch[c][i1]["<< scr_s[2]-pads[1]-1 <<"];" << std::endl;
-
-
 		dst << "\t\t\t}"  << std::endl;
 		dst << "\t\t}"    << std::endl;
 		dst << "\t}"      << std::endl;

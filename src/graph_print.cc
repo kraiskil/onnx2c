@@ -95,6 +95,7 @@ void Graph::print_includes(std::ostream &dst)
 {
 	dst << "#include <math.h>" << std::endl;
 	dst << "#include <stdint.h>" << std::endl;
+	dst << "#include <string.h>" << std::endl;
 
 	dst << "#define MAX(X,Y) ( X > Y ? X : Y)" << std::endl;
 }
