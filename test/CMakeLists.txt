@@ -7,13 +7,13 @@ add_executable( testrun
 	onnx_backend_tests_runner.cc)
 target_link_libraries(testrun onnx2c_lib protobuf)
 
-function( ONNX_type_test node_name data_dir test_ctest_name)
+function( ONNX_type_test node_name data_dir test_ctest_name accuracy)
 
 	add_custom_command(
 		OUTPUT
 		${node_name}_generated.c
 		COMMAND
-		testrun ${data_dir} > ${node_name}_generated.c
+		testrun ${data_dir} ${accuracy} > ${node_name}_generated.c
 		DEPENDS
 		#TODO also depends on test data -> don't depend, always run
 		testrun
@@ -39,6 +39,7 @@ function( ONNX_backend_node_test node_name)
 		${node_name}
 		${ONNX_NODE_TEST_DATA_DIR}/test_${node_name}
 		ONNX_backend_${node_name}
+		0.00001
 	)
 endfunction()
 
@@ -48,7 +49,7 @@ ONNX_backend_node_test(add_bcast)
 ONNX_backend_node_test(conv_with_strides_no_padding)
 ONNX_backend_node_test(conv_with_strides_padding)
 ONNX_backend_node_test(conv_with_strides_and_asymmetric_padding)
-ONNX_type_test(operator_conv ${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-operator/test_operator_conv ONNX_backend_pytorch_conv)
+ONNX_type_test(operator_conv ${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-operator/test_operator_conv ONNX_backend_pytorch_conv 0.00001)
 
 ONNX_backend_node_test(matmul_2d)
 

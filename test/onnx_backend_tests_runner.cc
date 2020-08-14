@@ -45,17 +45,23 @@ Tensor * get_input_from_file( std::string &partial_path, int input_number )
 	return t;
 }
 
-void entry( float *, float *);
-
 int main(int argc, char *argv[])
 {
-	if( argc < 2 ) {
-		std::cerr << "provide directory with input and reference data" << std::endl;
+	if( argc < 3 ) {
+		std::cerr << "Usage:" << std::endl;
+		std::cerr << "./onnx_backend_tests_runner <directory> <accuracy>" << std::endl;
+		std::cerr << std::endl;
+		std::cerr << " <directory> is the directory that contains the test - i.e. 'model.onnx' and test_data_set_0" << std::endl;
+		std::cerr << " <accuracy> floating point value: the maximum allowed difference between result and refrence. Use decimal dot, not comma!"<< std::endl;
 		exit(1);
 	}
 
 	onnx::ModelProto onnx_model;
 	std::string dir(argv[1]);
+
+	// Beware of user having locale support on! Test suite feeds floats with the decimal dot format.
+	setlocale(LC_NUMERIC, "C");
+	float test_accuracy = std::stod(argv[2]);
 
 	std::vector<Tensor*> inputs;
 	std::vector<Tensor*> references;
@@ -143,7 +149,7 @@ int main(int argc, char *argv[])
 	std::cout <<  references[0]->cname() << ");" << std::endl;
 	std::cout << std::endl;
 	std::cout << "\t" << "for(uint64_t i = 0; i< (sizeof(" << refname << ") / sizeof("<<type<<")); i++) {" << std::endl;
-	std::cout << "\t\t" << "if( fabs(result[i]-reference[i]) > 1e-5 )" <<std::endl;
+	std::cout << "\t\t" << "if( fabs(result[i]-reference[i]) > " << test_accuracy << " )" <<std::endl;
 	std::cout << "\t\t\t" << "return 1;" << std::endl;
 	std::cout << "\t}" << std::endl;
 
