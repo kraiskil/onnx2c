@@ -134,6 +134,9 @@ class Conv : public Node {
 		 * For now, hard-code scratch-area.
 		 */
 
+		dst << "\t/* Loop over batches */" << std::endl;
+		dst << "\tfor( uint32_t b=0; b<" << x->data_dim[0] << "; b++) {" << std::endl << std::endl;
+
 		/* Create scratch-area with paddings. Size is [channels][dim1+pads][dim2+pads]*/
 		/* TODO: don't put this on stack! Not putting it on stack needs rework in Graph::print* functions,
 		 * so it is here only to speed up onnx2c development. */
@@ -156,7 +159,7 @@ class Conv : public Node {
 		dst <<                   " i2++ ) {" << std::endl;
 
 		/* TODO: batch size is fixed to 1 here */
-		dst << "\t\t\t\t" << "scratch[c][i1][i2] = " << x->cname() << "[0][c][i1-"<<pads[0]<<"][i2-"<<pads[1]<<"];" << std::endl;
+		dst << "\t\t\t\t" << "scratch[c][i1][i2] = " << x->cname() << "[b][c][i1-"<<pads[0]<<"][i2-"<<pads[1]<<"];" << std::endl;
 		dst << "\t\t\t}"  << std::endl;
 		dst << "\t\t}"    << std::endl;
 		dst << "\t}"      << std::endl;
@@ -174,7 +177,7 @@ class Conv : public Node {
 		if( auto_pad == "NOTSET" )
 			dst << "0;" << std::endl;
 		else // SAME_*
-			dst << x->cname() << "[0][c]["<< pads[0] << "][i2-"<<pads[1]<<"];" << std::endl;
+			dst << x->cname() << "[b][c]["<< pads[0] << "][i2-"<<pads[1]<<"];" << std::endl;
 
 		dst << "\t\t\t}"  << std::endl;
 		dst << "\t\t}"    << std::endl;
@@ -189,7 +192,7 @@ class Conv : public Node {
 		if( auto_pad == "NOTSET" )
 			dst << "0;" << std::endl;
 		else // SAME_*
-			dst << x->cname() << "[0][c]["<< x->data_dim[3]-1 << "][i2-"<<pads[1]<<"];" << std::endl;
+			dst << x->cname() << "[b][c]["<< x->data_dim[3]-1 << "][i2-"<<pads[1]<<"];" << std::endl;
 
 
 		dst << "\t\t\t}"  << std::endl;
@@ -230,7 +233,6 @@ class Conv : public Node {
 		dst << "\t/* Run the convolution */" << std::endl;
 		dst << "\t/* loop over: m=input maps, c=channels, i1&i2 data dimensions*/" << std::endl;
 		dst << "\tfor( uint32_t m=0; m<" << w->data_dim[0] << "; m++) {" << std::endl;
-		dst << "\tfor( uint32_t c=0; c<" << x->data_dim[1] << "; c++) {" << std::endl;
 		dst << "\tfor( uint32_t i1=0, o1=0; ";
 		dst <<        "i1<" << scr_s[1] << "; ";
 		dst <<        "i1+=" << strides[0] << ", o1++) {" << std::endl;
@@ -239,20 +241,23 @@ class Conv : public Node {
 		dst <<        "i2+=" << strides[1] <<", o2++) {" << std::endl;
 
 		/* Loop over the kernel */
-		dst << "\t\t" << out << "[0][m][o1][o2] = 0;" << std::endl;;
+		dst << "\t\t" << out << "[b][m][o1][o2] = 0;" << std::endl;;
+		dst << "\t\tfor( uint32_t c=0; c<" << x->data_dim[1] << "; c++) {" << std::endl;
 		dst << "\t\tfor( uint32_t k1=0; k1<" << kernel_shape[0] << "; k1++) {" << std::endl;
 		dst << "\t\tfor( uint32_t k2=0; k2<" << kernel_shape[0] << "; k2++) {" << std::endl;
 
-		dst << "\t\t\t" << out << "[0][m][o1][o2] += scratch[c][i1+k1][i2+k2] *";
+		dst << "\t\t\t" << out << "[b][m][o1][o2] += scratch[c][i1+k1][i2+k2] *";
 		dst <<             w->cname() << "[m][c][k1][k2];" << std::endl;
 			
+		dst << "\t\t}"      << std::endl;
 		dst << "\t\t}"      << std::endl;
 		dst << "\t\t}"      << std::endl;
 		
 		dst << "\t}"      << std::endl;
 		dst << "\t}"      << std::endl;
 		dst << "\t}"      << std::endl;
-		dst << "\t}"      << std::endl;
+
+		dst << "\t} /* batch */"      << std::endl;
 	}
  
 	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
@@ -307,10 +312,29 @@ class Conv : public Node {
 		Tensor *rv = new Tensor;
 		rv->data_dim.push_back(x->data_dim[0]);//batch size
 		rv->data_dim.push_back(w->data_dim[0]);//"number of feature maps"
-		// Rest of the data dimensions. Probably correct as long as strides is fixed at 1
-		for( unsigned i=2; i<x->data_dim.size(); i++)
-			rv->data_dim.push_back(
-				(x->data_dim[i] + pads[i-2]+pads[i-2+num_data_dim]) / strides[i-2]);
+
+		for( unsigned xdim=2; xdim < x->data_dim.size(); xdim++) {
+			int outdim;
+			unsigned dim = xdim-2;
+			// From ONNX Operators.md:
+			// SAME_UPPER or SAME_LOWER mean pad the input so that the output spatial size match the input.
+			// "match" here means "is equal".
+			if( auto_pad == "SAME_UPPER" || auto_pad == "SAME_LOWER" )
+				outdim = x->data_dim[xdim];
+			else if( auto_pad == "NOTSET" ) {
+				//padded input
+				int input_size = x->data_dim[xdim] + pads[dim]+pads[dim+num_data_dim];
+				// [ 0 1 2 3 4 5 6 7 8 9  ]
+				//                |kern=3|
+				// last output=7
+				int last_out = input_size - kernel_shape[dim];
+				outdim = last_out / strides[dim] + 1;
+			}
+			else
+				ERROR("Unimplemented: VALID padding");
+
+			rv->data_dim.push_back(outdim);
+		}
 
 		rv->data_type = x->data_type;
 		rv->data_num_elem = x->data_num_elem;

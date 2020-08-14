@@ -22,6 +22,12 @@ function( ONNX_type_test node_name data_dir test_ctest_name)
 	add_executable( ${node_name}_test
 		${node_name}_generated.c
 		)
+	target_compile_options( ${node_name}_test
+		PRIVATE
+			-Wall -Werror
+			#TODO: space for output tensor is generated, but not used.
+			-Wno-unused-variable
+		)
 
 	add_test( ${test_ctest_name}
 		${node_name}_test
