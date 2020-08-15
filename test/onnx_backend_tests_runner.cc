@@ -47,12 +47,13 @@ Tensor * get_input_from_file( std::string &partial_path, int input_number )
 
 int main(int argc, char *argv[])
 {
-	if( argc < 3 ) {
+	if( argc < 4 ) {
 		std::cerr << "Usage:" << std::endl;
-		std::cerr << "./onnx_backend_tests_runner <directory> <accuracy>" << std::endl;
+		std::cerr << "./onnx_backend_tests_runner <directory> <accuracy> <test_data_set>" << std::endl;
 		std::cerr << std::endl;
 		std::cerr << " <directory> is the directory that contains the test - i.e. 'model.onnx' and test_data_set_0" << std::endl;
 		std::cerr << " <accuracy> floating point value: the maximum allowed difference between result and refrence. Use decimal dot, not comma!"<< std::endl;
+		std::cerr << " <test_data_set> integer value: select the test dataset to run this test against. (Most tests have only 0)" << std::endl;
 		exit(1);
 	}
 
@@ -66,9 +67,7 @@ int main(int argc, char *argv[])
 	std::vector<Tensor*> inputs;
 	std::vector<Tensor*> references;
 
-	// TODO: at this time, node tests have just one data set. When the time comes,
-	//       loop over other test_data_set_* directories
-	std::string dataset_dir = dir + "/test_data_set_0";
+	std::string dataset_dir = dir + "/test_data_set_" + argv[3];
 
 
 	int input_number=0;

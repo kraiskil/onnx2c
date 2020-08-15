@@ -7,22 +7,22 @@ add_executable( testrun
 	onnx_backend_tests_runner.cc)
 target_link_libraries(testrun onnx2c_lib protobuf)
 
-function( ONNX_type_test node_name data_dir test_ctest_name accuracy)
+function( ONNX_type_test node_name data_dir test_ctest_name accuracy test_data_set)
 
 	add_custom_command(
 		OUTPUT
-		${node_name}_generated.c
+		${node_name}_${test_data_set}_generated.c
 		COMMAND
-		testrun ${data_dir} ${accuracy} > ${node_name}_generated.c
+		testrun ${data_dir} ${accuracy} ${test_data_set} > ${node_name}_${test_data_set}_generated.c
 		DEPENDS
 		#TODO also depends on test data -> don't depend, always run
 		testrun
 		)
 
-	add_executable( ${node_name}_test
-		${node_name}_generated.c
+	add_executable( ${node_name}_${test_data_set}_test
+		${node_name}_${test_data_set}_generated.c
 		)
-	target_compile_options( ${node_name}_test
+	target_compile_options( ${node_name}_${test_data_set}_test
 		PRIVATE
 			-Wall -Werror
 			#TODO: space for output tensor is generated, but not used.
@@ -30,7 +30,7 @@ function( ONNX_type_test node_name data_dir test_ctest_name accuracy)
 		)
 
 	add_test( ${test_ctest_name}
-		${node_name}_test
+		${node_name}_${test_data_set}_test
 		)
 endfunction()
 
@@ -40,6 +40,7 @@ function( ONNX_backend_node_test node_name)
 		${ONNX_NODE_TEST_DATA_DIR}/test_${node_name}
 		ONNX_backend_${node_name}
 		0.00001
+		0
 	)
 endfunction()
 
@@ -49,7 +50,7 @@ ONNX_backend_node_test(add_bcast)
 ONNX_backend_node_test(conv_with_strides_no_padding)
 ONNX_backend_node_test(conv_with_strides_padding)
 ONNX_backend_node_test(conv_with_strides_and_asymmetric_padding)
-ONNX_type_test(operator_conv ${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-operator/test_operator_conv ONNX_backend_pytorch_conv 0.00001)
+ONNX_type_test(operator_conv ${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-operator/test_operator_conv ONNX_backend_pytorch_conv 0.00001 0)
 
 ONNX_backend_node_test(matmul_2d)
 
@@ -70,5 +71,7 @@ ONNX_backend_node_test(reshape_reordered_all_dims)
 
 # More end-to-end kind of tests here
 add_subdirectory(tfl_helloworld)
-ONNX_type_test(mnist ${CMAKE_CURRENT_SOURCE_DIR}/mnist mnist 0.01)
+ONNX_type_test(mnist ${CMAKE_CURRENT_SOURCE_DIR}/mnist mnist0 0.01 0)
+ONNX_type_test(mnist ${CMAKE_CURRENT_SOURCE_DIR}/mnist mnist1 0.01 1)
+ONNX_type_test(mnist ${CMAKE_CURRENT_SOURCE_DIR}/mnist mnist2 0.01 2)
 
