@@ -185,6 +185,7 @@ bool Graph::hasUnresolvedNodes(void)
 #include "nodes/maxpool.h"
 #include "nodes/relu.h"
 #include "nodes/reshape.h"
+#include "nodes/softmax.h"
 
 Node* Graph::findNode(std::string opName)
 {
@@ -195,6 +196,7 @@ Node* Graph::findNode(std::string opName)
 	if( opName == "MaxPool" )return new MaxPool;
 	if( opName == "Relu" )return new Relu;
 	if( opName == "Reshape" )return new Reshape;
+	if( opName == "Softmax" )return new Softmax;
 
 	ERROR("Unimplemented: node operation " << opName);
 	return NULL;

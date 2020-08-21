@@ -28,6 +28,7 @@ function( ONNX_type_test node_name data_dir test_ctest_name accuracy test_data_s
 			#TODO: space for output tensor is generated, but not used.
 			-Wno-unused-variable
 		)
+	target_link_libraries( ${node_name}_${test_data_set}_test m )
 
 	add_test( ${test_ctest_name}
 		${node_name}_${test_data_set}_test
@@ -78,6 +79,13 @@ ONNX_backend_node_test(reshape_one_dim)
 ONNX_backend_node_test(reshape_reordered_all_dims)
 #ONNX_backend_node_test(reshape_zero_and_negative_dim)
 
+ONNX_backend_node_test(softmax_axis_0)
+ONNX_backend_node_test(softmax_axis_1)
+ONNX_backend_node_test(softmax_axis_2)
+ONNX_backend_node_test(softmax_default_axis)
+ONNX_backend_node_test(softmax_example)
+ONNX_backend_node_test(softmax_large_number)
+ONNX_backend_node_test(softmax_negative_axis)
 
 # More end-to-end kind of tests here
 add_subdirectory(tfl_helloworld)
