@@ -109,15 +109,9 @@ void Graph::print_interface_function(std::ostream &dst)
 		/* TODO: FIXME: separate input tensors that are initialized
 		 * or re-initializable (and therefore count as input), from
 		 * the "actual" input data */
-		Tensor *t=NULL;
-		for( auto o : tensors)
-			if( o->name == i.name() )
-				if( o->isIO ) {
-					t=o;
-					break;
-				}
+		Tensor *t=findTensor(i.name());
 
-		if( t ) {
+		if( t && t->isIO ) {
 			print_tensor(dst, t);
 			dst << ", ";
 		}
@@ -125,15 +119,11 @@ void Graph::print_interface_function(std::ostream &dst)
 	for ( auto i : model.graph().output() ) {
 		/* TODO: when there are more than one output, see above for how
 		 * inputs are handled */
-		Tensor *t = NULL;
-		for( auto o : tensors)
-			if( o->name == i.name() )
-				if( o->isIO ) {
-					t=o;
-					break;
-				}
-		if( t )
+		Tensor *t = findTensor(i.name());
+
+		if( t && t->isIO ) {
 			print_tensor(dst, t);
+		}
 	}
 	dst << ") {" << std::endl;
 

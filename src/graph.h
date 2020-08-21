@@ -45,6 +45,8 @@ private:
 	 * if it is not already there (checked by name) */
 	bool addTensor(Tensor *t);
 
+	Tensor *findTensor(const std::string &name) const;
+
 	static int anonymous_nodes;
 };
 

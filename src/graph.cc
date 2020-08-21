@@ -213,6 +213,13 @@ bool Graph::addTensor(Tensor *t)
 	if( pushit )
 		tensors.push_back(t);
 	return pushit;
+}
 
+Tensor *Graph::findTensor(const std::string &name) const
+{
+	for( auto o : tensors)
+		if( o->name == name )
+			return o;
+	return NULL;
 }
 
