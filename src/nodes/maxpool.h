@@ -8,6 +8,7 @@ class MaxPool : public Node {
 		op_name = "MaxPool";
 		ceil_mode = 0;
 		storage_order=0;
+		auto_pad = "NOTSET";
 	}
 	/* MaxPool node specific attributes */
 	int ceil_mode;
@@ -16,12 +17,12 @@ class MaxPool : public Node {
 	std::vector<int> pads;
 	int storage_order;
 	std::vector<int> strides;
+	std::string auto_pad;
 
 	std::vector<int> pad_shapes; // pad_shapes[i] = "sum of pads along axis i"
 
 	void parseAttributes_auto_pad( const onnx::AttributeProto &a ) {
-		if (a.s() != "NOTSET" )
-			ERROR("Unimplemented: MaxPool auto_pad is deprecated, and not set to NOTSET");
+		auto_pad = a.s();
 	}
 
 	void parseAttributes_ceil_mode( const onnx::AttributeProto &a ) {
@@ -104,6 +105,7 @@ class MaxPool : public Node {
 
 		dst << "\t/* MaxPool" << std::endl;
 		dst << "\t *" << std::endl;
+		dst << "\t * auto_pad: " << auto_pad << std::endl;
 		dst << "\t * ceil_mode: " << ceil_mode <<std::endl;
 		dst << "\t * dilations: ";
 			for( int d: dilations )
@@ -122,22 +124,6 @@ class MaxPool : public Node {
 			for( int s: strides)
 				dst << s << " ";
 		dst << std::endl <<  "\t */" << std::endl;
-
-		/* TODO: move to resolve? */
-		for(auto p: pads)
-			if(p!=0)
-				ERROR("Unimplemented: pads != 0");
-		int data_dim = inputs[0]->data_dim.size()-2;
-		for(int i=0; i<data_dim; i++) {
-			int out_size = outputs[0]->data_dim[2+i];
-			int in_size = inputs[0]->data_dim[2+i];
-			if( (((out_size-1)*strides[i]) + kernel_shape[i]) > in_size )
-				ERROR("Sizes mismatch. Padding would have been necessary? Node" << onnx_name);
-		}
-		// at this point we know:
-		// no padding is needed
-		// just looping through input with given kerne size+stride size does not overflow reads
-		// only 2D data supported for now
 
 		int batch_size = inputs[0]->data_dim[0];
 		int channels = inputs[0]->data_dim[1];
@@ -201,13 +187,38 @@ class MaxPool : public Node {
 			for( unsigned i=0; i< x->data_dim.size(); i++ )
 				strides.push_back(1);
 
+		if( dilations.size() == 0 )
+			for( unsigned i=0; i< x->data_dim.size(); i++ )
+				dilations.push_back(1);
 
 		unsigned data_dims = x->data_dim.size()-2;
 		// if 'pads' attribute not given, fill with defaults
 		if( pads.size() == 0 ) {
+			pads.resize(data_dims * 2);
 			for(unsigned i=0; i<data_dims; i++) {
-				pads.push_back(0);
-				pads.push_back(0);
+				if( auto_pad == "SAME_UPPER" || auto_pad == "SAME_LOWER" ) {
+					//pad_shape[i] = (output_spatial_shape[i] - 1) *
+					//             strides_spatial_shape[i] + ((kernel_spatial_shape[i] - 1) * dilations[i] + 1)
+					//              - input_spatial_shape[i]
+					// NB: onnx2c architecture does not allow figuring out the output shape at this stage
+					// (especially since the onnx spec says it is a function of input, strides, pads &c).
+					// The auto_pad attribute for MaxPool is deprecated anyway. Probably just for this confusion.
+					// This tries to be some sort of band-aid: assume the output size is the same as input size
+					// which is the usual(?) reason to use "same" padding on the network design level. 
+					int input_size = x->data_dim[i+2];
+					int pad_shape = (input_size - 1) * strides[i] + (( kernel_shape[i] -1) * dilations[i]+1) - input_size; 
+					pads[i] = pad_shape/2;
+					pads[i+data_dims] = pad_shape/2;
+					if( pad_shape & 1 )
+						if( auto_pad == "SAME_UPPER" )
+							pads[i]++;
+						else
+							pads[i+data_dims]++;
+				}
+				else {
+					pads[i] = 0;
+					pads[i+data_dims] = 0;
+				}
 			}
 		}
 		if( pads.size() != 2*data_dims ) {
@@ -235,6 +246,16 @@ class MaxPool : public Node {
 				d = ceil((float)(in_dim + pad - ((kernel - 1) * dilation + 1)) / stride + 1);
 			else
 				d = floor((float)(in_dim + pad - ((kernel  - 1) * dilation + 1)) / stride + 1);
+
+			// Handle edge-case of deprecated auto padding
+			// output_spatial_shape[i] = ceil((input_spatial_shape[i] -
+			//              ((kernel_spatial_shape[i] - 1) * dilations[i] + 1) + 1) / strides_spatial_shape[i])
+			if( auto_pad == "VALID" )
+				d = ceil((float)( in_dim - ((kernel - 1) *dilation + 1) +1) /  stride );
+
+			// output_spatial_shape[i] = ceil(input_spatial_shape[i] / strides_spatial_shape[i])
+			else if( auto_pad == "SAME_UPPER" || auto_pad == "SAME_LOWER" )
+				d = ceil( (float)in_dim / stride );
 
 			rv->data_dim.push_back(d);
 			rv_num_elem *= d;
