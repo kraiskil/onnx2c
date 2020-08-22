@@ -28,7 +28,7 @@ class Conv : public Node {
 			ERROR("Unimplemented: SAME_LOWER padding for Conv");
 		}
 		else if( a.s() == "VALID" ) {
-			ERROR("Unimplemented: VALID padding for Conv");
+			; // all good :)
 		}
 		else if (a.s() == "NOTSET" ) {
 			;
@@ -101,6 +101,7 @@ class Conv : public Node {
 	{
 		const Tensor *x = inputs[0];
 		const Tensor *w = inputs[1];
+		const Tensor *b = inputs.size()==3 ? inputs[2] : NULL;
 		const Tensor *y = outputs[0];
 		std::string type = x->data_type_str();
 		int num_data_dim = x->data_dim.size()-2;
@@ -180,8 +181,14 @@ class Conv : public Node {
 		dst <<        "i2<" << scr_s[2] << "; ";
 		dst <<        "i2+=" << strides[1] <<", o2++) {" << std::endl;
 
+
 		/* Loop over the kernel */
-		dst << "\t\t" << out << "[b][m][o1][o2] = 0;" << std::endl;;
+		dst << "\t\t" << out << "[b][m][o1][o2] = ";
+		if( b == NULL )
+			dst << "0;" << std::endl;
+		else
+			dst << b->cname() << "[b];" << std::endl;
+
 		dst << "\t\tfor( uint32_t c=0; c<" << x->data_dim[1] << "; c++) {" << std::endl;
 		dst << "\t\tfor( uint32_t k1=0; k1<" << kernel_shape[0] << "; k1++) {" << std::endl;
 		dst << "\t\tfor( uint32_t k2=0; k2<" << kernel_shape[0] << "; k2++) {" << std::endl;
@@ -207,7 +214,6 @@ class Conv : public Node {
 		const Tensor *b;             // bias
 		if( inputs.size() == 3 ) {
 			b = inputs[2];
-			ERROR("unimplemented: bias term");
 		}
 		else
 			b = NULL;
@@ -224,21 +230,19 @@ class Conv : public Node {
 		int num_data_dim = x->data_dim.size()-2;
 
 
-		/* TODO: assume here "pads" attribute is not given, and auto_pad iseither of SAME_*.
-		 *       also assume kernel size is odd (not even).
-		 * TODO: if auto_pad is VALID, does it imply kernel size is 1, so no padding is ever
-		 *       required, or does the output shrink? ONNX spec just assumes this as known...
-		 */
-		if( kernel_shape[0] != kernel_shape[1] )
-			ERROR("Unimplemented: non-square kernels");
-
-		if( (kernel_shape[0] & 0x1) == 0 )
-			ERROR("Unimplemented: even (not odd) sized kernels");
-
 		if( pads.size() == 0 ) {
+			pads.resize(num_data_dim*2);
 			for( unsigned i=0; i< x->data_dim.size() -2; i++ ) {
-				pads.push_back( kernel_shape[0]/2 );
-				pads.push_back( kernel_shape[0]/2 );
+				if( auto_pad == "VALID" || auto_pad == "NOTSET" ) {
+					pads[i] = 0;
+					pads[i+num_data_dim] = 0;
+				}
+				else {
+					// TODO: diations and strides might cause need for bigger paddings
+					pads[i] = kernel_shape[i] / 2;
+					pads[i+num_data_dim] = kernel_shape[i] / 2;
+					// TODO: handle case where uneven padding is needed
+				}
 			}
 		}
 
@@ -261,7 +265,7 @@ class Conv : public Node {
 			// "match" here means "is equal".
 			if( auto_pad == "SAME_UPPER" || auto_pad == "SAME_LOWER" )
 				outdim = x->data_dim[xdim];
-			else if( auto_pad == "NOTSET" ) {
+			else if( auto_pad == "NOTSET" || auto_pad == "VALID") {
 				//padded input
 				int input_size = x->data_dim[xdim] + pads[dim]+pads[dim+num_data_dim];
 				// [ 0 1 2 3 4 5 6 7 8 9  ]
@@ -270,8 +274,6 @@ class Conv : public Node {
 				int last_out = input_size - kernel_shape[dim];
 				outdim = last_out / strides[dim] + 1;
 			}
-			else
-				ERROR("Unimplemented: VALID padding");
 
 			rv->data_dim.push_back(outdim);
 		}
