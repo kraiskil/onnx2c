@@ -87,6 +87,14 @@ ONNX_backend_node_test(softmax_example)
 ONNX_backend_node_test(softmax_large_number)
 ONNX_backend_node_test(softmax_negative_axis)
 
+ONNX_backend_node_test(transpose_default)
+ONNX_backend_node_test(transpose_all_permutations_0)
+ONNX_backend_node_test(transpose_all_permutations_1)
+ONNX_backend_node_test(transpose_all_permutations_2)
+ONNX_backend_node_test(transpose_all_permutations_3)
+ONNX_backend_node_test(transpose_all_permutations_4)
+ONNX_backend_node_test(transpose_all_permutations_5)
+
 # More end-to-end kind of tests here
 add_subdirectory(tfl_helloworld)
 ONNX_type_test(mnist ${CMAKE_CURRENT_SOURCE_DIR}/mnist mnist0 0.01 0)
