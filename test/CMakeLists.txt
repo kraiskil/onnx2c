@@ -98,3 +98,4 @@ ONNX_backend_node_test(transpose_all_permutations_5)
 # More end-to-end kind of tests here
 add_subdirectory(tfl_helloworld)
 add_subdirectory(mnist)
+add_subdirectory(velardo)
