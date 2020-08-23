@@ -97,12 +97,4 @@ ONNX_backend_node_test(transpose_all_permutations_5)
 
 # More end-to-end kind of tests here
 add_subdirectory(tfl_helloworld)
-ONNX_type_test(mnist ${CMAKE_CURRENT_SOURCE_DIR}/mnist mnist0 0.01 0)
-ONNX_type_test(mnist ${CMAKE_CURRENT_SOURCE_DIR}/mnist mnist1 0.01 1)
-ONNX_type_test(mnist ${CMAKE_CURRENT_SOURCE_DIR}/mnist mnist2 0.01 2)
-add_custom_command(OUTPUT mnist_generated.c
-	COMMAND onnx2c ${CMAKE_CURRENT_SOURCE_DIR}/mnist/model.onnx > mnist_generated.c)
-add_executable(mnist_static mnist/test.cc mnist_generated.c)
-target_link_libraries(mnist_static onnx2c_lib protobuf)
-add_test(mnist_static mnist_static)
-
+add_subdirectory(mnist)
