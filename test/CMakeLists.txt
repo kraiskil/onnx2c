@@ -40,13 +40,16 @@ function( ONNX_backend_node_test node_name)
 		${node_name}
 		${ONNX_NODE_TEST_DATA_DIR}/test_${node_name}
 		ONNX_backend_${node_name}
-		0.00001
+		0.00002
 		0
 	)
 endfunction()
 
 ONNX_backend_node_test(add)
 ONNX_backend_node_test(add_bcast)
+
+ONNX_backend_node_test(batchnorm_epsilon)
+ONNX_backend_node_test(batchnorm_example)
 
 ONNX_backend_node_test(conv_with_strides_no_padding)
 ONNX_backend_node_test(conv_with_strides_padding)
