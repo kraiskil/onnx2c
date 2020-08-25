@@ -183,9 +183,12 @@ void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs)
 				dst << ",";
 			dst << std::endl;
 		}
+		// indent a stand-alone closing brace
+		for( int i=0; i<dim; i++)
+			dst << "  ";
 	}
 
-	else
+	else {
 		for( int i=0; i<data_dim[dim]; i++)
 		{
 			int element=offs+i;
@@ -193,6 +196,8 @@ void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs)
 			if( i <(data_dim[dim]-1) )
 				dst << ", ";
 		}
+	}
+
 	dst << "}";
 }
 
