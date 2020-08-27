@@ -86,7 +86,6 @@ class Transpose : public Node {
 		Tensor *rv = new Tensor;
 		rv->data_dim = out_dim;
 		rv->data_type = A->data_type;
-		rv->data_num_elem = A->data_num_elem;
 		outputs.push_back(rv);
 	}
 };

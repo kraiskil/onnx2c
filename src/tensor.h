@@ -14,7 +14,6 @@ class Tensor {
 	bool initialize; // generate initialization from data in data_buffer
 	bool isIO;       // is parameter passed to the entry function of the graph. 
 	std::vector<int> data_dim;
-	int data_num_elem;
 	onnx::TensorProto_DataType data_type;
 	void *data_buffer;
 
@@ -28,6 +27,10 @@ class Tensor {
 
 	/* Number of bytes of one data element */
 	int data_elem_size(void)const;
+
+	/* Number of elements in data.
+	 * I.e. the product of the data dimensions */
+	int data_num_elem(void) const;
 
 	/* A string with the the C type for this tensor's data element. E.g. "float" */
 	std::string data_type_str(void) const;

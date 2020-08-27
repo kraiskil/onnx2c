@@ -21,7 +21,7 @@ class Reshape : public Node {
 		dst << "\t" << type << " *data = (" << type << "*)" << inputs[0]->cname() << ";" << std::endl;
 		dst << "\t" << type << " *reshaped = (" << type << "*)" << outputs[0]->cname() << ";" << std::endl;
 
-		dst << "\t" << "for( uint32_t i=0; i<" << inputs[0]->data_num_elem << "; i++ )" << std::endl;
+		dst << "\t" << "for( uint32_t i=0; i<" << inputs[0]->data_num_elem() << "; i++ )" << std::endl;
 		dst << "\t\treshaped[i] = data[i];" << std::endl;
 		dst << std::endl;
 	}
@@ -43,7 +43,7 @@ class Reshape : public Node {
 		/* TODO: uint64_t does not overflow here, right?
 		 * Because if it does, you probably aren't targetting edge computing? */
 		uint64_t shape_num_elem=1;
-		for(int i=0; i<shape->data_num_elem; i++) {
+		for(int i=0; i<shape->data_num_elem(); i++) {
 			// dimension=0: unchanged from input
 			// dimension=-1: infer from dim
 			if( new_shape[i] <= 0 )
@@ -52,18 +52,17 @@ class Reshape : public Node {
 			shape_num_elem *= new_shape[i];
 		}
 
-		if( shape_num_elem != (uint64_t)data->data_num_elem )
+		if( shape_num_elem != (uint64_t)data->data_num_elem() )
 			ERROR("Reshape: Wrong amount of input for requested shape");
 
 		Tensor *rv = new Tensor;
 		// TODO: what if B has more dimensions? Check ONNX semantics
-		for( int i=0; i<shape->data_num_elem; i++) {
+		for( int i=0; i<shape->data_num_elem(); i++) {
 			int64_t d = new_shape[i];
 			rv->data_dim.push_back(d);
 		}
 
 		rv->data_type = data->data_type;
-		rv->data_num_elem = data->data_num_elem;
 		outputs.push_back(rv);
 	}
 };

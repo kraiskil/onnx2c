@@ -241,7 +241,6 @@ class MaxPool : public Node {
 		};
 
 		rv->data_type = x->data_type;
-		rv->data_num_elem = rv_num_elem;
 		outputs.push_back(rv);
 		//TODO: also push out the optional Indices tensor. But this needs some fixes in Graph. And a test case
 		//      that uses multiple outputs.

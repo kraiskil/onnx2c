@@ -18,12 +18,12 @@ class Add : public Node {
 
 		/* Simple case where no broadcasting is needed */
 		/* TODO: This check is not sufficient: [1][1] and [1][8] needs a broadcast */
-		if( inputs[0]->data_num_elem == inputs[1]->data_num_elem) {
+		if( inputs[0]->data_num_elem() == inputs[1]->data_num_elem()) {
 			dst << "\t" << type << " *A = (" << type << "*)" << A->cname() << ";" << std::endl;
 			dst << "\t" << type << " *B = (" << type << "*)" << B->cname() << ";" << std::endl;
 			dst << "\t" << type << " *C = (" << type << "*)" << C->cname() << ";" << std::endl;
 
-			dst << "\t" << "for( uint32_t i=0; i<" << A->data_num_elem << "; i++ )" << std::endl;
+			dst << "\t" << "for( uint32_t i=0; i<" << A->data_num_elem() << "; i++ )" << std::endl;
 			dst << "\t\tC[i] = A[i] + B[i];" << std::endl;
 			dst << std::endl;
 		}
@@ -105,7 +105,6 @@ class Add : public Node {
 		Tensor *rv = new Tensor;
 		rv->data_dim = result_dim;
 		rv->data_type = A->data_type;
-		rv->data_num_elem = total_elems;
 		outputs.push_back(rv);
 	}
 };

@@ -279,7 +279,6 @@ class Conv : public Node {
 		}
 
 		rv->data_type = x->data_type;
-		rv->data_num_elem = x->data_num_elem;
 		outputs.push_back(rv);
 	}
 };

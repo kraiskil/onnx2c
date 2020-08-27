@@ -133,7 +133,6 @@ class BatchNormalization : public Node {
 		Tensor *rv = new Tensor;
 		rv->data_dim = X->data_dim;
 		rv->data_type = X->data_type;
-		rv->data_num_elem = X->data_num_elem;
 		outputs.push_back(rv);
 	}
 };

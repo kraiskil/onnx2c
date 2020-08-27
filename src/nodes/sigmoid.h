@@ -34,7 +34,7 @@ class Sigmoid : public Node {
 		dst << "\t" << type << " *input = (" << type << "*)" << input->cname() << ";" << std::endl;
 		dst << "\t" << type << " *output = (" << type << "*)" << output->cname() << ";" << std::endl;
 
-		dst << "\t" << "for( uint32_t i=0; i<" << input->data_num_elem << "; i++ )" << std::endl;
+		dst << "\t" << "for( uint32_t i=0; i<" << input->data_num_elem() << "; i++ )" << std::endl;
 		dst << "\t\toutput[i] = 1.0"<<castlabel<< "/(1+" << expfunction << "(-input[i]));" << std::endl;
 		dst << std::endl;
 	}
@@ -51,7 +51,6 @@ class Sigmoid : public Node {
 		Tensor *rv = new Tensor;
 		rv->data_dim = A->data_dim;
 		rv->data_type = A->data_type;
-		rv->data_num_elem = A->data_num_elem;
 		outputs.push_back(rv);
 	}
 };

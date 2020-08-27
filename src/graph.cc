@@ -77,7 +77,6 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 		ERROR("Non-valid data type " << datatype << " in tensor " << t->name);
 	t->data_type = static_cast<onnx::TensorProto_DataType>(datatype);
 
-	int64_t num_elem=1;
 	for( onnx::TensorShapeProto_Dimension d : tsp.dim() ) {
 
 		// dim_param is a string that defines this dimension's variable name
@@ -91,11 +90,9 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 		else
 			dim_size=d.dim_value();
 
-		num_elem *=dim_size;
 		t->data_dim.push_back(dim_size);
 	}
 
-	t->data_num_elem = num_elem;
 	return t;
 }
 

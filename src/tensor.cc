@@ -21,39 +21,34 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 		ERROR("Non-valid data type " << datatype << " in tensor " << tensor.name());
 	data_type = static_cast<onnx::TensorProto_DataType>(datatype);
 
+	int data_num_elements;
 	switch( datatype )
 	{
 		case onnx::TensorProto_DataType_FLOAT:
-			data_num_elem = tensor.float_data_size(); break;
+			data_num_elements = tensor.float_data_size(); break;
 
 		case onnx::TensorProto_DataType_INT32:
-			data_num_elem = tensor.int32_data_size(); break;
+			data_num_elements = tensor.int32_data_size(); break;
 		case onnx::TensorProto_DataType_INT64:
-			data_num_elem = tensor.int64_data_size(); break;
+			data_num_elements = tensor.int64_data_size(); break;
 		default:
 			ERROR("unhandled tensor data type in tensor " << tensor.name());
 			break;
 	};
 
-	// Save the data dimensions, and calculate number of elements based on this data.
-	// At least ONNX testsuite input & output, dumped as protobuffers, have
-	// data_num_elem set to zero in them. TODO: figure out if there is something behind this
 	int64_t calc_num_data =1;
 	for( int dim : tensor.dims() ) {
 		data_dim.push_back(dim);
 		calc_num_data *= dim;
 	}
-	if( data_num_elem != calc_num_data ) {
-		if( data_num_elem != 0 )
+	if( data_num_elements != calc_num_data ) {
+		if( data_num_elements != 0 )
 			ERROR("Error: data size does not match dimensions, and data_num_elem is not zero");
 		else if( tensor.has_raw_data() == false )
 			ERROR("Error: data size does not match dimensions, and no raw data");
-		else
-			data_num_elem = calc_num_data;
 	}
 
-	data_num_elem = data_num_elem;
-	data_buffer = malloc(data_num_elem * data_elem_size());
+	data_buffer = malloc(data_num_elem() * data_elem_size());
 	if( data_buffer == NULL )
 		ERROR("memory allocation failed for tensor " << tensor.name());
 
@@ -69,15 +64,15 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 		switch( datatype )
 		{
 			case onnx::TensorProto_DataType_FLOAT:
-				for( int i=0; i<data_num_elem; i++  )
+				for( int i=0; i<data_num_elem(); i++  )
 					((float*)data_buffer)[i] = tensor.float_data(i);
 				break;
 			case onnx::TensorProto_DataType_INT32:
-				for( int i=0; i<data_num_elem; i++  )
+				for( int i=0; i<data_num_elem(); i++  )
 					((int32_t*)data_buffer)[i] = tensor.int32_data(i);
 				break;
 			case onnx::TensorProto_DataType_INT64:
-				for( int i=0; i<data_num_elem; i++  )
+				for( int i=0; i<data_num_elem(); i++  )
 					((int64_t*)data_buffer)[i] = tensor.int64_data(i);
 				break;
 			default:
@@ -210,3 +205,11 @@ void Tensor::print_type_name_dimensions(std::ostream &dst, std::string prefix)
 		dst << "[" << i << "]";
 }
 
+int Tensor::data_num_elem(void) const
+{
+	int dim=1;
+	for( auto i : data_dim )
+		dim *= i;
+
+	return dim;
+}

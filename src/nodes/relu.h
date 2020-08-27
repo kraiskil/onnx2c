@@ -21,7 +21,7 @@ class Relu : public Node {
 		dst << "\t" << type << " *X = (" << type << "*)" << inputs[0]->cname() << ";" << std::endl;
 		dst << "\t" << type << " *Y = (" << type << "*)" << outputs[0]->cname() << ";" << std::endl;
 
-		dst << "\t" << "for( uint32_t i=0; i<" << inputs[0]->data_num_elem << "; i++ )" << std::endl;
+		dst << "\t" << "for( uint32_t i=0; i<" << inputs[0]->data_num_elem() << "; i++ )" << std::endl;
 		dst << "\t\tY[i] = X[i] > 0 ? X[i] : 0;" << std::endl;
 		dst << std::endl;
 	} 
@@ -38,7 +38,6 @@ class Relu : public Node {
 		for( auto d : A->data_dim )
 			rv->data_dim.push_back(d);
 		rv->data_type = A->data_type;
-		rv->data_num_elem = A->data_num_elem;
 		outputs.push_back(rv);
 	}
 };
