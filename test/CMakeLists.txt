@@ -7,6 +7,18 @@ add_executable( testrun
 	onnx_backend_tests_runner.cc)
 target_link_libraries(testrun onnx2c_lib protobuf)
 
+function( compile_onnx onnx_file c_file )
+	add_custom_command(
+		OUTPUT
+			${c_file}
+		COMMAND
+			onnx2c ${onnx_file} > ${c_file}
+		DEPENDS 
+			${onnx_file}
+	) 
+endfunction()
+
+
 function( ONNX_type_test node_name data_dir test_ctest_name accuracy test_data_set)
 
 	add_custom_command(
