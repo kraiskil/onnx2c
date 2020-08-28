@@ -80,7 +80,27 @@ ONNX_backend_node_test(flatten_negative_axis4)
 
 ONNX_backend_node_test(matmul_2d)
 
+ONNX_backend_node_test(maxpool_1d_default)
+ONNX_backend_node_test(maxpool_2d_precomputed_pads)
+ONNX_backend_node_test(maxpool_2d_strides)
+# This uses implicit padding on the axis ends which
+# is agianst specifications - might be fragile
+# see https://github.com/onnx/onnx/issues/2971
+# and https://github.com/onnx/onnx/issues/2927
+ONNX_backend_node_test(maxpool_2d_ceil)
+ONNX_backend_node_test(maxpool_2d_precomputed_same_upper)
+#ONNX_backend_node_test(maxpool_2d_uint8)
 ONNX_backend_node_test(maxpool_2d_default)
+ONNX_backend_node_test(maxpool_2d_precomputed_strides)
+ONNX_backend_node_test(maxpool_3d_default)
+ONNX_backend_node_test(maxpool_2d_dilations)
+ONNX_backend_node_test(maxpool_2d_same_lower)
+ONNX_backend_node_test(maxpool_2d_pads)
+ONNX_backend_node_test(maxpool_2d_same_upper)
+# Has multiple outputs
+#ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_pads)
+#ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_strides)
+
 
 ONNX_backend_node_test(relu)
 
