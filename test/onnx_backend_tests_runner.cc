@@ -150,9 +150,14 @@ int main(int argc, char *argv[])
 	std::cout << "\t" << "for(uint64_t i = 0; i< (sizeof(" << refname << ") / sizeof("<<type<<")); i++) {" << std::endl;
 	std::cout << "\t\t" << "if( fabs(result[i]-reference[i]) > " << test_accuracy << " )" <<std::endl;
 	std::cout << "\t\t\t" << "return 1;" << std::endl;
-	// fabs(nan) > 0.1 always false - and out-of-bounds indexing is a likely bug and source of nans
-	std::cout << "\t\t" << "if(isnan(result[i]) || isnan(reference[i]))" << std::endl;
-	std::cout << "\t\t\t" << "return 1;" << std::endl;
+	if( type == "float" || type == "double" ) {
+		// fabs(nan) > 0.1 always false - and out-of-bounds indexing is a likely bug and source of nans
+		std::cout << "\t\t" << "if(isnan(result[i]) || isnan(reference[i]))" << std::endl;
+		std::cout << "\t\t\t" << "return 1;" << std::endl;
+	}
+	else if( type == "uint8_t" ) {
+		// no nan checking needed
+	}
 	std::cout << "\t}" << std::endl;
 
 	std::cout << "\treturn 0;" << std::endl;

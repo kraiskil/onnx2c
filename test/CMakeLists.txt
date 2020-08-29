@@ -89,7 +89,7 @@ ONNX_backend_node_test(maxpool_2d_strides)
 # and https://github.com/onnx/onnx/issues/2927
 ONNX_backend_node_test(maxpool_2d_ceil)
 ONNX_backend_node_test(maxpool_2d_precomputed_same_upper)
-#ONNX_backend_node_test(maxpool_2d_uint8)
+ONNX_backend_node_test(maxpool_2d_uint8)
 ONNX_backend_node_test(maxpool_2d_default)
 ONNX_backend_node_test(maxpool_2d_precomputed_strides)
 ONNX_backend_node_test(maxpool_3d_default)

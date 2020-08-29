@@ -138,9 +138,16 @@ class MaxPool : public Node {
 		int channels = inputs[0]->data_dim[1];
 		unsigned n_data_dims = inputs[0]->data_dim.size()-2;
 		std::string type = inputs[0]->data_type_str();
+		std::string type_min_value;
 		std::string in = inputs[0]->cname();
 		std::string out = outputs[0]->cname();
 
+		if( type == "float" )
+			type_min_value = "-FLT_MAX";
+		else if( type == "uint8_t" )
+			type_min_value = "0";
+		else
+			ERROR("Unimplemented: minimum value for this type");
 
 		std::string in_idxs = "[b][c]";
 		std::string in_kern_idxs = "[b][c]";
@@ -166,7 +173,7 @@ class MaxPool : public Node {
 			dst <<               o_idx <<"++, "<< i_idx << "+=" << strides[i] << ") {" << std::endl;
 		}
 
-		dst<<"\t\t\t"  <<       type << " curmax = -FLT_MAX;" << std::endl;
+		dst<<"\t\t\t"  <<       type << " curmax = " << type_min_value << ";" << std::endl;
 
 		// loop over kernel
 		for( unsigned i = 0; i<n_data_dims; i++) {

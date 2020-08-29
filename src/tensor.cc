@@ -27,6 +27,9 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 		case onnx::TensorProto_DataType_FLOAT:
 			data_num_elements = tensor.float_data_size(); break;
 
+		case onnx::TensorProto_DataType_UINT8:
+			// sic - uint8 data is contained in the int32 array
+			data_num_elements = tensor.int32_data_size(); break;
 		case onnx::TensorProto_DataType_INT32:
 			data_num_elements = tensor.int32_data_size(); break;
 		case onnx::TensorProto_DataType_INT64:
@@ -67,6 +70,12 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 				for( int i=0; i<data_num_elem(); i++  )
 					((float*)data_buffer)[i] = tensor.float_data(i);
 				break;
+			case onnx::TensorProto_DataType_UINT8:
+				// The onnx.proto is a bit vague on how the data is packed
+				// to the container. This implementation passes the tests :)
+				for( int i=0; i<data_num_elem(); i++  )
+					((uint8_t*)data_buffer)[i] = tensor.int32_data(i);
+				break;
 			case onnx::TensorProto_DataType_INT32:
 				for( int i=0; i<data_num_elem(); i++  )
 					((int32_t*)data_buffer)[i] = tensor.int32_data(i);
@@ -97,6 +106,8 @@ int Tensor::data_elem_size(void)const
 	{
 	case onnx::TensorProto_DataType_FLOAT:
 			return sizeof(float); break;
+		case onnx::TensorProto_DataType_UINT8:
+			return sizeof(uint8_t); break;
 		case onnx::TensorProto_DataType_INT32:
 			return sizeof(int32_t); break;
 		case onnx::TensorProto_DataType_INT64:
@@ -113,6 +124,8 @@ std::string Tensor::data_type_str(void) const
 	{
 		case onnx::TensorProto_DataType_FLOAT:
 			return "float"; break;
+		case onnx::TensorProto_DataType_UINT8:
+			return "uint8_t"; break;
 		case onnx::TensorProto_DataType_INT32:
 			return "int32_t"; break;
 		case onnx::TensorProto_DataType_INT64:
@@ -132,6 +145,13 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 		{
 			float *f = static_cast<float*>(data_buffer);
 			dst << std::showpoint << f[element]<< "f";
+			break;
+		}
+		case onnx::TensorProto_DataType_UINT8:
+		{
+			uint8_t *f = static_cast<uint8_t*>(data_buffer);
+			// don't print as characters
+			dst << static_cast<int>(f[element]);
 			break;
 		}
 		case onnx::TensorProto_DataType_INT32:
