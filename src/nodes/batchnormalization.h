@@ -56,7 +56,7 @@ class BatchNormalization : public Node {
 		}
 	}
 
-	virtual void print(std::ostream &dst) const
+	virtual void print(std::ostream &dst) const override
 	{
 		const Tensor *input = inputs[0];
 		const Tensor *scale = inputs[1];
@@ -108,7 +108,7 @@ class BatchNormalization : public Node {
 
 
 
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
 		if( inputs.size() != 5 )
 			ERROR("wrong number of inputs to BatchNormalization");

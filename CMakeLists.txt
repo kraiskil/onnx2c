@@ -7,6 +7,9 @@ project(onnx2c
 	LANGUAGES C CXX
 	) 
 set (CMAKE_CXX_STANDARD 11)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+
 
 add_library(onnx2c_lib STATIC
 	src/graph.cc

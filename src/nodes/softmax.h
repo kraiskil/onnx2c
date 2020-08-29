@@ -32,7 +32,7 @@ class Softmax : public Node {
 		}
 	}
 
-	virtual void print(std::ostream &dst) const
+	virtual void print(std::ostream &dst) const override
 	{
 		const Tensor *input = inputs[0];
 		const Tensor *output = outputs[0];
@@ -52,7 +52,6 @@ class Softmax : public Node {
 		dst << "\t/* Softmax" << std::endl;
 		dst << "\t * axis = " << axis << std::endl;
 		dst << "\t */" << std::endl; 
-		dst << "\t" << type << " *getmax = (" << type << "*)" << input->cname() << ";" << std::endl;
 		dst << "\t" << type << " sum = 0.0;" << std::endl;
 		dst << "\t" << type << " max = -INFINITY;" << std::endl;
 		dst << std::endl;
@@ -107,7 +106,7 @@ class Softmax : public Node {
 
 
 
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
 		if( inputs.size() != 1 )
 			ERROR("wrong number of inputs to Softmax");

@@ -97,7 +97,7 @@ class Conv : public Node {
 		}
 	}
 
-	virtual void print(std::ostream &dst) const
+	virtual void print(std::ostream &dst) const override
 	{
 		const Tensor *x = inputs[0];
 		const Tensor *w = inputs[1];
@@ -175,10 +175,10 @@ class Conv : public Node {
 		dst << "\t/* loop over: m=input maps, c=channels, i1&i2 data dimensions*/" << std::endl;
 		dst << "\tfor( uint32_t m=0; m<" << w->data_dim[0] << "; m++) {" << std::endl;
 		dst << "\tfor( uint32_t i1=0, o1=0; ";
-		dst <<        "i1<" << scr_s[1] << "; ";
+		dst <<        "i1<" << scr_s[1] - kernel_shape[0] + 1 << "; ";
 		dst <<        "i1+=" << strides[0] << ", o1++) {" << std::endl;
 		dst << "\tfor( uint32_t i2=0, o2=0; ";
-		dst <<        "i2<" << scr_s[2] << "; ";
+		dst <<        "i2<" << scr_s[2] - kernel_shape[1] + 1<< "; ";
 		dst <<        "i2+=" << strides[1] <<", o2++) {" << std::endl;
 
 
@@ -207,7 +207,7 @@ class Conv : public Node {
 		dst << "\t} /* batch */"      << std::endl;
 	}
  
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
 		const Tensor *x = inputs[0]; // data
 		const Tensor *w = inputs[1]; // weights

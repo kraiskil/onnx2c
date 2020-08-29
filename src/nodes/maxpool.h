@@ -105,7 +105,7 @@ class MaxPool : public Node {
 		}
 	}
 
-	virtual void print(std::ostream &dst) const
+	virtual void print(std::ostream &dst) const override
 	{
 		if( inputs.size() != 1 )
 			ERROR("wrong number of inputs to MaxPool");
@@ -209,7 +209,7 @@ class MaxPool : public Node {
 		dst<<"\t}" << std::endl;
 	}
  
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
 		const Tensor *x = inputs[0];
 
@@ -283,7 +283,7 @@ class MaxPool : public Node {
 				d = ceil((float)( in_dim - ((kernel - 1) *dilation + 1) +1) /  stride );
 
 			// output_spatial_shape[i] = ceil(input_spatial_shape[i] / strides_spatial_shape[i])
-			else if( auto_pad == "SAME_UPPER" || auto_pad == "SAME_LOWER" )
+			else // auto_pad == "SAME_UPPER" || auto_pad == "SAME_LOWER"
 				d = ceil( (float)in_dim / stride );
 
 			rv->data_dim.push_back(d);

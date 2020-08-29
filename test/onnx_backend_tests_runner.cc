@@ -24,8 +24,11 @@ bool load_input_data(const std::string &filename, onnx::TensorProto &result)
 	fseek(f, 0, SEEK_SET);
 
 	char data[size];
-	fread(data, size, 1, f);
+	int nread = fread(data, 1, size, f);
 	fclose(f);
+
+	if( nread != size )
+		ERROR("Problem reading input data");
 
 	::google::protobuf::io::ArrayInputStream input_stream(data, size);
 	::google::protobuf::io::CodedInputStream coded_stream(&input_stream);

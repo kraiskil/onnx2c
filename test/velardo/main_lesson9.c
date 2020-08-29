@@ -6,8 +6,8 @@ void entry(float tensor_dense_input[1][2], float tensor_dense_1[1][1]);
 
 int main(void)
 {
-	float input1[1][2] = { 0.1, 0.2 };
-	float input2[1][2] = { 0.2, 0.2 };
+	float input1[1][2] = {{ 0.1, 0.2 }};
+	float input2[1][2] = {{ 0.2, 0.2 }};
 	float output1 = 0.2859681248664856;
 	float output2 = 0.38861969113349915;
 	float result[1][1];
