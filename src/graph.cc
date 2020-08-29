@@ -30,6 +30,10 @@ Graph::Graph(
 		Tensor *n = getIoTensor( i );
 		addTensor( n );
 	}
+	for ( auto i : onnx_graph.output() ) {
+		Tensor *n = getIoTensor( i );
+		addTensor( n );
+	}
 
 	// while exists unresolved nodes
 	//   search in unresolved nodes for a resolvable node (i.e. has resolved inputs)

@@ -17,6 +17,13 @@ class Tensor {
 	onnx::TensorProto_DataType data_type;
 	void *data_buffer;
 
+	Tensor() :
+		generate(false),
+		initialize(false),
+		isIO(false),
+		data_buffer(NULL)
+	{}
+
 	std::string name; // NB: ONNX name. Might not be valid for C
 	std::string doc;
 

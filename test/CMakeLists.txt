@@ -15,6 +15,7 @@ function( compile_onnx onnx_file c_file )
 			onnx2c ${onnx_file} > ${c_file}
 		DEPENDS 
 			${onnx_file}
+			onnx2c
 	) 
 endfunction()
 
