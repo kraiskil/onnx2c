@@ -15,6 +15,9 @@ class MatMul : public Node {
 			ERROR("wrong number of outputs from MatMul");
 		std::string type = inputs[0]->data_type_str();
 
+		if( inputs[0]->data_dim.size() != 2 )
+			ERROR("Unimplemented: higher than 2D MatMul");
+
 		int32_t rows = inputs[0]->data_dim[0];
 		int32_t cols = inputs[1]->data_dim[1];
 		int32_t inner = inputs[0]->data_dim[1];
