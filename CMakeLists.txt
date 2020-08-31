@@ -21,6 +21,7 @@ add_library(onnx2c_lib STATIC
 target_compile_options(onnx2c_lib
 	PRIVATE
 		-Isrc
+		-I${CMAKE_CURRENT_SOURCE_DIR}/aixlog/include
 		-Wall
 	)
 add_executable( onnx2c
@@ -29,6 +30,7 @@ add_executable( onnx2c
 target_compile_options(onnx2c
 	PRIVATE
 		-Isrc
+		-I${CMAKE_CURRENT_SOURCE_DIR}/aixlog/include
 		-Wall
 	)
 target_link_libraries(onnx2c onnx2c_lib protobuf)

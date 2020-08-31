@@ -6,6 +6,10 @@ set(ONNX_NODE_TEST_DATA_DIR ${ONNX_BACKEND_TEST_DATA_DIR}/node/)
 add_executable( testrun
 	onnx_backend_tests_runner.cc)
 target_link_libraries(testrun onnx2c_lib protobuf)
+target_compile_options(testrun
+	PRIVATE
+		-I${CMAKE_CURRENT_SOURCE_DIR}/../aixlog/include
+	)
 
 function( compile_onnx onnx_file c_file )
 	add_custom_command(

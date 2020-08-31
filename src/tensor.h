@@ -57,6 +57,9 @@ class Tensor {
 
 	/* Print the i:th element in data_buffer */
 	void print_element(std::ostream &dst, uint64_t i) const;
+
+	/* Format dimensions into a string */
+	std::string str_dimensions(void);
 };
 
 }

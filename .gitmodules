@@ -1,3 +1,6 @@
 [submodule "onnx"]
 	path = onnx
 	url = https://github.com/onnx/onnx.git
+[submodule "aixlog"]
+	path = aixlog
+	url = https://github.com/badaix/aixlog.git

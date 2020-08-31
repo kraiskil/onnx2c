@@ -3,6 +3,7 @@
 #include "graph.h"
 #include "onnx.pb.h"
 
+#include "aixlog.hpp"
 #include <iostream>
 
 using namespace toC;
@@ -11,10 +12,18 @@ int Graph::anonymous_nodes=0;
 
 Graph::Graph(
 	onnx::ModelProto &onnx_model,
+	bool verbose,
 	std::vector<Tensor*> ext_inputs
 	)
-	:model(onnx_model)
+	:model(onnx_model), verbose_mode(verbose)
 {
+
+	AixLog::Severity s = AixLog::Severity::fatal; // there is no "off"
+	if( verbose )
+		s = AixLog::Severity::debug;
+	AixLog::Log::init<AixLog::SinkCerr>(s);
+
+
 	onnx::GraphProto onnx_graph = onnx_model.graph();
 
 	// 0. add provided external initializers (from test bench
@@ -170,6 +179,13 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 
 	n->isResolved = true;
 	nodes.push_back(n);
+	LOG(DEBUG) << "Adding node: " << n->onnx_name << std::endl;
+	LOG(DEBUG) << "    inputs: " << std::endl;
+	for( auto i : inputs)
+		LOG(DEBUG) << "         " << i->name << std::endl;
+	LOG(DEBUG) << "    outputs: " << n->onnx_name << std::endl;
+	for( auto o : outputs)
+		LOG(DEBUG) << "         " << o->name << std::endl;
 }
 
 
@@ -219,8 +235,11 @@ bool Graph::addTensor(Tensor *t)
 		if( t->name == o->name )
 			pushit = false;
 
-	if( pushit )
+	if( pushit ) {
 		tensors.push_back(t);
+		LOG(DEBUG) << "Adding tensor: " << t->name << " - "<< t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
+
+	}
 	return pushit;
 }
 

@@ -1,6 +1,7 @@
-#include <iostream>
+#include "aixlog.hpp"
 
 #define ERROR(why) do { \
-	std::cerr << why << ". At " << __FILE__ << ":" << __LINE__ << std::endl;\
+	LOG(FATAL) << why; \
 	exit(1);\
 } while(0)
+

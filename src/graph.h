@@ -10,6 +10,7 @@ class Graph {
 public:
 	Graph(
 		onnx::ModelProto &onnx_model,
+		bool verbose_mode = false,
 		std::vector<Tensor*> inputs={}
 	);
 
@@ -40,6 +41,7 @@ private:
 	onnx::ModelProto &model;
 	std::vector<Tensor*> tensors;
 	std::vector<Node*> nodes;
+	bool verbose_mode;
 
 	/* Add new tensor to set of known tensors,
 	 * if it is not already there (checked by name) */
