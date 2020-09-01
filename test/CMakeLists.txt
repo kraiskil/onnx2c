@@ -87,7 +87,6 @@ ONNX_backend_node_test(matmul_2d)
 # only 2d matmul implemented. _integer has multiple outputs
 #ONNX_backend_node_test(matmul_3d)
 #ONNX_backend_node_test(matmul_4d)
-#ONNX_backend_node_test(matmul_integer)
 
 
 ONNX_backend_node_test(maxpool_1d_default)
@@ -107,8 +106,8 @@ ONNX_backend_node_test(maxpool_2d_dilations)
 ONNX_backend_node_test(maxpool_2d_same_lower)
 ONNX_backend_node_test(maxpool_2d_pads)
 ONNX_backend_node_test(maxpool_2d_same_upper)
-# Has multiple outputs
-#ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_pads)
+ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_pads)
+#Has column-major order
 #ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_strides)
 
 

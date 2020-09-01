@@ -73,15 +73,18 @@ void Graph::print_functions(std::ostream &dst)
 	for( auto n : nodes ) {
 		dst << "static inline void ";
 		dst << n->c_name() << "( ";
+		bool isfirst=true;
 		for( auto t : n->inputs ){
+			if( isfirst )
+				isfirst = false;
+			else
+				dst << ", ";
 			print_tensor(dst, t);
-			// TODO: print this only N-1 first times
-			dst << ", ";
 		}
-		//TODO: handle multi-output case
-		for( auto t: n->outputs)
+		for( auto t: n->outputs) {
+			dst << ", ";
 			print_tensor(dst, t);
-
+		}
 		dst << " )";
 		dst <<  std::endl << "{" << std::endl;
 
@@ -103,7 +106,7 @@ void Graph::print_includes(std::ostream &dst)
 
 void Graph::print_interface_function(std::ostream &dst)
 {
-
+	bool isfirst = true;
 	// TODO: take the interface function name from the ONNX file name
 	dst << "void entry(" ;
 	for ( auto i : model.graph().input() ) {
@@ -113,8 +116,11 @@ void Graph::print_interface_function(std::ostream &dst)
 		Tensor *t=findTensor(i.name());
 
 		if( t && t->isIO ) {
+			if(!isfirst)
+				dst << ", ";
+			else
+				isfirst = false;
 			print_tensor(dst, t);
-			dst << ", ";
 		}
 	}
 	for ( auto i : model.graph().output() ) {
@@ -123,6 +129,7 @@ void Graph::print_interface_function(std::ostream &dst)
 		Tensor *t = findTensor(i.name());
 
 		if( t && t->isIO ) {
+			dst << ", ";
 			print_tensor(dst, t);
 		}
 	}
@@ -134,11 +141,16 @@ void Graph::print_interface_function(std::ostream &dst)
 	for( auto n : nodes )
 	{
 		dst << "\t" << n->c_name() << "( ";
+		isfirst = true;
 		for( auto i : n->inputs ) {
+			if(isfirst)
+				isfirst = false;
+			else
+				dst << ", ";
 			dst << i->cname();
-			dst << ", ";
 		}
 		for( auto i : n->outputs ) {
+			dst << ", ";
 			dst << i->cname();
 		}
 		dst << ");" << std::endl;

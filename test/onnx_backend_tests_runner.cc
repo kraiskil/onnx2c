@@ -99,25 +99,20 @@ int main(int argc, char *argv[])
 		if( t->name == "" )
 			t->name = std::string("output_") + std::to_string(input_number);
 
-		// TODO: rest of the framework does not handle multiple outputs yet
-		if( input_number == 1 )
-			break;
 		references.push_back(t);
 		input_number++;
 	}
 
-	if( references.size() != 1 ) {
-		std::cerr << "Only one output implemented for now" << std::endl;
-		exit(1);
-	}
 
+	// Read in model
 	std::string model_fn = dir + "/model.onnx";
 	std::ifstream model_ifs(model_fn);
 	if (!model_ifs.good()) {
-		std::cerr << "Error opening modele file: " << model_fn << std::endl;
+		std::cerr << "Error opening model file: " << model_fn << std::endl;
 		exit(1); //TODO: check out error numbers for a more accurate one
 	}
 
+	// Why do we send input and reference tensors to the Graph?
 	std::vector <Tensor *> tensors_to_parser;
 	for( auto i : inputs) tensors_to_parser.push_back(i);
 	for( auto i : references) tensors_to_parser.push_back(i);
@@ -126,7 +121,7 @@ int main(int argc, char *argv[])
 	Graph toCgraph(onnx_model, false/*verbose*/, tensors_to_parser);
 	toCgraph.print_source(std::cout);
 
-
+	// print the reference tensors
 	for( auto o : references ) {
 		std::string refname = "reference_" + o->cname();
 		std::cout << "static ";
@@ -136,34 +131,54 @@ int main(int argc, char *argv[])
 		std::cout << ";" << std::endl;
 	}
 
-	std::string refname = "reference_" + references[0]->cname();
-	std::string type = references[0]->data_type_str();
-
 
 	std::cout <<         "int main(void) {" << std::endl;
-	std::cout << "\t" << type << " *result = (" << type << "*)" << references[0]->cname() << ";" << std::endl;
-	std::cout << "\t" << type << " *reference = (" << type << "*)" << refname << ";" << std::endl;
+
+	// run inference on the network
 	std::cout << "\t"<<  "entry(";
-	for( auto i = inputs.begin(); i<inputs.end(); i++) {
-		std::cout << (*i)->cname();
+	bool isfirst = true;
+	for( auto i : inputs) {
+		if( isfirst ) isfirst=false;
+		else          std::cout << ", ";
+		std::cout << i->cname();
+	}
+	for( auto r : references ) {
 		std::cout << ", ";
+		std::cout << r->cname();
 	}
-	std::cout <<  references[0]->cname() << ");" << std::endl;
+	std::cout << ");" << std::endl;
 	std::cout << std::endl;
-	std::cout << "\t" << "for(uint64_t i = 0; i< (sizeof(" << refname << ") / sizeof("<<type<<")); i++) {" << std::endl;
-	if( type == "float" || type == "double" ) {
-		std::cout << "\t\t" << "if( fabs(result[i]-reference[i]) > " << test_accuracy << " )" <<std::endl;
-		std::cout << "\t\t\t" << "return 1;" << std::endl;
-		// fabs(nan) > 0.1 always false - and out-of-bounds indexing is a likely bug and source of nans
-		std::cout << "\t\t" << "if(isnan(result[i]) || isnan(reference[i]))" << std::endl;
-		std::cout << "\t\t\t" << "return 1;" << std::endl;
-	}
-	else if( type == "uint8_t" ) {
-		std::cout << "\t\t" << "if( result[i] != reference[i] )" <<std::endl;
-		std::cout << "\t\t\t" << "return 1;" << std::endl;
-		// no nan checking needed
-	}
+
+
+	// Loop over outuputs
+	for( auto r : references ) {
+	std::cout << "\t{" << std::endl;
+		std::string outname = r->cname();
+		std::string refname = "reference_" + r->cname();
+		std::string type = r->data_type_str();
+
+		std::cout << "\t\t" << type << " *result = (" << type << "*)" << outname << ";" << std::endl;
+		std::cout << "\t\t" << type << " *reference = (" << type << "*)" << refname << ";" << std::endl;
+
+		// Check result and reference, elementvise
+		std::cout << "\t\t" << "for(uint64_t i = 0; i< (sizeof(" << refname << ") / sizeof("<<type<<")); i++) {" << std::endl;
+		if( type == "float" || type == "double" ) {
+			std::cout << "\t\t\t" << "if( fabs(result[i]-reference[i]) > " << test_accuracy << " )" <<std::endl;
+			std::cout << "\t\t\t\t" << "return 1;" << std::endl;
+			// fabs(nan) > 0.1 always false - and out-of-bounds indexing is a likely bug and source of nans
+			std::cout << "\t\t\t" << "if(isnan(result[i]) || isnan(reference[i]))" << std::endl;
+			std::cout << "\t\t\t\t" << "return 1;" << std::endl;
+		}
+		else if( type == "uint8_t" || type == "int64_t" ) {
+			std::cout << "\t\t\t" << "if( result[i] != reference[i] )" <<std::endl;
+			std::cout << "\t\t\t\t" << "return 1;" << std::endl;
+			// no nan checking needed
+		}
+		else
+			ERROR("unimplemented type");
+		std::cout << "\t}" << std::endl;
 	std::cout << "\t}" << std::endl;
+	}
 
 	std::cout << "\treturn 0;" << std::endl;
 	std::cout << "}" << std::endl;

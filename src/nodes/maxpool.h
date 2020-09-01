@@ -109,8 +109,14 @@ class MaxPool : public Node {
 	{
 		if( inputs.size() != 1 )
 			ERROR("wrong number of inputs to MaxPool");
-		if( outputs.size() != 1 )
-			ERROR("wrong number of outputs from MaxPool");
+		if( outputs.size() != 1 && outputs.size() != 2)
+			ERROR("wrong number of outputs to MaxPool");
+
+		const Tensor *X = inputs[0];
+		const Tensor *Y = outputs[0];
+		const Tensor *Indices=NULL;
+		if( outputs.size() == 2 )
+			Indices = outputs[1];
 
 		dst << "\t/* MaxPool" << std::endl;
 		dst << "\t *" << std::endl;
@@ -134,13 +140,13 @@ class MaxPool : public Node {
 				dst << s << " ";
 		dst << std::endl <<  "\t */" << std::endl;
 
-		int batch_size = inputs[0]->data_dim[0];
-		int channels = inputs[0]->data_dim[1];
-		unsigned n_data_dims = inputs[0]->data_dim.size()-2;
-		std::string type = inputs[0]->data_type_str();
+		int batch_size = X->data_dim[0];
+		int channels = X->data_dim[1];
+		unsigned n_data_dims = X->data_dim.size()-2;
+		std::string type = X->data_type_str();
 		std::string type_min_value;
-		std::string in = inputs[0]->cname();
-		std::string out = outputs[0]->cname();
+		std::string in = X->cname();
+		std::string out = Y->cname();
 
 		if( type == "float" )
 			type_min_value = "-FLT_MAX";
@@ -149,14 +155,23 @@ class MaxPool : public Node {
 		else
 			ERROR("Unimplemented: minimum value for this type");
 
+		/* Multiply i'th data dimension index with size_of_dim to
+		 * get the Indices value */
+		std::vector<int> size_of_dim(X->data_dim.size());
+		size_of_dim[X->data_dim.size()-1]=1;
+		for( int i=X->data_dim.size()-2; i>= 0; i--)
+			size_of_dim[i] = size_of_dim[i+1] * X->data_dim[i];
+
 		std::string in_idxs = "[b][c]";
 		std::string in_kern_idxs = "[b][c]";
 		std::string out_idxs = "[b][c]";
+		std::string indices_value = "(b*" + std::to_string(size_of_dim[0]) + ")+(c*" + std::to_string(size_of_dim[1]) + ")";
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string i_str = std::to_string(i);
 			in_idxs += "[i" + i_str + "]";
 			out_idxs += "[o" + i_str + "]";
 			in_kern_idxs += "[ii" + i_str + "]";
+			indices_value += "+(ii" + i_str + "*" + std::to_string(size_of_dim[i+2]) + ")";
 		}
 
 		// loop over batches and channels
@@ -174,6 +189,8 @@ class MaxPool : public Node {
 		}
 
 		dst<<"\t\t\t"  <<       type << " curmax = " << type_min_value << ";" << std::endl;
+		if( Indices )
+			dst<<"\t\t\t"  <<       "int64_t curmaxind = -1;" << std::endl;
 
 		// loop over kernel
 		for( unsigned i = 0; i<n_data_dims; i++) {
@@ -192,13 +209,19 @@ class MaxPool : public Node {
 		}
 
 
-		dst<<"\t\t\t\t"<<         "curmax = MAX( curmax, " << in << in_kern_idxs << ");" <<std::endl;
+		dst<<"\t\t\t\t"<<         "if( curmax < " << in << in_kern_idxs << ") {" <<std::endl;
+		dst<<"\t\t\t\t\t"<<         "curmax = MAX( curmax, " << in << in_kern_idxs << ");" <<std::endl;
+		if( Indices )
+			dst<<"\t\t\t\t\t"<<         "curmaxind = " << indices_value << ";" <<std::endl;
+		dst<<"\t\t\t\t"<<         "}" <<std::endl;
 
 		// close kernel loop
 		for( unsigned i = 0; i<n_data_dims; i++)
 			dst<<"\t\t\t}" << std::endl;
 
 		dst<<"\t\t\t"  <<       out << out_idxs << "= curmax;" << std::endl;
+		if( Indices )
+			dst<<"\t\t\t"  <<       Indices->cname() << out_idxs << "= curmaxind;" << std::endl;
 
 		// close output loop
 		for( unsigned i = 0; i<n_data_dims; i++)
@@ -327,8 +350,12 @@ class MaxPool : public Node {
 
 		rv->data_type = x->data_type;
 		outputs.push_back(rv);
-		//TODO: also push out the optional Indices tensor. But this needs some fixes in Graph. And a test case
-		//      that uses multiple outputs.
+
+		// optional indices vector
+		Tensor *indices_out = new Tensor;
+		indices_out->data_type = onnx::TensorProto_DataType::TensorProto_DataType_INT64;
+		indices_out->data_dim = rv->data_dim;
+		outputs.push_back(indices_out);
 	}
 };
 }

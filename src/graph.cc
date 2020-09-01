@@ -162,24 +162,24 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 
 	n->resolveOutput(inputs, outputs );
 
-	// TODO: looking at onnx.proto, seems a node can have multiple outputs
-	//       but how to map output names to the outputs?
-	if( outputs.size() != 1 )
-		ERROR("Unimplemented - more (or less) than one output");
-	assert(node.output_size() == 1);
 
-	Tensor *t = outputs[0];
-	t->name = node.output(0); 
-	t->generate=true;
-	t->initialize=false;
-	addTensor(t);
+	for( unsigned o=0; o<outputs.size(); o++) {
+		Tensor *t = outputs[o];
 
-	for( auto o : outputs)
-		n->outputs.push_back(o);
+		if ( (int)o >= node.output_size() ) {
+			LOG(TRACE) << "skipping optional output after number " << o << std::endl;
+			break;
+		}
+		t->name = node.output(o);
+		t->generate=true;
+		t->initialize=false;
+		addTensor(t);
+		n->outputs.push_back(t);
+	}
 
 	n->isResolved = true;
 	nodes.push_back(n);
-	LOG(DEBUG) << "Adding node: " << n->onnx_name << std::endl;
+	LOG(DEBUG) << "Adding " << n->op_name << " node: " << n->onnx_name << std::endl;
 	LOG(DEBUG) << "    inputs: " << std::endl;
 	for( auto i : inputs)
 		LOG(DEBUG) << "         " << i->name << std::endl;
