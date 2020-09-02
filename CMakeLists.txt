@@ -17,6 +17,7 @@ add_library(onnx2c_lib STATIC
 	src/node.cc
 	src/onnx.pb.cc
 	src/tensor.cc
+	src/util.cc
 )
 target_compile_options(onnx2c_lib
 	PRIVATE
