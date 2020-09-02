@@ -15,6 +15,7 @@ little or no interest in onnx2c are:
 
  - ONNX specification coverage
  - accelerators
+ - backpropagation (i.e. training)
 
 
 Building
@@ -27,7 +28,8 @@ Make sure you have ProtocolBuffers libraries installed.
 
 Onnx2c sources include generated protobuffer files. If you need to update them:
 
-- get latest onnx.proto from ONXX github (https://github.com/onnx/onnx/blob/master/onnx/onnx.proto)
+- update the onnx git submodule
+- grab the onnx.proto file from onnx/onnx/onnx.proto
 - remove the last lines (i.e. option `optimize_for = LITE_RUNTIME;`)
 - recompile: `protoc onnx.proto --cpp_out=src`
 
@@ -41,7 +43,7 @@ Run
 `./onnx2c [your ONNX model file] > model.c`
 
 At the end of the `model.c` there is a function called 'void entry(...)'.
-Call that from your main program. Function parameters are named as in your ONNX model.
+Call that from your main program to run inference. Function parameters are named as in your ONNX model.
 
 
 Performance
