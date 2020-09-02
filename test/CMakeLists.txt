@@ -83,6 +83,10 @@ ONNX_backend_node_test(flatten_negative_axis2)
 ONNX_backend_node_test(flatten_negative_axis3)
 ONNX_backend_node_test(flatten_negative_axis4)
 
+ONNX_backend_node_test(lstm_defaults)
+ONNX_backend_node_test(lstm_with_initial_bias)
+ONNX_backend_node_test(lstm_with_peepholes)
+
 ONNX_backend_node_test(matmul_2d)
 # only 2d matmul implemented. _integer has multiple outputs
 #ONNX_backend_node_test(matmul_3d)

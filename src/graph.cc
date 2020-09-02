@@ -180,6 +180,7 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 			onnx_name = n->c_name() + "_recursive_"+std::to_string(o);
 		}
 		t->name = onnx_name;
+
 		addTensor(t);
 	}
 
@@ -205,6 +206,7 @@ bool Graph::hasUnresolvedNodes(void)
 #include "nodes/batchnormalization.h"
 #include "nodes/conv.h"
 #include "nodes/flatten.h"
+#include "nodes/lstm.h"
 #include "nodes/matmul.h"
 #include "nodes/maxpool.h"
 #include "nodes/relu.h"
@@ -220,6 +222,7 @@ Node* Graph::findNode(std::string opName)
 	if( opName == "BatchNormalization" )return new BatchNormalization;
 	if( opName == "Conv" )return new Conv;
 	if( opName == "Flatten" )return new Flatten;
+	if( opName == "LSTM" )return new LSTM;
 	if( opName == "MatMul" )return new MatMul;
 	if( opName == "MaxPool" )return new MaxPool;
 	if( opName == "Relu" )return new Relu;
