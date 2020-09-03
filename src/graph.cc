@@ -148,7 +148,6 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 	n->isResolved = false;
 	n->op_name = node.op_type();
 	n->onnx_name = node.name();
-	n->inputs = inputs;
 
 	if( n->onnx_name == "" ) {
 		std::string name = "anonymous_";
@@ -174,7 +173,6 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 		t->generate=true;
 		t->initialize=false;
 		addTensor(t);
-		n->outputs.push_back(t);
 	}
 
 	n->isResolved = true;

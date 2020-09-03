@@ -16,6 +16,8 @@ class Tensor {
 	std::vector<int> data_dim;
 	onnx::TensorProto_DataType data_type;
 	void *data_buffer;
+	std::string name; // NB: ONNX name. Might not be valid for C
+	std::string doc;
 
 	Tensor() :
 		generate(false),
@@ -23,9 +25,6 @@ class Tensor {
 		isIO(false),
 		data_buffer(NULL)
 	{}
-
-	std::string name; // NB: ONNX name. Might not be valid for C
-	std::string doc;
 
 	/* Create the C source name. Replace all non a-z,A-Z,0-9 or _
 	 * characters. Also prefix name sincce ONNX allows tensors and nodes
@@ -48,7 +47,7 @@ class Tensor {
 
 	/* Print the 'float foo[N][N]' part of the tensor.
 	 * Optionally, prefix name with given prefix: used for the test suite. */
-	void print_type_name_dimensions(std::ostream &destination, std::string prefix = "");
+	void print_tensor(std::ostream &destination, bool name_only=false, std::string prefix = "") const;
 
 	/* Print a tensor's initialization to output stream.
 	 * i.e. everything after the "=" in "float foo[43] = { 42, 42, ... };"

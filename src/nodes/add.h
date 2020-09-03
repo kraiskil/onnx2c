@@ -5,20 +5,31 @@ class Add : public Node {
 	public:
 	Add() {
 		op_name = "Add";
+		A=B=C=NULL;
+	}
+	const Tensor *A;
+	const Tensor *B;
+	const Tensor *C;
+
+
+	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
+	{
+		A->print_tensor(dst, !decorate);
+		dst << ", ";
+		B->print_tensor(dst, !decorate);
+		dst << ", ";
+		C->print_tensor(dst, !decorate);
 	}
 
-	virtual void print(std::ostream &dst) const
+	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *A = inputs[0];
-		const Tensor *B = inputs[1];
-		const Tensor *C = outputs[0];
 		std::string type = A->data_type_str();
 
 		dst << "\t/* Add*/" << std::endl;
 
 		/* Simple case where no broadcasting is needed */
 		/* TODO: This check is not sufficient: [1][1] and [1][8] needs a broadcast */
-		if( inputs[0]->data_num_elem() == inputs[1]->data_num_elem()) {
+		if( A->data_num_elem() == B->data_num_elem()) {
 			dst << "\t" << type << " *A = (" << type << "*)" << A->cname() << ";" << std::endl;
 			dst << "\t" << type << " *B = (" << type << "*)" << B->cname() << ";" << std::endl;
 			dst << "\t" << type << " *C = (" << type << "*)" << C->cname() << ";" << std::endl;
@@ -82,14 +93,13 @@ class Add : public Node {
 	}
 
 
-
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
 		if( inputs.size() != 2 )
 			ERROR("wrong number of inputs to Add");
 
-		const Tensor *A = inputs[0];
-		const Tensor *B = inputs[1];
+		A = inputs[0];
+		B = inputs[1];
 		if(  typeConstraint_highPrecisionNumeric(A) == false
 		   ||typeConstraint_highPrecisionNumeric(B) == false)
 			ERROR("Incorrect input for node"); 
@@ -105,6 +115,7 @@ class Add : public Node {
 		Tensor *rv = new Tensor;
 		rv->data_dim = result_dim;
 		rv->data_type = A->data_type;
+		C=rv;
 		outputs.push_back(rv);
 	}
 };

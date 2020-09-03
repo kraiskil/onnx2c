@@ -7,6 +7,7 @@ class Conv : public Node {
 		op_name = "Conv";
 		auto_pad = "NOTSET";
 		group = 1;
+		x=w=b=y=NULL;
 	}
 	/* Conv node specific attributes */
 	std::string auto_pad;
@@ -15,6 +16,28 @@ class Conv : public Node {
 	std::vector<int> kernel_shape;
 	std::vector<int> pads;
 	std::vector<int> strides;
+
+	// inputs
+	const Tensor *x;
+	const Tensor *w;
+	// optional inputs
+	const Tensor *b;
+	// outputs
+	const Tensor *y;
+
+	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
+	{
+		x->print_tensor(dst, !decorate);
+		dst << ", ";
+		w->print_tensor(dst, !decorate);
+		dst << ", ";
+		if( b ) {
+			b->print_tensor(dst, !decorate);
+			dst << ", ";
+		}
+		y->print_tensor(dst, !decorate);
+	}
+
 
 	void parseAttributes_auto_pad( const onnx::AttributeProto &a ) {
 		if( a.type() != onnx::AttributeProto_AttributeType_STRING )
@@ -99,10 +122,6 @@ class Conv : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *x = inputs[0];
-		const Tensor *w = inputs[1];
-		const Tensor *b = inputs.size()==3 ? inputs[2] : NULL;
-		const Tensor *y = outputs[0];
 		std::string type = x->data_type_str();
 		int num_data_dim = x->data_dim.size()-2;
 
@@ -209,9 +228,8 @@ class Conv : public Node {
  
 	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
-		const Tensor *x = inputs[0]; // data
-		const Tensor *w = inputs[1]; // weights
-		const Tensor *b;             // bias
+		x = inputs[0]; // data
+		w = inputs[1]; // weights
 		if( inputs.size() == 3 ) {
 			b = inputs[2];
 		}
@@ -279,6 +297,7 @@ class Conv : public Node {
 		}
 
 		rv->data_type = x->data_type;
+		y=rv;
 		outputs.push_back(rv);
 	}
 };

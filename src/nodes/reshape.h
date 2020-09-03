@@ -5,31 +5,43 @@ class Reshape : public Node {
 	public:
 	Reshape() {
 		op_name = "Reshape";
+		data=shape=reshaped=NULL;
+	}
+	// inputs
+	const Tensor *data;
+	const Tensor *shape;
+	// outputs
+	const Tensor *reshaped;
+
+	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
+	{
+		data->print_tensor(dst, !decorate);
+		dst << ", ";
+		shape->print_tensor(dst, !decorate);
+		dst << ", ";
+		reshaped->print_tensor(dst, !decorate);
 	}
 
-	virtual void print(std::ostream &dst) const
+
+	virtual void print(std::ostream &dst) const override
 	{
-		if( inputs.size() != 2 )
-			ERROR("wrong number of inputs to Reshape");
-		if( outputs.size() != 1 )
-			ERROR("wrong number of outputs from Reshape");
-		std::string type = inputs[0]->data_type_str();
+		std::string type = data->data_type_str();
 
 		/* TODO: is there ANY case where a reshape needs to re-order the internal data layout ? */
 		/* TODO: and if not - check that at least gcc can get rid of this copy! (So onnx2c doesn't need to) */
 		dst << "\t/*Reshape*/" << std::endl;
-		dst << "\t" << type << " *data = (" << type << "*)" << inputs[0]->cname() << ";" << std::endl;
-		dst << "\t" << type << " *reshaped = (" << type << "*)" << outputs[0]->cname() << ";" << std::endl;
+		dst << "\t" << type << " *data = (" << type << "*)" << data->cname() << ";" << std::endl;
+		dst << "\t" << type << " *reshaped = (" << type << "*)" << reshaped->cname() << ";" << std::endl;
 
-		dst << "\t" << "for( uint32_t i=0; i<" << inputs[0]->data_num_elem() << "; i++ )" << std::endl;
+		dst << "\t" << "for( uint32_t i=0; i<" << data->data_num_elem() << "; i++ )" << std::endl;
 		dst << "\t\treshaped[i] = data[i];" << std::endl;
 		dst << std::endl;
 	}
  
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
-		const Tensor *data = inputs[0];
-		const Tensor *shape = inputs[1];
+		data = inputs[0];
+		shape = inputs[1];
 		if( typeConstraint_int64(shape) == false )
 			ERROR("Incorrect input for node"); 
 
@@ -63,6 +75,7 @@ class Reshape : public Node {
 		}
 
 		rv->data_type = data->data_type;
+		reshaped = rv;
 		outputs.push_back(rv);
 	}
 };

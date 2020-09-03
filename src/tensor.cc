@@ -216,13 +216,15 @@ void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs)
 	dst << "}";
 }
 
-void Tensor::print_type_name_dimensions(std::ostream &dst, std::string prefix)
+void Tensor::print_tensor(std::ostream &dst, bool name_only, std::string prefix) const
 {
-	dst << data_type_str() << " ";
+	if( name_only == false )
+		dst << data_type_str() << " ";
 	dst << prefix;
 	dst << cname();
-	for( unsigned i : data_dim )
-		dst << "[" << i << "]";
+	if( name_only == false )
+		for( unsigned i : data_dim )
+			dst << "[" << i << "]";
 }
 
 int Tensor::data_num_elem(void) const

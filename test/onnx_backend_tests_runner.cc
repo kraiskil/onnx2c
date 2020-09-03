@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 	for( auto o : references ) {
 		std::string refname = "reference_" + o->cname();
 		std::cout << "static ";
-		o->print_type_name_dimensions(std::cout, "reference_");
+		o->print_tensor(std::cout, false, "reference_");
 		std::cout << " = ";
 		o->print_tensor_initializer(std::cout);
 		std::cout << ";" << std::endl;

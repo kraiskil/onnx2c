@@ -8,8 +8,22 @@ class Transpose : public Node {
 	public:
 	Transpose() {
 		op_name = "Transpose";
+		data=transposed=NULL;
 	}
 	std::vector<int> perm;
+
+	// inputs
+	const Tensor *data;
+	// outputs
+	const Tensor *transposed;
+
+	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
+	{
+		data->print_tensor(dst, !decorate);
+		dst << ", ";
+		transposed->print_tensor(dst, !decorate);
+	}
+
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 
@@ -29,10 +43,8 @@ class Transpose : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *input = inputs[0];
-		const Tensor *output = outputs[0];
-		std::string type = input->data_type_str();
-		unsigned n_dim = input->data_dim.size();
+		std::string type = data->data_type_str();
+		unsigned n_dim = data->data_dim.size();
 
 
 		dst << "\t/* Transpose" << std::endl;
@@ -52,13 +64,13 @@ class Transpose : public Node {
 		for( unsigned i = 0; i<n_dim; i++) {
 			std::string idx = "i" + std::to_string(i);
 			dst << "\t" << "for( uint32_t " << idx << "=0; ";
-			dst <<               idx << "<" << input->data_dim[i] << "; ";
+			dst <<               idx << "<" << data->data_dim[i] << "; ";
 			dst <<               idx <<"++ ) {" << std::endl;
 		}
 
 		// copy data
-		dst << "\t\t" << output->cname() << out_idx << " = ";
-		dst <<           input->cname() << in_idx << ";" << std::endl;
+		dst << "\t\t" << transposed->cname() << out_idx << " = ";
+		dst <<           data->cname() << in_idx << ";" << std::endl;
 
 		// close loops
 		for( unsigned i = 0; i<n_dim; i++)
@@ -72,8 +84,8 @@ class Transpose : public Node {
 		if( inputs.size() != 1 )
 			ERROR("wrong number of inputs to Transpose");
 
-		const Tensor *A = inputs[0];
-		unsigned n_dim = A->data_dim.size();
+		data = inputs[0];
+		unsigned n_dim = data->data_dim.size();
 
 		// "By default, reverse the dimensions, otherwise permute the axes according to the values given."
 		std::vector<int> out_dim;
@@ -81,11 +93,12 @@ class Transpose : public Node {
 			for( unsigned i=0; i<n_dim; i++)
 				perm.push_back( n_dim - 1 - i );
 		for( int d : perm )
-			out_dim.push_back( A->data_dim[d] );
+			out_dim.push_back( data->data_dim[d] );
 
 		Tensor *rv = new Tensor;
 		rv->data_dim = out_dim;
-		rv->data_type = A->data_type;
+		rv->data_type = data->data_type;
+		transposed = rv;
 		outputs.push_back(rv);
 	}
 };

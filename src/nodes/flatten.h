@@ -6,8 +6,20 @@ class Flatten : public Node {
 	Flatten() {
 		op_name = "Flatten";
 		axis = 1;
+		input=output=NULL;
 	}
 	int axis;
+
+	const Tensor *input;
+	const Tensor *output;
+
+	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
+	{
+		input->print_tensor(dst, !decorate);
+		dst << ", ";
+		output->print_tensor(dst, !decorate);
+	}
+
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 
@@ -26,8 +38,6 @@ class Flatten : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *input = inputs[0];
-		const Tensor *output = outputs[0];
 		std::string type = input->data_type_str();
 
 		dst << "\t/* Flatten*/" << std::endl;
@@ -47,7 +57,7 @@ class Flatten : public Node {
 		if( inputs.size() != 1 )
 			ERROR("wrong number of inputs to Flatten");
 
-		const Tensor *A = inputs[0];
+		input = inputs[0];
 
 		// output:
 		// A 2D tensor with the contents of the input tensor, with input dimensions up to axis
@@ -59,21 +69,22 @@ class Flatten : public Node {
 
 		int count_axis = axis;
 		if( axis < 0 ) 
-			count_axis = A->data_dim.size() + axis;
+			count_axis = input->data_dim.size() + axis;
 
 		int dim=1;
 		int i;
 		for(i=0; i<count_axis; i++)
-			dim *= A->data_dim[i];
+			dim *= input->data_dim[i];
 		result_dim.push_back(dim);
 		dim = 1;
-		for(; i<(int)A->data_dim.size(); i++)
-			dim *= A->data_dim[i];
+		for(; i<(int)input->data_dim.size(); i++)
+			dim *= input->data_dim[i];
 		result_dim.push_back(dim);
 
 		Tensor *rv = new Tensor;
 		rv->data_dim = result_dim;
-		rv->data_type = A->data_type;
+		rv->data_type = input->data_type;
+		output = rv;
 		outputs.push_back(rv);
 	}
 };

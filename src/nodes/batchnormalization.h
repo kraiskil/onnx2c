@@ -24,9 +24,35 @@ class BatchNormalization : public Node {
 		op_name = "BatchNormalization";
 		epsilon = 1e-5;
 		momentum = 0.9;
+		input=scale=bias=mean=var=output=NULL;
 	}
 	float epsilon;
 	float momentum;
+
+	// inputs
+	const Tensor *input; // 'X' in the spec
+	const Tensor *scale;
+	const Tensor *bias;  // 'B' in the spec
+	const Tensor *mean;
+	const Tensor *var;
+	// outputs
+	const Tensor *output;
+	// ... optional outputs not yet implmeneted
+
+	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
+	{
+		input -> print_tensor(dst, !decorate);
+		dst << ", ";
+		scale -> print_tensor(dst, !decorate);
+		dst << ", ";
+		bias -> print_tensor(dst, !decorate);
+		dst << ", ";
+		mean -> print_tensor(dst, !decorate);
+		dst << ", ";
+		var -> print_tensor(dst, !decorate);
+		dst << ", ";
+		output -> print_tensor(dst, !decorate);
+	}
 
 
 	virtual void parseAttribute_epsilon( const onnx::AttributeProto &a ) {
@@ -58,12 +84,6 @@ class BatchNormalization : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *input = inputs[0];
-		const Tensor *scale = inputs[1];
-		const Tensor *bias = inputs[2]; // "B" in spec
-		const Tensor *mean = inputs[3];
-		const Tensor *var = inputs[4];
-		const Tensor *output = outputs[0];
 
 		int batch_size =input->data_dim[0]; 
 		int num_chan =input->data_dim[1]; 
@@ -113,13 +133,13 @@ class BatchNormalization : public Node {
 		if( inputs.size() != 5 )
 			ERROR("wrong number of inputs to BatchNormalization");
 
-		const Tensor *X = inputs[0];
-		const Tensor *scale = inputs[1];
-		const Tensor *bias = inputs[2]; // "B" in spec
-		const Tensor *mean = inputs[3];
-		const Tensor *var = inputs[4];
+		input = inputs[0]; // "X"
+		scale = inputs[1];
+		bias = inputs[2]; // "B" in spec
+		mean = inputs[3];
+		var = inputs[4];
 
-		if( typeConstraint_plainFloatingPoints(X) == false)
+		if( typeConstraint_plainFloatingPoints(input) == false)
 			ERROR("Incorrect input for node");
 		if( typeConstraint_plainFloatingPoints(scale) == false)
 			ERROR("Incorrect input for node");
@@ -131,8 +151,9 @@ class BatchNormalization : public Node {
 			ERROR("Incorrect input for node");
 
 		Tensor *rv = new Tensor;
-		rv->data_dim = X->data_dim;
-		rv->data_type = X->data_type;
+		rv->data_dim = input->data_dim;
+		rv->data_type = input->data_type;
+		output = rv;
 		outputs.push_back(rv);
 	}
 };

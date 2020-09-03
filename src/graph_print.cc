@@ -73,18 +73,7 @@ void Graph::print_functions(std::ostream &dst)
 	for( auto n : nodes ) {
 		dst << "static inline void ";
 		dst << n->c_name() << "( ";
-		bool isfirst=true;
-		for( auto t : n->inputs ){
-			if( isfirst )
-				isfirst = false;
-			else
-				dst << ", ";
-			print_tensor(dst, t);
-		}
-		for( auto t: n->outputs) {
-			dst << ", ";
-			print_tensor(dst, t);
-		}
+		n->print_parameters(dst, true);
 		dst << " )";
 		dst <<  std::endl << "{" << std::endl;
 
@@ -141,18 +130,7 @@ void Graph::print_interface_function(std::ostream &dst)
 	for( auto n : nodes )
 	{
 		dst << "\t" << n->c_name() << "( ";
-		isfirst = true;
-		for( auto i : n->inputs ) {
-			if(isfirst)
-				isfirst = false;
-			else
-				dst << ", ";
-			dst << i->cname();
-		}
-		for( auto i : n->outputs ) {
-			dst << ", ";
-			dst << i->cname();
-		}
+		n->print_parameters(dst, false);
 		dst << ");" << std::endl;
 	}
 

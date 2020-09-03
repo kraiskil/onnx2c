@@ -20,6 +20,8 @@ class MaxPool : public Node {
 		ceil_mode = 0;
 		storage_order=0;
 		auto_pad = "NOTSET";
+
+		X=Y=Indices;
 	}
 	/* MaxPool node specific attributes */
 	int ceil_mode;
@@ -31,6 +33,26 @@ class MaxPool : public Node {
 	std::string auto_pad;
 
 	std::vector<int> pad_shapes; // pad_shapes[i] = "sum of pads along axis i"
+
+	// inputs
+	const Tensor *X;
+	// outputs
+	const Tensor *Y;
+	// optional outputs
+	const Tensor *Indices;
+
+	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
+	{
+		X->print_tensor(dst, !decorate);
+		dst << ", ";
+		Y->print_tensor(dst, !decorate);
+		if( Indices->name != "" ) {
+			dst << ", ";
+			Indices->print_tensor(dst, !decorate);
+		}
+	}
+
+
 
 	void parseAttributes_auto_pad( const onnx::AttributeProto &a ) {
 		auto_pad = a.s();
@@ -107,16 +129,6 @@ class MaxPool : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		if( inputs.size() != 1 )
-			ERROR("wrong number of inputs to MaxPool");
-		if( outputs.size() != 1 && outputs.size() != 2)
-			ERROR("wrong number of outputs to MaxPool");
-
-		const Tensor *X = inputs[0];
-		const Tensor *Y = outputs[0];
-		const Tensor *Indices=NULL;
-		if( outputs.size() == 2 )
-			Indices = outputs[1];
 
 		dst << "\t/* MaxPool" << std::endl;
 		dst << "\t *" << std::endl;
@@ -147,6 +159,11 @@ class MaxPool : public Node {
 		std::string type_min_value;
 		std::string in = X->cname();
 		std::string out = Y->cname();
+		bool calculate_indices;
+		if( Indices->name == "" )
+			calculate_indices = false;
+		else
+			calculate_indices = true;
 
 		if( type == "float" )
 			type_min_value = "-FLT_MAX";
@@ -184,12 +201,12 @@ class MaxPool : public Node {
 			std::string i_idx = "i" + std::to_string(i);
 			dst << "\t\t" << "for( int32_t " << o_idx << "=0, ";
 			dst <<               i_idx << "=" << -pads[i] << "; ";
-			dst <<               o_idx << "<" << outputs[0]->data_dim[2+i] << "; ";
+			dst <<               o_idx << "<" << Y->data_dim[2+i] << "; ";
 			dst <<               o_idx <<"++, "<< i_idx << "+=" << strides[i] << ") {" << std::endl;
 		}
 
 		dst<<"\t\t\t"  <<       type << " curmax = " << type_min_value << ";" << std::endl;
-		if( Indices )
+		if( calculate_indices )
 			dst<<"\t\t\t"  <<       "int64_t curmaxind = -1;" << std::endl;
 
 		// loop over kernel
@@ -205,13 +222,13 @@ class MaxPool : public Node {
 			std::string i_str = std::to_string(i);
 			dst<<"\t\t\t\t"  <<  "int ii" << i_str << " = i" << i_str << "+k" << i_str <<" + " << dilations[i] <<"-1;"<<std::endl;
 			dst<<"\t\t\t\t"  <<  "if( ii" << i_str << "<0) continue;" << std::endl;
-			dst<<"\t\t\t\t"  <<  "if( ii" << i_str << ">=" << inputs[0]->data_dim[2+i] << ") continue;" << std::endl;
+			dst<<"\t\t\t\t"  <<  "if( ii" << i_str << ">=" << X->data_dim[2+i] << ") continue;" << std::endl;
 		}
 
 
 		dst<<"\t\t\t\t"<<         "if( curmax < " << in << in_kern_idxs << ") {" <<std::endl;
 		dst<<"\t\t\t\t\t"<<         "curmax = MAX( curmax, " << in << in_kern_idxs << ");" <<std::endl;
-		if( Indices )
+		if( calculate_indices )
 			dst<<"\t\t\t\t\t"<<         "curmaxind = " << indices_value << ";" <<std::endl;
 		dst<<"\t\t\t\t"<<         "}" <<std::endl;
 
@@ -220,7 +237,7 @@ class MaxPool : public Node {
 			dst<<"\t\t\t}" << std::endl;
 
 		dst<<"\t\t\t"  <<       out << out_idxs << "= curmax;" << std::endl;
-		if( Indices )
+		if( calculate_indices )
 			dst<<"\t\t\t"  <<       Indices->cname() << out_idxs << "= curmaxind;" << std::endl;
 
 		// close output loop
@@ -234,13 +251,13 @@ class MaxPool : public Node {
  
 	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
-		const Tensor *x = inputs[0];
+		X = inputs[0];
 
-		if( !(  typeConstraint_plainFloatingPoints(x)
-		      ||typeConstraint_8bit(x)) )
+		if( !(  typeConstraint_plainFloatingPoints(X)
+		      ||typeConstraint_8bit(X)) )
 			ERROR("Incorrect input for node"); 
 
-		if( x->data_dim[0] != 1 )
+		if( X->data_dim[0] != 1 )
 			ERROR("Unimplemented: MaxPool batches bigger than 1");
 
 
@@ -251,14 +268,14 @@ class MaxPool : public Node {
 			ERROR("Unimplemented: column-major storage_order");
 
 		if( strides.size() == 0 )
-			for( unsigned i=0; i< x->data_dim.size(); i++ )
+			for( unsigned i=0; i< X->data_dim.size(); i++ )
 				strides.push_back(1);
 
 		if( dilations.size() == 0 )
-			for( unsigned i=0; i< x->data_dim.size(); i++ )
+			for( unsigned i=0; i< X->data_dim.size(); i++ )
 				dilations.push_back(1);
 
-		unsigned data_dims = x->data_dim.size()-2;
+		unsigned data_dims = X->data_dim.size()-2;
 
 		// if 'pads' attribute not given, fill with defaults
 		// VALID or NOTSET. Former always means no padding, latter means explicit
@@ -280,15 +297,15 @@ class MaxPool : public Node {
 		}
 
 		Tensor *rv = new Tensor;
-		rv->data_dim.push_back(x->data_dim[0]); //batch size
-		rv->data_dim.push_back(x->data_dim[1]); //num channels
+		rv->data_dim.push_back(X->data_dim[0]); //batch size
+		rv->data_dim.push_back(X->data_dim[1]); //num channels
 
 		// Calculate output shape. Pads are now calculated
 		// for those auto_pad modes that need them.
-		uint64_t rv_num_elem = x->data_dim[0] * x->data_dim[1];
-		for( unsigned i=2; i<x->data_dim.size(); i++ ) {
+		uint64_t rv_num_elem = X->data_dim[0] * X->data_dim[1];
+		for( unsigned i=2; i<X->data_dim.size(); i++ ) {
 			int d;
-			int in_dim = x->data_dim[i];
+			int in_dim = X->data_dim[i];
 			int kernel = kernel_shape[i-2];
 			int dilation = dilations.size()==0 ? 1 : dilations[i-2];
 			int stride = strides[i-2];
@@ -328,7 +345,7 @@ class MaxPool : public Node {
 				// The auto_pad attribute for MaxPool is deprecated anyway. Probably just for this confusion.
 				// This tries to be some sort of band-aid: assume the output size is the same as input size
 				// which is the usual(?) reason to use "same" padding on the network design level. 
-				int input_size = x->data_dim[i+2];
+				int input_size = X->data_dim[i+2];
 				int output_size = rv->data_dim[i+2];
 				int pad_shape = (output_size - 1) * strides[i] + (( kernel_shape[i] -1) * dilations[i]+1) - input_size; 
 				pads[i] = pad_shape/2;
@@ -348,13 +365,15 @@ class MaxPool : public Node {
 			ERROR("Pads size mismatch!");
 		}
 
-		rv->data_type = x->data_type;
+		rv->data_type = X->data_type;
+		Y=rv;
 		outputs.push_back(rv);
 
 		// optional indices vector
 		Tensor *indices_out = new Tensor;
 		indices_out->data_type = onnx::TensorProto_DataType::TensorProto_DataType_INT64;
 		indices_out->data_dim = rv->data_dim;
+		Indices = indices_out;
 		outputs.push_back(indices_out);
 	}
 };

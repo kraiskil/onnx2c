@@ -38,9 +38,15 @@ public:
 	Node* findNode(std::string opName);
 
 private:
+	// The top-level onnx object.
 	onnx::ModelProto &model;
+	// The tensors of the network. Pointers are added to this
+	// vector as walking the graph resolves node outputs.
+	// Each node keeps pointers internally also to its own inputs&outputs
 	std::vector<Tensor*> tensors;
+	// The kernels/nodes/operators of the network.
 	std::vector<Node*> nodes;
+	// Should onnx2c print debug info while compiling
 	bool verbose_mode;
 
 	/* Add new tensor to set of known tensors,

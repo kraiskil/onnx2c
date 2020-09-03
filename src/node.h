@@ -11,15 +11,14 @@ class Tensor;
 /* The ONNX node, or computation kernel. *
  * Node is a virtual parent class for each of the
  * ONNX node "types" or "operands" (e.g. Add, Relu, ...)
- * 
+ * Each individual node in the graph is then an instance of
+ * these subclasses.
  */
 class Node {
 	public:
 	bool isResolved;
 	std::string onnx_name; //ONNX name of the individual node
 	std::string op_name;   //ONNX name of node type
-	std::vector<const Tensor*> inputs;
-	std::vector<const Tensor*> outputs;
 
 	/* Create the C source name. Replace all non a-z,A-Z,0-9 or _
 	 * characters. Also prefix name since ONNX allows tensors and nodes
@@ -32,6 +31,14 @@ class Node {
 
 	/* Print the C implmementation of the operator */
 	virtual void print(std::ostream &destination) const = 0; 
+
+	/* Print comma-separated list of function parameters.
+	 * Unused optional tensors skipped. e.g.:
+	 *   "tensior_X, tensor_Y"
+	 * or decorated
+	 *   "float tensor_X[1][2][3], float tensor_Y[2][3][4]"
+	 */
+	virtual void print_parameters(std::ostream &destination, bool decorate ) const = 0;
 
 	/* Figure out in what format the output is in.
 	 * Return values are pointers to Tensor values, allocated with new. Ownership given to caller.

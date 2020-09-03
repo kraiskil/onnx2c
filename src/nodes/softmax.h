@@ -14,8 +14,21 @@ class Softmax : public Node {
 	Softmax() {
 		op_name = "Softmax";
 		axis = 1;
+		input=output=NULL;
 	}
 	int axis;
+
+	// inputs
+	const Tensor *input;
+	// outputs
+	const Tensor *output;
+
+	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
+	{
+		input->print_tensor(dst, !decorate);
+		dst << ", ";
+		output->print_tensor(dst, !decorate);
+	}
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 
@@ -34,8 +47,6 @@ class Softmax : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *input = inputs[0];
-		const Tensor *output = outputs[0];
 		std::string type = input->data_type_str();
 		unsigned n_dim = input->data_dim.size();
 		std::string expfunc = "expf";
@@ -111,13 +122,14 @@ class Softmax : public Node {
 		if( inputs.size() != 1 )
 			ERROR("wrong number of inputs to Softmax");
 
-		const Tensor *A = inputs[0];
-		if( typeConstraint_allFloatingPoints(A) == false)
+		input = inputs[0];
+		if( typeConstraint_allFloatingPoints(input) == false)
 			ERROR("Incorrect input for node");
 
 		Tensor *rv = new Tensor;
-		rv->data_dim = A->data_dim;
-		rv->data_type = A->data_type;
+		rv->data_dim = input->data_dim;
+		rv->data_type = input->data_type;
+		output = rv;
 		outputs.push_back(rv);
 	}
 };

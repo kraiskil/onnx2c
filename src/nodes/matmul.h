@@ -5,23 +5,35 @@ class MatMul : public Node {
 	public:
 	MatMul() {
 		op_name = "MatMul";
+		A=B=Y=NULL;
+	}
+	// inputs
+	const Tensor *A;
+	const Tensor *B;
+	// outputs
+	const Tensor *Y;
+
+	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
+	{
+		A->print_tensor(dst, !decorate);
+		dst << ", ";
+		B->print_tensor(dst, !decorate);
+		dst << ", ";
+		Y->print_tensor(dst, !decorate);
 	}
 
-	virtual void print(std::ostream &dst) const
-	{
-		if( inputs.size() != 2 )
-			ERROR("wrong number of inputs to MatMul");
-		if( outputs.size() != 1 )
-			ERROR("wrong number of outputs from MatMul");
-		std::string type = inputs[0]->data_type_str();
 
-		if( inputs[0]->data_dim.size() != 2 )
+	virtual void print(std::ostream &dst) const override
+	{
+		std::string type = A->data_type_str();
+
+		if( A->data_dim.size() != 2 )
 			ERROR("Unimplemented: higher than 2D MatMul");
 
-		int32_t rows = inputs[0]->data_dim[0];
-		int32_t cols = inputs[1]->data_dim[1];
-		int32_t inner = inputs[0]->data_dim[1];
-		int32_t inner2 = inputs[1]->data_dim[0];
+		int32_t rows = A->data_dim[0];
+		int32_t cols = B->data_dim[1];
+		int32_t inner = A->data_dim[1];
+		int32_t inner2 = B->data_dim[0];
 		if( inner == 0 ) inner=1;
 
 		// TODO: handle the case of [N] * [Nx1] multiplication,
@@ -34,9 +46,9 @@ class MatMul : public Node {
 	
 		dst << "\t/*MatMul*/" << std::endl;
 		
-		dst << "\t" << type << " *A = (" << type << "*)" << inputs[0]->cname() << ";" << std::endl;
-		dst << "\t" << type << " *B = (" << type << "*)" << inputs[1]->cname() << ";" << std::endl;
-		dst << "\t" << type << " *Y = (" << type << "*)" << outputs[0]->cname() << ";" << std::endl;
+		dst << "\t" << type << " *A = (" << type << "*)" << A->cname() << ";" << std::endl;
+		dst << "\t" << type << " *B = (" << type << "*)" << B->cname() << ";" << std::endl;
+		dst << "\t" << type << " *Y = (" << type << "*)" << Y->cname() << ";" << std::endl;
 
 		dst << "\t" << "for( uint32_t r=0; r<" << rows << "; r++ )" << std::endl;
 		dst << "\t\t" << "for( uint32_t c=0; c<" << cols << "; c++ ) {" << std::endl;
@@ -47,10 +59,10 @@ class MatMul : public Node {
 		dst << std::endl;
 
 	} 
-	virtual void resolveOutput( const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+	virtual void resolveOutput( const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
-		const Tensor *A = inputs[0];
-		const Tensor *B = inputs[1];
+		A = inputs[0];
+		B = inputs[1];
 		if(  typeConstraint_highPrecisionNumeric(A) == false )
 			ERROR("Incorrect input for MatMul"); 
 		if(  typeConstraint_highPrecisionNumeric(B) == false )
@@ -64,6 +76,7 @@ class MatMul : public Node {
 		rv->data_dim.push_back(rows);
 		rv->data_dim.push_back(cols);
 		rv->data_type = A->data_type;
+		Y=rv;
 		outputs.push_back(rv);
 	}
 
