@@ -20,7 +20,7 @@ Graph::Graph(
 
 	AixLog::Severity s = AixLog::Severity::fatal; // there is no "off"
 	if( verbose )
-		s = AixLog::Severity::debug;
+		s = AixLog::Severity::trace;
 	AixLog::Log::init<AixLog::SinkCerr>(s);
 
 
@@ -68,7 +68,6 @@ void Graph::addResolvedTensor(onnx::TensorProto &tensor)
 
 Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 {
-
 	onnx::TypeProto tp = vi.type();
 	onnx::TypeProto::ValueCase vc = tp.value_case();
 
@@ -79,8 +78,8 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 	onnx::TensorShapeProto tsp = tpt.shape();
 
 	Tensor *t = new Tensor;
-	t->generate=false;
 	t->initialize=false;
+	t->generate=false;
 	t->isIO = true;
 	t->name = vi.name();
 	t->doc  = vi.doc_string();
@@ -162,16 +161,25 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 	n->resolveOutput(inputs, outputs );
 
 
+	// Loop over node's declared outputs.
+	// This will now contain all of the node's outputs, also such optional ones
+	// that are not used in the model.
 	for( unsigned o=0; o<outputs.size(); o++) {
 		Tensor *t = outputs[o];
 
-		if ( (int)o >= node.output_size() ) {
-			LOG(TRACE) << "skipping optional output after number " << o << std::endl;
-			break;
+		// optional outputs are named "" or just omitted
+		std::string onnx_name="";
+		if( (int)o<node.output_size() )
+			onnx_name = node.output(o);
+
+		if( onnx_name == "" ) {
+			if (t->isRecursive==false) {
+				LOG(TRACE) << "skipping: output number " << o << " is unused" << std::endl;
+				continue;
+			}
+			onnx_name = n->c_name() + "_recursive_"+std::to_string(o);
 		}
-		t->name = node.output(o);
-		t->generate=true;
-		t->initialize=false;
+		t->name = onnx_name;
 		addTensor(t);
 	}
 
@@ -223,22 +231,69 @@ Node* Graph::findNode(std::string opName)
 	return NULL;
 }
 
-bool Graph::addTensor(Tensor *t)
+void Graph::addTensor(Tensor *t)
 {
-	/* ONNX allows (but does not require - or there are bugs out there)
-	 * for initializer tensors to be listed as inputs. Those have been
-	 * processed elsewhere already. */
-	bool pushit = true;
+	/* This is a bit fragile!
+	 * Add tensor t to known tensors, or if
+	 * a tensor of the same name already exists,
+	 * update the existing tensor.
+	 *
+	 * How and which parts of the existing tensor
+	 * to update is the fragile part :)
+	 */
+	Tensor *prev = NULL;
 	for( auto o : tensors)
-		if( t->name == o->name )
-			pushit = false;
+		if( t->name == o->name ) {
+			prev = o;
+			break;
+		}
 
-	if( pushit ) {
+	if( prev == NULL ) {
 		tensors.push_back(t);
-		LOG(DEBUG) << "Adding tensor: " << t->name << " - "<< t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
-
+		LOG(DEBUG) << "Adding new tensor: " << t->name << " - "<< t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
 	}
-	return pushit;
+	else {
+		LOG(DEBUG) << "Updating existing tensor: " << t->name << std::endl;
+		LOG(TRACE) << "   was: gen " << prev->generate
+		           << "  init " << prev->initialize
+		           << "  IO " << prev->isIO
+		           << "  recurs " << prev->isRecursive
+		           << "  alias " << !!prev->isAliasOf
+		           << std::endl;
+		LOG(TRACE) << "   new: gen " << t->generate
+		           << "  init " << t->initialize
+		           << "  IO " << t->isIO
+		           << "  recurs " << t->isRecursive
+		           << "  alias " << !!t->isAliasOf
+		           << std::endl;
+
+
+		// if updating an output to be recursive:
+		if( t->isRecursive ) {
+			// Since this tensor was already added, it was added
+			// because it is a graph output.
+			// This is because recursion means recursion to same node, not a general loop in the network
+			if( prev->isIO == false )
+				ERROR("Update logic failure (i.e. this is an assert fail)");
+			if( t->isAliasOf ) {
+				prev->generate = false;
+				prev->initialize = false;
+				prev->isAliasOf = t->isAliasOf;
+			}
+			else {
+				prev->generate = t->generate;
+				prev->initialize = t->initialize;
+			}
+			prev->isRecursive = true;
+		}
+
+		LOG(TRACE) << "   now: gen " << prev->generate
+		           << "  init " << prev->initialize
+		           << "  IO " << prev->isIO
+		           << "  recurs " << prev->isRecursive
+		           << "  alias " << !!prev->isAliasOf
+		           << std::endl;
+	}
 }
 
 Tensor *Graph::findTensor(const std::string &name) const

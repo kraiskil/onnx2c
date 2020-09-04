@@ -10,19 +10,26 @@ namespace toC {
 // i.e. the data buffers a ONNX node produces or consumes
 class Tensor {
 	public:
-	bool generate;   // generate code for this Tensor? (false for inputs)
+	bool generate;   // generate code (i.e global definition) for this Tensor
 	bool initialize; // generate initialization from data in data_buffer
-	bool isIO;       // is parameter passed to the entry function of the graph. 
+	bool isIO;       // is a parameter passed to the entry function of the graph.
+	                 // IO tensors still get initialized e.g. in the test suite
+	bool isRecursive;// tensor that one node uses both output and input.
+	                 // may additionally be used as input for other nodes
+	const Tensor *isAliasOf; // Recursive tensors might (but need not) be defined
+	                         // twice: as the input and the output.
 	std::vector<int> data_dim;
 	onnx::TensorProto_DataType data_type;
-	void *data_buffer;
+	void *data_buffer;// if initialized, contains the initialization data
 	std::string name; // NB: ONNX name. Might not be valid for C
 	std::string doc;
 
 	Tensor() :
-		generate(false),
+		generate(true),
 		initialize(false),
 		isIO(false),
+		isRecursive(false),
+		isAliasOf(NULL),
 		data_buffer(NULL)
 	{}
 
@@ -46,8 +53,11 @@ class Tensor {
 
 
 	/* Print the 'float foo[N][N]' part of the tensor.
-	 * Optionally, prefix name with given prefix: used for the test suite. */
-	void print_tensor(std::ostream &destination, bool name_only=false, std::string prefix = "") const;
+	 * If anternate_name is given, use that instead of 'foo',
+	 * This is intended to print the tensors in a function declaration, definition and callsites.
+	 * If callsite is true, skip the "float" and "[N][N]" parts.
+	 */
+	void print_tensor(std::ostream &destination, bool callsite=false, std::string alternate_name = "") const;
 
 	/* Print a tensor's initialization to output stream.
 	 * i.e. everything after the "=" in "float foo[43] = { 42, 42, ... };"

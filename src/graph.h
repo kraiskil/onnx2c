@@ -49,9 +49,10 @@ private:
 	// Should onnx2c print debug info while compiling
 	bool verbose_mode;
 
-	/* Add new tensor to set of known tensors,
-	 * if it is not already there (checked by name) */
-	bool addTensor(Tensor *t);
+	/* Add new tensor to set of known tensors.
+	 * If the tensor is not already known (checked by name),
+	 * the existing tensor is updated */
+	void addTensor(Tensor *t);
 
 	Tensor *findTensor(const std::string &name) const;
 

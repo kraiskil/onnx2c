@@ -104,7 +104,7 @@ void Graph::print_interface_function(std::ostream &dst)
 		 * the "actual" input data */
 		Tensor *t=findTensor(i.name());
 
-		if( t && t->isIO ) {
+		if( t && t->isIO && t->isAliasOf==NULL ) {
 			if(!isfirst)
 				dst << ", ";
 			else
@@ -117,11 +117,15 @@ void Graph::print_interface_function(std::ostream &dst)
 		 * inputs are handled */
 		Tensor *t = findTensor(i.name());
 
-		if( t && t->isIO ) {
+		if( t && t->isIO && t->isAliasOf==NULL ) {
 			dst << ", ";
 			print_tensor(dst, t);
 		}
+		else if( t && t->isIO && t->isAliasOf!=NULL ) {
+			dst << "/* "<<t->name << " aliased to " << t->isAliasOf->cname() << " */ ";
+		}
 	}
+
 	dst << ") {" << std::endl;
 
 	// since nodes were resolved from graph inputs in the order there were

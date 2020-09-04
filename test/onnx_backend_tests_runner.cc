@@ -125,7 +125,10 @@ int main(int argc, char *argv[])
 	for( auto o : references ) {
 		std::string refname = "reference_" + o->cname();
 		std::cout << "static ";
-		o->print_tensor(std::cout, false, "reference_");
+		if( o->isAliasOf )
+			o->isAliasOf->print_tensor(std::cout, false, refname);
+		else
+			o->print_tensor(std::cout, false, refname);
 		std::cout << " = ";
 		o->print_tensor_initializer(std::cout);
 		std::cout << ";" << std::endl;
@@ -138,11 +141,15 @@ int main(int argc, char *argv[])
 	std::cout << "\t"<<  "entry(";
 	bool isfirst = true;
 	for( auto i : inputs) {
+		if( i-> isAliasOf )
+			continue;
 		if( isfirst ) isfirst=false;
 		else          std::cout << ", ";
 		std::cout << i->cname();
 	}
 	for( auto r : references ) {
+		if( r-> isAliasOf )
+			continue;
 		std::cout << ", ";
 		std::cout << r->cname();
 	}
