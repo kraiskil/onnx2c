@@ -210,6 +210,7 @@ bool Graph::hasUnresolvedNodes(void)
 #include "nodes/relu.h"
 #include "nodes/reshape.h"
 #include "nodes/sigmoid.h"
+#include "nodes/squeeze.h"
 #include "nodes/softmax.h"
 #include "nodes/transpose.h"
 
@@ -224,6 +225,7 @@ Node* Graph::findNode(std::string opName)
 	if( opName == "Relu" )return new Relu;
 	if( opName == "Reshape" )return new Reshape;
 	if( opName == "Sigmoid" )return new Sigmoid;
+	if( opName == "Squeeze" )return new Squeeze;
 	if( opName == "Softmax" )return new Softmax;
 	if( opName == "Transpose" )return new Transpose;
 

@@ -25,6 +25,19 @@ int parse_attribute_int(const onnx::AttributeProto &a)
 	return a.i();
 }
 
+std::vector<int> parse_attribute_ints(const onnx::AttributeProto &a)
+{
+	if( a.ints_size() == 0 )
+		ERROR("Not a floats attribute");
+
+	std::vector<int> rv;
+
+	for( int i : a.ints() )
+		rv.push_back(i);
+
+	return rv;
+}
+
 float parse_attribute_float(const onnx::AttributeProto &a)
 {
 	if( a.has_f() == false )

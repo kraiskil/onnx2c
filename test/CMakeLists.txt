@@ -126,6 +126,9 @@ ONNX_backend_node_test(reshape_reordered_all_dims)
 ONNX_backend_node_test(sigmoid)
 ONNX_backend_node_test(sigmoid_example)
 
+ONNX_backend_node_test(squeeze)
+ONNX_backend_node_test(squeeze_negative_axes)
+
 ONNX_backend_node_test(softmax_axis_0)
 ONNX_backend_node_test(softmax_axis_1)
 ONNX_backend_node_test(softmax_axis_2)
