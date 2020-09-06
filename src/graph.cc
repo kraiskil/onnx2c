@@ -291,6 +291,9 @@ void Graph::addTensor(Tensor *t)
 			}
 			prev->isRecursive = true;
 		}
+		// Recursive nodes might need to initialize internal tensors
+		if( t->data_buffer )
+			prev->data_buffer = t->data_buffer;
 
 		LOG(TRACE) << "   now: gen " << prev->generate
 		           << "  init " << prev->initialize

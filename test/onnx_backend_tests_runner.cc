@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
 	float test_accuracy = std::stod(argv[2]);
 
 	std::vector<Tensor*> inputs;
+	std::vector<Tensor*> outputs;
 	std::vector<Tensor*> references;
 
 	std::string dataset_dir = dir + "/test_data_set_" + argv[3];
@@ -90,16 +91,24 @@ int main(int argc, char *argv[])
 	input_number=0;
 	while(true) {
 		std::string partial = dataset_dir + "/output_";
-		Tensor *t = get_input_from_file(partial, input_number);
-		if( t == NULL )
+		Tensor *ref = get_input_from_file(partial, input_number);
+		Tensor *out = get_input_from_file(partial, input_number);
+		if( ref == NULL || out == NULL )
 			break;
-		t->generate=true;
-		t->initialize=false;
-		t->isIO = true;
-		if( t->name == "" )
-			t->name = std::string("output_") + std::to_string(input_number);
+		ref->generate=true;
+		ref->initialize=true;
+		out->generate=true;
+		out->initialize=false;
+		// Just in case the network needs to zero-initialize the output buffer (e.g. LSTM)
+		out->data_buffer = NULL;
+		out->isIO = true;
+		if( ref->name == "" ) {
+			ref->name = std::string("output_") + std::to_string(input_number);
+			out->name = std::string("output_") + std::to_string(input_number);
+		}
 
-		references.push_back(t);
+		references.push_back(ref);
+		outputs.push_back(out);
 		input_number++;
 	}
 
@@ -115,7 +124,7 @@ int main(int argc, char *argv[])
 	// Why do we send input and reference tensors to the Graph?
 	std::vector <Tensor *> tensors_to_parser;
 	for( auto i : inputs) tensors_to_parser.push_back(i);
-	for( auto i : references) tensors_to_parser.push_back(i);
+	for( auto i : outputs) tensors_to_parser.push_back(i);
 
 	onnx_model.ParseFromIstream(&model_ifs);
 	Graph toCgraph(onnx_model, false/*verbose*/, tensors_to_parser);
@@ -147,8 +156,8 @@ int main(int argc, char *argv[])
 		else          std::cout << ", ";
 		std::cout << i->cname();
 	}
-	for( auto r : references ) {
-		if( r-> isAliasOf )
+	for( auto r : outputs ) {
+		if( r->isAliasOf )
 			continue;
 		std::cout << ", ";
 		std::cout << r->cname();
@@ -158,9 +167,11 @@ int main(int argc, char *argv[])
 
 
 	// Loop over outuputs
-	for( auto r : references ) {
+	for( unsigned i=0; i<outputs.size(); i++ ) {
 	std::cout << "\t{" << std::endl;
-		std::string outname = r->cname();
+		Tensor *r = references[i];
+		Tensor *o = outputs[i];
+		std::string outname = o->isAliasOf? o->isAliasOf->cname() : o->cname();
 		std::string refname = "reference_" + r->cname();
 		std::string type = r->data_type_str();
 

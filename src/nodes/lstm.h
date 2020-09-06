@@ -377,7 +377,12 @@ class LSTM : public Node {
 			Y_h->isAliasOf = initial_h;
 			Y_h->generate=false;
 		}
-		// TODO: handle the else case: set zero-initializer to Y_h
+		else {
+			Y_h->data_buffer = calloc(Y_h->data_num_elem(), Y_h->data_elem_size());
+			if( Y_h->data_buffer == NULL )
+				ERROR("Memory allocation failed");
+			Y_h->initialize = true;
+		}
 
 		Y_c = new Tensor;
 		Y_c->data_type = X->data_type;
@@ -389,8 +394,12 @@ class LSTM : public Node {
 			Y_c->isAliasOf = initial_c;
 			Y_c->generate=false;
 		}
-		// TODO: handle the else case: zero initializer to Y_c
-
+		else {
+			Y_c->data_buffer = calloc(Y_c->data_num_elem(), Y_c->data_elem_size());
+			if( Y_c->data_buffer == NULL )
+				ERROR("Memory allocation failed");
+			Y_c->initialize = true;
+		}
 
 		outputs.push_back(Y);
 		outputs.push_back(Y_h);
