@@ -196,6 +196,8 @@ class LSTM : public Node {
 		dst << "\t" << "int oidx = hs;" << std::endl;
 		dst << "\t" << "int fidx = 2*hs;" << std::endl;
 		dst << "\t" << "int cidx = 3*hs;" << std::endl;
+		// index into B, to get Rb. Add *iidx too. Wb is B at offset 0
+		dst << "\t" << "int Rb = 4*hs;" << std::endl;
 
 		dst << "\t" << "/* Forget gate */" << std::endl;
 		dst << "\t" << data_type << " ft[bs][hs];" << std::endl;
@@ -208,8 +210,10 @@ class LSTM : public Node {
 		// Ht-1*R
 		dst << "\t\t" << "for( int k=0; k<hs; k++)" << std::endl;
 		dst << "\t\t\t" << "ft[i][j] += Y_h[0][i][k]*R[0][fidx+j][k];" << std::endl;
-		if( B ) // Bias
+		if( B ) { // Bias
 		dst << "\t\t" << "ft[i][j] += B[0][fidx+j];" << std::endl;
+		dst << "\t\t" << "ft[i][j] += B[0][Rb+fidx+j];" << std::endl;
+		}
 		if( P ) // Peephole
 		dst << "\t\t" << "ft[i][j] += P[0][fidx+j]*Y_c[0][i][j];" << std::endl;
 		// TODO: this is sigmoid. Don't hard-code - activation is an node attribute
@@ -228,8 +232,10 @@ class LSTM : public Node {
 		// Ht-1*R
 		dst << "\t\t" << "for( int k=0; k<hs; k++)" << std::endl;
 		dst << "\t\t\t" << "it[i][j] += Y_h[0][i][k]*R[0][iidx+j][k];" << std::endl;
-		if( B ) // Bias
+		if( B ) { // Bias
 		dst << "\t\t" << "it[i][j] += B[0][iidx+j];" << std::endl;
+		dst << "\t\t" << "it[i][j] += B[0][Rb+iidx+j];" << std::endl;
+		}
 		if( P ) // Peephole
 		dst << "\t\t" << "it[i][j] += P[0][iidx+j]*Y_c[0][i][j];" << std::endl;
 		// TODO: this is sigmoid. Don't hard-code - activation is an node attribute
@@ -248,8 +254,10 @@ class LSTM : public Node {
 		// Ht-1*R
 		dst << "\t\t" << "for( int k=0; k<hs; k++)" << std::endl;
 		dst << "\t\t\t" << "ct[i][j] += Y_h[0][i][k]*R[0][cidx+j][k];" << std::endl;
-		if( B ) // Bias
+		if( B ) { // Bias
 		dst << "\t\t" << "ct[i][j] += B[0][cidx+j];" << std::endl;
+		dst << "\t\t" << "ct[i][j] += B[0][Rb+cidx+j];" << std::endl;
+		}
 		// TODO: this is tahnf. Don't hard-code - activation is an node attribute
 		dst << "\t\t" << "ct[i][j] = tanhf(ct[i][j]);" << std::endl;
 		dst << "\t" << "}" << std::endl;
@@ -259,6 +267,7 @@ class LSTM : public Node {
 		dst << "\t" << "for( int i=0; i<bs; i++)" << std::endl;
 		dst << "\t" << "for( int j=0; j<hs; j++)" << std::endl;
 		dst << "\t\t" << "Y_c[0][i][j] = Y_c[0][i][j]*ft[i][j] + it[i][j]*ct[i][j];" << std::endl;
+
 
 		dst << "\t" << "/* Output gate */" << std::endl;
 		dst << "\t" << data_type << " ot[bs][hs];" << std::endl;
@@ -271,8 +280,10 @@ class LSTM : public Node {
 		// Ht-1*R
 		dst << "\t\t" << "for( int k=0; k<hs; k++)" << std::endl;
 		dst << "\t\t\t" << "ot[i][j] += Y_h[0][i][k]*R[0][oidx+j][k];" << std::endl;
-		if( B ) // Bias
+		if( B ) {// Bias
 		dst << "\t\t" << "ot[i][j] += B[0][oidx+j];" << std::endl;
+		dst << "\t\t" << "ot[i][j] += B[0][Rb+oidx+j];" << std::endl;
+		}
 		if( P ) // Peephole
 		dst << "\t\t" << "ot[i][j] += P[0][oidx+j]*Y_c[0][i][j];" << std::endl;
 		// TODO: this is tahnf. Don't hard-code - activation is an node attribute
@@ -320,7 +331,7 @@ class LSTM : public Node {
 		if( activation_beta.size() != 3 )
 			ERROR("Unimplemented/error: not 3 activation beta");
 
-		if( direction == "" )
+		if( direction == "" || direction == "forward" )
 			direction = "forward";
 		else
 			ERROR("Unimplmeneted: backward and bidirectional LSTM");

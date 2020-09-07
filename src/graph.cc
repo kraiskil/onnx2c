@@ -49,8 +49,13 @@ Graph::Graph(
 	//   resolve node + create output tensor
 	while( hasUnresolvedNodes() )
 	{
+		unsigned num_resolved_nodes = nodes.size();
+
 		for( auto n : onnx_graph.node() )
 			tryResolveNode( n );
+
+		if( num_resolved_nodes == nodes.size() )
+			ERROR("Failed to resolve a new node");
 	}
 
 }
@@ -116,6 +121,10 @@ bool Graph::nodeInputsResolved(const onnx::NodeProto &node, std::vector<const Te
 	for( auto i : node.input() )
 	{
 		bool input_resolved = false;
+		// Unused inputs don't need to be resolved.
+		if( i == "" )
+			continue;
+
 		for( auto t : tensors ) {
 			if ( t->name == i ) {
 				input_resolved = true;
@@ -125,8 +134,10 @@ bool Graph::nodeInputsResolved(const onnx::NodeProto &node, std::vector<const Te
 		}
 
 		// Node has an unresolved input tensor
-		if( input_resolved == false )
+		if( input_resolved == false ) {
+			LOG(TRACE) << "Input tensor " << i << " not resolved" << std::endl;
 			return false;
+		}
 	}
 
 	return true;
@@ -137,7 +148,13 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 	// Check if node has all inputs resolved
 	std::vector<const Tensor*> inputs;
 	std::vector<Tensor*> outputs;
+	LOG(DEBUG) << "Resolving node " << node.name() <<std::endl;
 
+	for( auto o : nodes )
+		if( node.name() == o->onnx_name ) {
+			LOG(TRACE) << "Node " << node.name() << " already resolved"<<std::endl;
+			return;
+		}
 
 	if( nodeInputsResolved(node, inputs) == false )
 		return;
