@@ -1,5 +1,5 @@
 /* This file is part of onnx2c.
- * 
+ *
  * LSTM.
  * Implements a Long Short Term Memory node.
  * A nice description is given in:
@@ -151,6 +151,19 @@ class LSTM : public Node {
 		ERROR("Unhandled: beta for activation: " << a);
 	}
 
+	void print_activation(std::ostream &dst, const std::string &activation, const std::string &variable) const
+	{
+		if( activation == "Sigmoid" )
+			dst << "1.0f/(1+expf(-" << variable << "));" << std::endl;
+		else if (activation == "Tanh" )
+			// TODO: optimize to tanhf? If someone uses tanh, do they care about execution speed? :)
+			dst << "tanh(" << variable << ");" << std::endl;
+		else if (activation == "Relu" )
+			dst << "MAX(" << variable << ", 0);" << std::endl;
+		else
+			ERROR("Unimplmemented activation function");
+	}
+
 	virtual void print(std::ostream &dst) const override
 	{
 		dst << "\t/* LSTM " << std::endl;
@@ -168,7 +181,9 @@ class LSTM : public Node {
 		dst << "\t *   Y_h = " << Y_h->cname() << std::endl;
 		dst << "\t *   Y_c = " << Y_c->cname() << std::endl;
 		dst << "\t * attributes:" << std::endl;
-		dst << "\t * (TBD):" << std::endl;
+		dst << "\t *   activations: f:" << activations[0];
+		dst <<         " g:" << activations[1] << " h:" << activations[2] << std::endl;
+		dst << "\t * (rest TBD):" << std::endl;
 		dst << "\t */" << std::endl;
 
 		/*
@@ -216,8 +231,8 @@ class LSTM : public Node {
 		}
 		if( P ) // Peephole
 		dst << "\t\t" << "ft[i][j] += P[0][fidx+j]*Y_c[0][i][j];" << std::endl;
-		// TODO: this is sigmoid. Don't hard-code - activation is an node attribute
-		dst << "\t\t" << "ft[i][j] = 1.0f/(1+expf(-ft[i][j]));" << std::endl;
+		dst << "\t\t" << "ft[i][j] =";
+		print_activation( dst, activations[0], "ft[i][j]");
 		dst << "\t" << "}" << std::endl;
 
 
@@ -238,8 +253,8 @@ class LSTM : public Node {
 		}
 		if( P ) // Peephole
 		dst << "\t\t" << "it[i][j] += P[0][iidx+j]*Y_c[0][i][j];" << std::endl;
-		// TODO: this is sigmoid. Don't hard-code - activation is an node attribute
-		dst << "\t\t" << "it[i][j] = 1.0f/(1+expf(-it[i][j]));" << std::endl;
+		dst << "\t\t" << "it[i][j] =";
+		print_activation( dst, activations[0], "it[i][j]");
 		dst << "\t" << "}" << std::endl;
 
 
@@ -258,8 +273,8 @@ class LSTM : public Node {
 		dst << "\t\t" << "ct[i][j] += B[0][cidx+j];" << std::endl;
 		dst << "\t\t" << "ct[i][j] += B[0][Rb+cidx+j];" << std::endl;
 		}
-		// TODO: this is tahnf. Don't hard-code - activation is an node attribute
-		dst << "\t\t" << "ct[i][j] = tanhf(ct[i][j]);" << std::endl;
+		dst << "\t\t" << "ct[i][j] =";
+		print_activation( dst, activations[1], "ct[i][j]");
 		dst << "\t" << "}" << std::endl;
 
 
@@ -286,16 +301,16 @@ class LSTM : public Node {
 		}
 		if( P ) // Peephole
 		dst << "\t\t" << "ot[i][j] += P[0][oidx+j]*Y_c[0][i][j];" << std::endl;
-		// TODO: this is tahnf. Don't hard-code - activation is an node attribute
-		dst << "\t\t" << "ot[i][j] = 1.0f/(1+expf(-ot[i][j]));" << std::endl;
+		dst << "\t\t" << "ot[i][j] =";
+		print_activation( dst, activations[0], "ot[i][j]");
 		dst << "\t" << "}" << std::endl;
 
 
 		dst << "\t" << "/* Hidden state */" << std::endl;
 		dst << "\t" << "for( int i=0; i<bs; i++)" << std::endl;
 		dst << "\t" << "for( int j=0; j<hs; j++)" << std::endl;
-		// TODO: don't hard-code tanh
-		dst << "\t\t" << "Y_h[0][i][j] = ot[i][j] * tanhf(Y_c[0][i][j]);" << std::endl;
+		dst << "\t\t" << "Y_h[0][i][j] = ot[i][j] * ";
+		print_activation( dst, activations[2], "Y_c[0][i][j]");
 
 	}
 
