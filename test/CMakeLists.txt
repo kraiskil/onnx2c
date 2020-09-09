@@ -62,6 +62,17 @@ function( ONNX_backend_node_test node_name)
 	)
 endfunction()
 
+set(ONNX_LOCAL_NODE_TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/local_ops/)
+function( ONNX_backend_node_local_test node_name)
+	ONNX_type_test(
+			${node_name}
+			${ONNX_LOCAL_NODE_TEST_DATA_DIR}/test_${node_name}
+			ONNX_backend_${node_name}
+			0.00002
+			0
+	)
+endfunction()
+
 ONNX_backend_node_test(add)
 ONNX_backend_node_test(add_bcast)
 
@@ -154,3 +165,8 @@ add_subdirectory(tfl_helloworld)
 add_subdirectory(mnist)
 add_subdirectory(velardo)
 add_subdirectory(simple_networks)
+
+################ local op tests ##################
+
+ONNX_backend_node_local_test(matmul_precision)
+
