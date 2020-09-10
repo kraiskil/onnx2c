@@ -9,3 +9,4 @@ distributing this software causes anyone any harm.
 
 Authors:
 Kalle Raiskila
+Robin van Emden
