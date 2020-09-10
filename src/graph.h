@@ -21,7 +21,6 @@ public:
 	/* print individual parts of the file */
 	void print_file_frontmatter(std::ostream &destination);
 	void print_global_tensors(std::ostream &destination);
-	void print_tensor(std::ostream &dst, const Tensor *t);
 	void print_functions(std::ostream &destination);
 	void print_includes(std::ostream &dst);
 	void print_interface_function(std::ostream &dst);

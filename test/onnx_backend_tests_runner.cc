@@ -81,6 +81,9 @@ int main(int argc, char *argv[])
 		if( t == NULL )
 			break;
 		t->isIO = true;
+		// These input vectors could be const in the generated test
+		// cases, but that would break the logic: IO can't be const
+		t->isConst=false;
 		if( t->name == "" )
 			t->name = std::string("input_") + std::to_string(input_number);
 	
@@ -99,6 +102,7 @@ int main(int argc, char *argv[])
 		ref->initialize=true;
 		out->generate=true;
 		out->initialize=false;
+		out->isConst=false;
 		// Just in case the network needs to zero-initialize the output buffer (e.g. LSTM)
 		out->data_buffer = NULL;
 		out->isIO = true;

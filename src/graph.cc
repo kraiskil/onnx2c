@@ -63,7 +63,6 @@ Graph::Graph(
 
 void Graph::addResolvedTensor(onnx::TensorProto &tensor)
 {
-	// create Tensor object
 	Tensor *t = new Tensor;
 
 	t->parse_onnx_tensor(tensor);
@@ -86,6 +85,7 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 	t->initialize=false;
 	t->generate=false;
 	t->isIO = true;
+	t->isConst = false;
 	t->name = vi.name();
 	t->doc  = vi.doc_string();
 
@@ -197,6 +197,7 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 			onnx_name = n->c_name() + "_recursive_"+std::to_string(o);
 		}
 		t->name = onnx_name;
+		t->isConst = false;
 
 		addTensor(t);
 	}
@@ -279,12 +280,14 @@ void Graph::addTensor(Tensor *t)
 		LOG(TRACE) << "   was: gen " << prev->generate
 		           << "  init " << prev->initialize
 		           << "  IO " << prev->isIO
+		           << "  const " << prev->isConst
 		           << "  recurs " << prev->isRecursive
 		           << "  alias " << !!prev->isAliasOf
 		           << std::endl;
 		LOG(TRACE) << "   new: gen " << t->generate
 		           << "  init " << t->initialize
 		           << "  IO " << t->isIO
+		           << "  const " << prev->isConst
 		           << "  recurs " << t->isRecursive
 		           << "  alias " << !!t->isAliasOf
 		           << std::endl;
@@ -312,9 +315,13 @@ void Graph::addTensor(Tensor *t)
 		if( t->data_buffer )
 			prev->data_buffer = t->data_buffer;
 
+		if( t->isConst == false )
+			prev->isConst = false;
+
 		LOG(TRACE) << "   now: gen " << prev->generate
 		           << "  init " << prev->initialize
 		           << "  IO " << prev->isIO
+		           << "  const " << prev->isConst
 		           << "  recurs " << prev->isRecursive
 		           << "  alias " << !!prev->isAliasOf
 		           << std::endl;

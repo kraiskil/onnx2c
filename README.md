@@ -59,12 +59,15 @@ running STM32Cube HAL with a clock speed of 84 or 96MHz. With same project and
 optimization settings (gcc -O4), measuring inference time by toggling GPIO pins,
 the STMCubeAI-generated version ran at 490us, while the onnx2c one took 20us.
 
+See Notes below for a description of the RAM optmimized version.
+
 Memory consumption was about similar:
 | platform               |text      |  data  |  bss | runtime |
 |:-----------------------|---------:|-------:|-----:|--------:|
 |STM HAL + onnx2c @96MHz |     8276 |   1300 |  3060| 20us    |
 |STM HAL + CubeAI @96MHz |     14372|   1696 |  2808| 490us   |
 |OpenCM3 + onnx2c @84MHz |     8236 |   1296 |   388| 25us    |
+|--"-- (onnx2c RAM opt)  |     8236 |     12 |   388| 29us    |
 
 
 ### Comparison 
@@ -84,4 +87,16 @@ but re-trained using the tutorial. But this most likely is not the cause for the
 execution speed difference.
 
 More datapoints are definitely needed...
+
+### Notes
+
+The above values are made with an older version of onnx2c. Later versions
+have added a "mark constant tensors as 'const'" optimisation, that significantly
+reduces RAM usage, but has a small performance penalty (4us in the above case).
+
+This is because when marked const, GCC generates code that reads the 'const' vectors
+from flash (as opposed to copying them to RAM). Reading flash is, of course,
+slower than RAM.
+
+Disabling of this optimisation should be added as a command-line option to onnx2c.
 

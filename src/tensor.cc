@@ -8,6 +8,7 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 	generate=true;
 	initialize=true;
 	isIO = false;
+	isConst = true;
 
 	// assert tensor is resolvable
 	if( onnx::TensorProto_DataLocation() != onnx::TensorProto_DataLocation_DEFAULT )
@@ -224,8 +225,11 @@ void Tensor::print_tensor(std::ostream &dst, bool is_callsite, std::string alter
 	if( isAliasOf )
 		ERROR("printing an aliased tensor does not make sense");
 
-	if( is_callsite == false )
+	if( is_callsite == false ) {
+		if( isConst )
+			dst << "const ";
 		dst << data_type_str() << " ";
+	}
 	if( alternate_name == "" )
 		dst << cname();
 	else

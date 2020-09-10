@@ -49,7 +49,7 @@ void Graph::print_global_tensors(std::ostream &dst)
 
 		dst << "/* " << t->name << "*/" << std::endl;
 		dst << "static ";
-		print_tensor(dst, t);
+		t->print_tensor(dst);
 		if( t->initialize ) {
 			dst << " = "<<std::endl;
 			t->print_tensor_initializer(dst);
@@ -57,15 +57,6 @@ void Graph::print_global_tensors(std::ostream &dst)
 
 		dst << ";" << std::endl;
 	}
-}
-
-/* Prints the "float foo[N][M]" part of a tensor */
-void Graph::print_tensor(std::ostream &dst, const Tensor *t)
-{
-	dst << t->data_type_str() << " ";
-	dst << t->cname();
-	for( unsigned i : t->data_dim )
-		dst << "[" << i << "]";
 }
 
 void Graph::print_functions(std::ostream &dst)
@@ -109,7 +100,7 @@ void Graph::print_interface_function(std::ostream &dst)
 				dst << ", ";
 			else
 				isfirst = false;
-			print_tensor(dst, t);
+			t->print_tensor(dst);
 		}
 	}
 	for ( auto i : model.graph().output() ) {
@@ -119,7 +110,7 @@ void Graph::print_interface_function(std::ostream &dst)
 
 		if( t && t->isIO && t->isAliasOf==NULL ) {
 			dst << ", ";
-			print_tensor(dst, t);
+			t->print_tensor(dst);
 		}
 		else if( t && t->isIO && t->isAliasOf!=NULL ) {
 			dst << "/* "<<t->name << " aliased to " << t->isAliasOf->cname() << " */ ";

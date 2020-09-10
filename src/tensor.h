@@ -12,6 +12,7 @@ class Tensor {
 	public:
 	bool generate;   // generate code (i.e global definition) for this Tensor
 	bool initialize; // generate initialization from data in data_buffer
+	bool isConst;    // constant value.
 	bool isIO;       // is a parameter passed to the entry function of the graph.
 	                 // IO tensors still get initialized e.g. in the test suite
 	bool isRecursive;// tensor that one node uses both output and input.
@@ -27,6 +28,7 @@ class Tensor {
 	Tensor() :
 		generate(true),
 		initialize(false),
+		isConst(true),
 		isIO(false),
 		isRecursive(false),
 		isAliasOf(NULL),
