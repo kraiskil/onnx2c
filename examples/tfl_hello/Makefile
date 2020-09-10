@@ -9,7 +9,7 @@ LDFLAGS=-L${OPENCM3_DIR}/lib -lopencm3_stm32f4 -Tstm32f411.ld -nostartfiles -Wl,
 all: tfl_hello
 .PHONY: flash
 
-generated.c: ../../tfl_helloworld/model.onnx
+generated.c: ../../test/tfl_helloworld/model.onnx
 	onnx2c $< > $@
 
 tfl_hello: main.c generated.c
