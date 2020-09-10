@@ -128,6 +128,7 @@ int main(int argc, char *argv[])
 
 	onnx_model.ParseFromIstream(&model_ifs);
 	Graph toCgraph(onnx_model, false/*verbose*/, tensors_to_parser);
+	std::cout.precision(20);
 	toCgraph.print_source(std::cout);
 
 	// print the reference tensors
