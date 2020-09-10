@@ -1,0 +1,11 @@
+ONNX2C LICENSE
+
+Onnx2c copyright is held by its authors listed below.
+
+You may use and distribute this software freely.
+You may not hold the authors liable if using or
+distributing this software causes anyone any harm.
+
+
+Authors:
+Kalle Raiskila
