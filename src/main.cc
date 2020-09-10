@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 
 	onnx_model.ParseFromIstream(&input);
 
+    std::cout.precision(20);
 	toC::Graph toCgraph(onnx_model, verbose_mode);
 	toCgraph.print_source(std::cout);
 }
