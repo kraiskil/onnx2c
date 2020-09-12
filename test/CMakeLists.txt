@@ -91,6 +91,7 @@ ONNX_backend_node_test(concat_3d_axis_2)
 ONNX_backend_node_test(concat_3d_axis_negative_1)
 ONNX_backend_node_test(concat_3d_axis_negative_2)
 ONNX_backend_node_test(concat_3d_axis_negative_3)
+ONNX_type_test(operator_concat2 ${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-operator/test_operator_concat2 ONNX_backend_pytorch_conv 0.00001 0)
 
 ONNX_backend_node_test(conv_with_strides_no_padding)
 ONNX_backend_node_test(conv_with_strides_padding)
@@ -179,7 +180,6 @@ add_subdirectory(mnist)
 add_subdirectory(velardo)
 add_subdirectory(simple_networks)
 
-################ local op tests ##################
-
+# local op tests 
 ONNX_backend_node_local_test(matmul_precision)
 
