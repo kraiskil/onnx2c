@@ -214,80 +214,66 @@ class LSTM : public Node {
 		// index into B, to get Rb. Add *iidx too. Wb is B at offset 0
 		dst << "\t" << "int Rb = 4*hs;" << std::endl;
 
+		// TODO: these temporary variables are BIG. Make them global to minimize
+		// stack usage? Probably needs to be an onnx2c flag for user to select
 		dst << "\t" << "/* Forget gate */" << std::endl;
 		dst << "\t" << data_type << " ft[bs][hs];" << std::endl;
+		dst << "\t" << "/* Input gate */" << std::endl;
+		dst << "\t" << data_type << " it[bs][hs];" << std::endl;
+		dst << "\t" << "/* Cell gate */" << std::endl;
+		dst << "\t" << data_type << " ct[bs][hs];" << std::endl;
+		dst << "\t" << "/* Output gate */" << std::endl;
+		dst << "\t" << data_type << " ot[bs][hs];" << std::endl;
+		dst << std::endl;
 		dst << "\t" << "for( int i=0; i<bs; i++)" << std::endl;
 		dst << "\t" << "for( int j=0; j<hs; j++) {" << std::endl;
 		dst << "\t\t" << "ft[i][j]=0;" << std::endl;
+		dst << "\t\t" << "it[i][j]=0;" << std::endl;
+		dst << "\t\t" << "ct[i][j]=0;" << std::endl;
+
 		// Xt*W
-		dst << "\t\t" << "for( int k=0; k<ds; k++)" << std::endl;
+		dst << "\t\t" << "for( int k=0; k<ds; k++) {" << std::endl;
 		dst << "\t\t\t" << "ft[i][j] += X[0][i][k]*W[0][fidx+j][k];" << std::endl;
+		dst << "\t\t\t" << "it[i][j] += X[0][i][k]*W[0][iidx+j][k];" << std::endl;
+		dst << "\t\t\t" << "ct[i][j] += X[0][i][k]*W[0][cidx+j][k];" << std::endl;
+		dst << "\t\t" << "}" << std::endl;
+
 		// Ht-1*R
-		dst << "\t\t" << "for( int k=0; k<hs; k++)" << std::endl;
+		dst << "\t\t" << "for( int k=0; k<hs; k++) {" << std::endl;
 		dst << "\t\t\t" << "ft[i][j] += Y_h[0][i][k]*R[0][fidx+j][k];" << std::endl;
+		dst << "\t\t\t" << "ct[i][j] += Y_h[0][i][k]*R[0][cidx+j][k];" << std::endl;
+		dst << "\t\t\t" << "it[i][j] += Y_h[0][i][k]*R[0][iidx+j][k];" << std::endl;
+		dst << "\t\t" << "}" << std::endl;
+
 		if( B ) { // Bias
 		dst << "\t\t" << "ft[i][j] += B[0][fidx+j];" << std::endl;
 		dst << "\t\t" << "ft[i][j] += B[0][Rb+fidx+j];" << std::endl;
-		}
-		if( P ) // Peephole
-		dst << "\t\t" << "ft[i][j] += P[0][fidx+j]*Y_c[0][i][j];" << std::endl;
-		dst << "\t\t" << "ft[i][j] =";
-		print_activation( dst, activations[0], "ft[i][j]");
-		dst << "\t" << "}" << std::endl;
-
-
-		dst << "\t" << "/* Input gate */" << std::endl;
-		dst << "\t" << data_type << " it[bs][hs];" << std::endl;
-		dst << "\t" << "for( int i=0; i<bs; i++)" << std::endl;
-		dst << "\t" << "for( int j=0; j<hs; j++) {" << std::endl;
-		dst << "\t\t" << "it[i][j]=0;" << std::endl;
-		// Xt*W
-		dst << "\t\t" << "for( int k=0; k<ds; k++)" << std::endl;
-		dst << "\t\t\t" << "it[i][j] += X[0][i][k]*W[0][iidx+j][k];" << std::endl;
-		// Ht-1*R
-		dst << "\t\t" << "for( int k=0; k<hs; k++)" << std::endl;
-		dst << "\t\t\t" << "it[i][j] += Y_h[0][i][k]*R[0][iidx+j][k];" << std::endl;
-		if( B ) { // Bias
 		dst << "\t\t" << "it[i][j] += B[0][iidx+j];" << std::endl;
 		dst << "\t\t" << "it[i][j] += B[0][Rb+iidx+j];" << std::endl;
-		}
-		if( P ) // Peephole
-		dst << "\t\t" << "it[i][j] += P[0][iidx+j]*Y_c[0][i][j];" << std::endl;
-		dst << "\t\t" << "it[i][j] =";
-		print_activation( dst, activations[0], "it[i][j]");
-		dst << "\t" << "}" << std::endl;
-
-
-		dst << "\t" << "/* Cell gate */" << std::endl;
-		dst << "\t" << data_type << " ct[bs][hs];" << std::endl;
-		dst << "\t" << "for( int i=0; i<bs; i++)" << std::endl;
-		dst << "\t" << "for( int j=0; j<hs; j++) {" << std::endl;
-		dst << "\t\t" << "ct[i][j]=0;" << std::endl;
-		// Xt*W
-		dst << "\t\t" << "for( int k=0; k<ds; k++)" << std::endl;
-		dst << "\t\t\t" << "ct[i][j] += X[0][i][k]*W[0][cidx+j][k];" << std::endl;
-		// Ht-1*R
-		dst << "\t\t" << "for( int k=0; k<hs; k++)" << std::endl;
-		dst << "\t\t\t" << "ct[i][j] += Y_h[0][i][k]*R[0][cidx+j][k];" << std::endl;
-		if( B ) { // Bias
 		dst << "\t\t" << "ct[i][j] += B[0][cidx+j];" << std::endl;
 		dst << "\t\t" << "ct[i][j] += B[0][Rb+cidx+j];" << std::endl;
 		}
+		if( P ) { // Peephole
+		dst << "\t\t" << "ft[i][j] += P[0][fidx+j]*Y_c[0][i][j];" << std::endl;
+		dst << "\t\t" << "it[i][j] += P[0][iidx+j]*Y_c[0][i][j];" << std::endl;
+		// Cell gate does not have a peephole
+		}
+
+		// Activations
+		dst << "\t\t" << "ft[i][j] =";
+		print_activation( dst, activations[0], "ft[i][j]");
+		dst << "\t\t" << "it[i][j] =";
+		print_activation( dst, activations[0], "it[i][j]");
 		dst << "\t\t" << "ct[i][j] =";
 		print_activation( dst, activations[1], "ct[i][j]");
 		dst << "\t" << "}" << std::endl;
 
-
-		dst << "\t" << "/* Cell state */" << std::endl;
-		dst << "\t" << "for( int i=0; i<bs; i++)" << std::endl;
-		dst << "\t" << "for( int j=0; j<hs; j++)" << std::endl;
-		dst << "\t\t" << "Y_c[0][i][j] = Y_c[0][i][j]*ft[i][j] + it[i][j]*ct[i][j];" << std::endl;
-
-
-		dst << "\t" << "/* Output gate */" << std::endl;
-		dst << "\t" << data_type << " ot[bs][hs];" << std::endl;
+		// Cell state, Output gate
 		dst << "\t" << "for( int i=0; i<bs; i++)" << std::endl;
 		dst << "\t" << "for( int j=0; j<hs; j++) {" << std::endl;
+		dst << "\t\t" << "/* Cell state */" << std::endl;
+		dst << "\t\t" << "Y_c[0][i][j] = Y_c[0][i][j]*ft[i][j] + it[i][j]*ct[i][j];" << std::endl;
+		dst << "\t\t" << "/* Output gate */" << std::endl;
 		dst << "\t\t" << "ot[i][j]=0;" << std::endl;
 		// X*W
 		dst << "\t\t" << "for( int k=0; k<ds; k++)" << std::endl;
@@ -305,7 +291,7 @@ class LSTM : public Node {
 		print_activation( dst, activations[0], "ot[i][j]");
 		dst << "\t" << "}" << std::endl;
 
-
+		// Hidden state
 		dst << "\t" << "/* Hidden state */" << std::endl;
 		dst << "\t" << "for( int i=0; i<bs; i++)" << std::endl;
 		dst << "\t" << "for( int j=0; j<hs; j++)" << std::endl;
