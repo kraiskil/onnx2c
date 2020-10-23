@@ -3,10 +3,14 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src)
 set(ONNX_BACKEND_TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../onnx/onnx/backend/test/data/)
 set(ONNX_NODE_TEST_DATA_DIR ${ONNX_BACKEND_TEST_DATA_DIR}/node/)
 
-add_executable( testrun
-	onnx_backend_tests_runner.cc)
-target_link_libraries(testrun onnx2c_lib protobuf)
-target_compile_options(testrun
+# testgen utility that reads the input from a
+# onnx "standard" formatted test (see directory $ONNX_BACKEND_TEST_DATA_DIR)
+# and generates input, the network-under-test, expected output and a main()
+# to check output matches expected output.
+add_executable( testgen
+	onnx_backend_tests_generator.cc)
+target_link_libraries(testgen onnx2c_lib protobuf)
+target_compile_options(testgen
 	PRIVATE
 		-I${CMAKE_CURRENT_SOURCE_DIR}/../aixlog/include
 	)
@@ -30,10 +34,10 @@ function( ONNX_type_test node_name data_dir test_ctest_name accuracy test_data_s
 		OUTPUT
 		${node_name}_${test_data_set}_generated.c
 		COMMAND
-		testrun ${data_dir} ${accuracy} ${test_data_set} > ${node_name}_${test_data_set}_generated.c
+		testgen ${data_dir} ${accuracy} ${test_data_set} > ${node_name}_${test_data_set}_generated.c
 		DEPENDS
 		#TODO also depends on test data -> don't depend, always run
-		testrun
+		testgen
 		)
 
 	add_executable( ${node_name}_${test_data_set}_test

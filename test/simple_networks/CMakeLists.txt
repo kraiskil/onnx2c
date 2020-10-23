@@ -1,3 +1,12 @@
+# Small networks generated with the accompanying
+# python scripts, with different parameters.
+#
+# To add a new one might need a kludge, but general guidlines are
+# -create new TEST.onnx model with demo.py
+# -input is fixed to the matrix in that script
+# -copy its output into TEST.c
+# -add new simple_test() line.
+
 
 function( simple_test test_name output_size)
 	compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/${test_name}.onnx ${test_name}_generated.c)
@@ -10,7 +19,6 @@ function( simple_test test_name output_size)
 	add_test(small_${test_name} ${test_name})
 endfunction()
 
-
 simple_test( conv_k2 16 )
 simple_test( conv_k2_maxpool_k2 4 )
 simple_test( conv_k2_s2 4 )
@@ -18,6 +26,9 @@ simple_test( maxpool_k2 16 )
 simple_test( maxpool_k2_s2 4 )
 
 
+# LSTM being a recursive model, several invocations might be needed (the 'r' parameter in the test name).
+# This a kludge left in from debugging the initial LSTM implementation, but there is no point removing it
+# now. This is not a fragile test - should not break.
 function( lstm_test test_name)
 	compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/${test_name}.onnx ${test_name}_generated.c)
 	add_executable(${test_name} ${test_name}_generated.c ${test_name}.c  main_lstm.c)
@@ -28,7 +39,6 @@ function( lstm_test test_name)
 			-DOUTPUT_SIZE=${output_size})
 	add_test(small_${test_name} ${test_name})
 endfunction()
-
 lstm_test( lstm_k1_b1_r1 )
 lstm_test( lstm_k1_b1_r5 )
 lstm_test( lstm_kg_bg_r5 )

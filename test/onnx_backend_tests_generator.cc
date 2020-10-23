@@ -1,3 +1,13 @@
+/*
+ * Generate C source from an ONNX "standard" test directory.
+ * (see e.g. onnx/onnx/backend/test/data/node/test_add/ for an example)
+ * This takes as paramters the directory where the test is and 
+ * which of the test inputs in that test directory to use.
+ * (see the "Usage" error print at start of main()).
+ * The final test source is printed out on stdout.
+ */
+
+
 #include <iostream>
 #include <fstream>
 
