@@ -161,6 +161,7 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 
 
 	Node *n = findNode(node.op_type());
+	n->onnx_node = &node;
 	n->isResolved = false;
 	n->op_name = node.op_type();
 	n->onnx_name = node.name();

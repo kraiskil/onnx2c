@@ -17,6 +17,7 @@ class Tensor;
 class Node {
 	public:
 	bool isResolved;
+	const onnx::NodeProto *onnx_node;
 	std::string onnx_name; //ONNX name of the individual node
 	std::string op_name;   //ONNX name of node type
 
