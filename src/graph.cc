@@ -225,6 +225,7 @@ bool Graph::hasUnresolvedNodes(void)
 
 
 #include "nodes/add.h"
+#include "nodes/averagepool.h"
 #include "nodes/batchnormalization.h"
 #include "nodes/concat.h"
 #include "nodes/conv.h"
@@ -243,6 +244,7 @@ bool Graph::hasUnresolvedNodes(void)
 Node* Graph::findNode(std::string opName)
 {
 	if( opName == "Add" )return new Add;
+	if( opName == "AveragePool" )return new AveragePool;
 	if( opName == "BatchNormalization" )return new BatchNormalization;
 	if( opName == "Concat" )return new Concat;
 	if( opName == "Conv" )return new Conv;

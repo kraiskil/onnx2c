@@ -1,32 +1,30 @@
 /* This file is part of onnx2c.
  *
- * MaxPool
- * Picks maximum value from the elements that
+ * AveragePool
+ * Calculates average from the elements that
  * are under the kernel.
  *
- * Current implementation is likely non-optimal:
- * padding checks are done in the innermost
- * loop. The C compiler need to do real magic
- * to optimize that...
- *
- * TODO: share code with AveragePool
+ * TODO: share code with MaxPool. Current implementation
+ * is a direcect copy of maxpool with minimal modification 
  */
 #include <cmath>
 
 namespace toC {
 
-class MaxPool : public Node {
+class AveragePool : public Node {
 	public:
-	MaxPool() {
-		op_name = "MaxPool";
+	AveragePool() {
+		op_name = "AveragePool";
 		ceil_mode = 0;
+		count_include_pad=0;
 		storage_order=0;
 		auto_pad = "NOTSET";
 
 		X=Y=Indices;
 	}
-	/* MaxPool node specific attributes */
+	/* AveragePool node specific attributes */
 	int ceil_mode;
+	int count_include_pad;
 	std::vector<int> dilations;
 	std::vector<int> kernel_shape;
 	std::vector<int> pads;
@@ -62,13 +60,13 @@ class MaxPool : public Node {
 
 	void parseAttributes_ceil_mode( const onnx::AttributeProto &a ) {
 		if( a.type() != onnx::AttributeProto_AttributeType_INT )
-			ERROR("Wrong attribute type for MaxPool attribute 'ceil_mode'");
+			ERROR("Wrong attribute type for AveragePool attribute 'ceil_mode'");
 		ceil_mode = a.i();
 	}
 
 	void parseAttributes_dilations( const onnx::AttributeProto &a ) {
 		if( a.type() != onnx::AttributeProto_AttributeType_INTS )
-			ERROR("Wrong attribute type for MaxPool attribute 'dilations'");
+			ERROR("Wrong attribute type for AveragePool attribute 'dilations'");
 
 		for( auto i : a.ints() ) {
 			dilations.push_back(i);
@@ -78,7 +76,7 @@ class MaxPool : public Node {
 
 	void parseAttributes_kernel_shape( const onnx::AttributeProto &a ) {
 		if( a.type() != onnx::AttributeProto_AttributeType_INTS )
-			ERROR("Wrong attribute type for MaxPool attribute 'kernel_shape'");
+			ERROR("Wrong attribute type for AveragePool attribute 'kernel_shape'");
 
 		for( auto i : a.ints() ) {
 			kernel_shape.push_back(i);
@@ -87,7 +85,7 @@ class MaxPool : public Node {
 
 	void parseAttributes_pads( const onnx::AttributeProto &a ) {
 		if( a.type() != onnx::AttributeProto_AttributeType_INTS )
-			ERROR("Wrong attribute type for MaxPool attribute 'pads'");
+			ERROR("Wrong attribute type for AveragePool attribute 'pads'");
 
 		for( auto i : a.ints() ) {
 			pads.push_back(i);
@@ -96,13 +94,13 @@ class MaxPool : public Node {
 
 	void parseAttributes_storage_order( const onnx::AttributeProto &a ) {
 		if( a.type() != onnx::AttributeProto_AttributeType_INT )
-			ERROR("Wrong attribute type for MaxPool attribute 'storage_order'");
+			ERROR("Wrong attribute type for AveragePool attribute 'storage_order'");
 		storage_order = a.i();
 	}
 
 	void parseAttributes_strides( const onnx::AttributeProto &a ) {
 		if( a.type() != onnx::AttributeProto_AttributeType_INTS )
-			ERROR("Wrong attribute type for MaxPool attribute 'kernel_strides'");
+			ERROR("Wrong attribute type for AveragePool attribute 'kernel_strides'");
 
 		for( auto i : a.ints() ) {
 			strides.push_back(i);
@@ -116,6 +114,8 @@ class MaxPool : public Node {
 				parseAttributes_auto_pad(a);
 			else if( a.name() == "ceil_mode" )
 				parseAttributes_ceil_mode(a);
+			else if( a.name() == "count_include_pad" )
+				count_include_pad = parse_attribute_int(a);
 			else if( a.name() == "dilations" )
 				parseAttributes_dilations(a);
 			else if( a.name() == "kernel_shape" )
@@ -132,7 +132,7 @@ class MaxPool : public Node {
 	virtual void print(std::ostream &dst) const override
 	{
 
-		dst << "\t/* MaxPool" << std::endl;
+		dst << "\t/* AveragePool" << std::endl;
 		dst << "\t *" << std::endl;
 		dst << "\t * auto_pad: " << auto_pad << std::endl;
 		dst << "\t * ceil_mode: " << ceil_mode <<std::endl;
@@ -161,11 +161,6 @@ class MaxPool : public Node {
 		std::string type_min_value;
 		std::string in = X->cname();
 		std::string out = Y->cname();
-		bool calculate_indices;
-		if( Indices->name == "" )
-			calculate_indices = false;
-		else
-			calculate_indices = true;
 
 		if( type == "float" )
 			type_min_value = "-FLT_MAX";
@@ -207,9 +202,8 @@ class MaxPool : public Node {
 			dst <<               o_idx <<"++, "<< i_idx << "+=" << strides[i] << ") {" << std::endl;
 		}
 
-		dst<<"\t\t\t"  <<       type << " curmax = " << type_min_value << ";" << std::endl;
-		if( calculate_indices )
-			dst<<"\t\t\t"  <<       "int64_t curmaxind = -1;" << std::endl;
+		dst<<"\t\t\t"  << type << " curavg = 0.0;" << std::endl;
+		dst<<"\t\t\t"  << "int numavg = 0;" << std::endl;
 
 		// loop over kernel
 		for( unsigned i = 0; i<n_data_dims; i++) {
@@ -218,6 +212,8 @@ class MaxPool : public Node {
 			dst <<               idx << "<" << kernel_shape[i] << "; ";
 			dst <<               idx <<"++ ) {" << std::endl;
 		}
+		if( count_include_pad != 0 )
+			dst<<"\t\t\t\t" << "numavg += 1;" <<std::endl;
 
 		// check for out-of-input reading (i.e. read a pad)
 		for( unsigned i = 0; i<n_data_dims; i++) {
@@ -227,20 +223,16 @@ class MaxPool : public Node {
 			dst<<"\t\t\t\t"  <<  "if( ii" << i_str << ">=" << X->data_dim[2+i] << ") continue;" << std::endl;
 		}
 
-
-		dst<<"\t\t\t\t"<<         "if( curmax < " << in << in_kern_idxs << ") {" <<std::endl;
-		dst<<"\t\t\t\t\t"<<         "curmax = MAX( curmax, " << in << in_kern_idxs << ");" <<std::endl;
-		if( calculate_indices )
-			dst<<"\t\t\t\t\t"<<         "curmaxind = " << indices_value << ";" <<std::endl;
-		dst<<"\t\t\t\t"<<         "}" <<std::endl;
+		// not reading a pad:
+		if( count_include_pad == 0 )
+			dst<<"\t\t\t\t" << "numavg += 1;" <<std::endl;
+		dst<<"\t\t\t\t" << "curavg += " << in << in_kern_idxs << ";" <<std::endl;
 
 		// close kernel loop
 		for( unsigned i = 0; i<n_data_dims; i++)
 			dst<<"\t\t\t}" << std::endl;
 
-		dst<<"\t\t\t"  <<       out << out_idxs << "= curmax;" << std::endl;
-		if( calculate_indices )
-			dst<<"\t\t\t"  <<       Indices->cname() << out_idxs << "= curmaxind;" << std::endl;
+		dst<<"\t\t\t"  <<       out << out_idxs << "= curavg/numavg;" << std::endl;
 
 		// close output loop
 		for( unsigned i = 0; i<n_data_dims; i++)
@@ -260,11 +252,11 @@ class MaxPool : public Node {
 			ERROR("Incorrect input for node"); 
 
 		if( X->data_dim[0] != 1 )
-			ERROR("Unimplemented: MaxPool batches bigger than 1");
+			ERROR("Unimplemented: AveragePool batches bigger than 1");
 
 
 		if( kernel_shape.size() == 0 )
-			ERROR("MaxPool: kernel_shape not provided");
+			ERROR("AveragePool: kernel_shape not provided");
 
 		if( storage_order != 0 )
 			ERROR("Unimplemented: column-major storage_order");
@@ -344,7 +336,7 @@ class MaxPool : public Node {
 				//              - input_spatial_shape[i]
 				// NB: onnx2c architecture does not allow figuring out the output shape at this stage
 				// (especially since the onnx spec says it is a function of input, strides, pads &c).
-				// The auto_pad attribute for MaxPool is deprecated anyway. Probably just for this confusion.
+				// The auto_pad attribute for AveragePool is deprecated anyway. Probably just for this confusion.
 				// This tries to be some sort of band-aid: assume the output size is the same as input size
 				// which is the usual(?) reason to use "same" padding on the network design level. 
 				int input_size = X->data_dim[i+2];
