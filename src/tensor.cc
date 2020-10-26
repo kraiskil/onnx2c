@@ -22,6 +22,7 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 		ERROR("Non-valid data type " << datatype << " in tensor " << tensor.name());
 	data_type = static_cast<onnx::TensorProto_DataType>(datatype);
 
+	// Number of data in the ONNX protobuffer. Except if data is stored "externally" this will be 0 :|
 	int data_num_elements;
 	switch( datatype )
 	{
@@ -35,6 +36,9 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 			data_num_elements = tensor.int32_data_size(); break;
 		case onnx::TensorProto_DataType_INT64:
 			data_num_elements = tensor.int64_data_size(); break;
+		case onnx::TensorProto_DataType_BOOL:
+			// sic - bool data is contained in the int32 array
+			data_num_elements = tensor.int32_data_size(); break;
 		default:
 			ERROR("unhandled tensor data type in tensor " << tensor.name());
 			break;
@@ -51,6 +55,12 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 		else if( tensor.has_raw_data() == false )
 			ERROR("Error: data size does not match dimensions, and no raw data");
 	}
+
+	// Panic-fix: if data is external, and scalar, dimensions are 0 at this point.
+	// Because that is how ONNX and/or protobuf do it :|
+	// TODO: can we do assertions here to verify this?
+	if( tensor.dims().size() == 0 )
+		data_dim.push_back(1);
 
 	data_buffer = malloc(data_num_elem() * data_elem_size());
 	if( data_buffer == NULL )
@@ -116,6 +126,8 @@ int Tensor::data_elem_size(void)const
 			return sizeof(int32_t); break;
 		case onnx::TensorProto_DataType_INT64:
 			return sizeof(int64_t); break;
+		case onnx::TensorProto_DataType_BOOL:
+			return sizeof(bool); break;
 		default:
 			ERROR("unhandled tensor data type in tensor " << name);
 			break;
@@ -134,6 +146,8 @@ std::string Tensor::data_type_str(void) const
 			return "int32_t"; break;
 		case onnx::TensorProto_DataType_INT64:
 			return "int64_t"; break;
+		case onnx::TensorProto_DataType_BOOL:
+			return "bool"; break;
 		default:
 			ERROR("unhandled tensor data type in tensor " << name);
 			break;
@@ -170,6 +184,13 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 			dst << f[element];
 			break;
 		}
+		case onnx::TensorProto_DataType_BOOL:
+		{
+			bool *f = static_cast<bool*>(data_buffer);
+			dst << f[element];
+			break;
+		}
+
 		default:
 			ERROR("unimplemented printing of initialized datatype " << data_type_str());
 	}
