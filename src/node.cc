@@ -6,6 +6,23 @@
 
 using namespace toC;
 
+bool Node::is_output_N_used(unsigned N)
+{
+	// ONNX spec:
+	// "There are two ways to leave an optional input or output unspecified:
+	// the first, available only for trailing inputs and outputs, is to simply
+	// not provide that input; the second method is to use an empty string in
+	// place of an input or output name."
+
+	if( (int)N >= onnx_node->output_size() )
+		return false;
+
+	if( onnx_node->output(N) == "" )
+		return false;
+
+	return true;
+}
+
 bool Node::typeConstraint_highPrecisionNumeric(const Tensor *t) const
 {
 	return (
@@ -71,3 +88,4 @@ void Node::multidirectional_broadcast_size(
 				ERROR("multidirectional_broadcast: bad tensor shapes for node " << onnx_name);
 		}
 }
+

@@ -159,7 +159,6 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 	if( nodeInputsResolved(node, inputs) == false )
 		return;
 
-
 	Node *n = findNode(node.op_type());
 	n->onnx_node = &node;
 	n->isResolved = false;
@@ -186,10 +185,14 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 		Tensor *t = outputs[o];
 
 		// optional outputs are named "" or just omitted
-		std::string onnx_name="";
-		if( (int)o<node.output_size() )
+		std::string onnx_name;
+		if( n->is_output_N_used(o) )
 			onnx_name = node.output(o);
+		else
+			onnx_name = "";
 
+		// recursive nodes are special: if they are not used by other nodes,
+		// then the ONNX graph doesn't record them (i.e. they look like they'd be unused)
 		if( onnx_name == "" ) {
 			if (t->isRecursive==false) {
 				LOG(TRACE) << "skipping: output number " << o << " is unused" << std::endl;
@@ -277,6 +280,7 @@ void Graph::addTensor(Tensor *t)
 	if( prev == NULL ) {
 		tensors.push_back(t);
 		LOG(DEBUG) << "Adding new tensor: " << t->name << " - "<< t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
+		// TODO return & remove else {}
 	}
 	else {
 		LOG(DEBUG) << "Updating existing tensor: " << t->name << std::endl;

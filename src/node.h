@@ -46,6 +46,11 @@ class Node {
 	 * This function may not fail: call only with all inputs given & resolved */
 	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) = 0;
 
+	/* Check if an optional output is used in the network.
+	 * N is Nth output specified in the Operator.md specification for this node.
+	 * Start counting N from 0. */
+	bool is_output_N_used(unsigned N);
+
 	/* Not all node types have attributes. Override where needed */
 	virtual void parseAttributes( onnx::NodeProto &node )
 	{
