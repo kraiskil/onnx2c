@@ -228,6 +228,7 @@ bool Graph::hasUnresolvedNodes(void)
 #include "nodes/batchnormalization.h"
 #include "nodes/concat.h"
 #include "nodes/conv.h"
+#include "nodes/dropout.h"
 #include "nodes/flatten.h"
 #include "nodes/lstm.h"
 #include "nodes/matmul.h"
@@ -245,6 +246,7 @@ Node* Graph::findNode(std::string opName)
 	if( opName == "BatchNormalization" )return new BatchNormalization;
 	if( opName == "Concat" )return new Concat;
 	if( opName == "Conv" )return new Conv;
+	if( opName == "Dropout" )return new Dropout;
 	if( opName == "Flatten" )return new Flatten;
 	if( opName == "LSTM" )return new LSTM;
 	if( opName == "MatMul" )return new MatMul;

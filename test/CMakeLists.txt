@@ -102,6 +102,13 @@ ONNX_backend_node_test(conv_with_strides_padding)
 ONNX_backend_node_test(conv_with_strides_and_asymmetric_padding)
 ONNX_type_test(operator_conv ${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-operator/test_operator_conv ONNX_backend_pytorch_conv 0.00001 0)
 
+ONNX_backend_node_test(dropout_default)
+ONNX_backend_node_test(dropout_default_mask_ratio)
+ONNX_backend_node_test(dropout_default_ratio)
+ONNX_backend_node_test(dropout_default_mask)
+ONNX_backend_node_test(dropout_default_old)
+ONNX_backend_node_test(dropout_random_old)
+
 ONNX_backend_node_test(flatten_axis0)
 ONNX_backend_node_test(flatten_axis1)
 ONNX_backend_node_test(flatten_axis2)
