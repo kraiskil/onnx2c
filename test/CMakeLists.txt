@@ -168,14 +168,14 @@ ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_pads)
 ONNX_backend_node_test(relu)
 
 ONNX_backend_node_test(reshape_extended_dims)
-#ONNX_backend_node_test(reshape_negative_extended_dims)  # zero and negative dimensions TBD
+ONNX_backend_node_test(reshape_negative_extended_dims)
 ONNX_backend_node_test(reshape_reduced_dims)
 ONNX_backend_node_test(reshape_reordered_last_dims)
-#ONNX_backend_node_test(reshape_zero_dim)
-#ONNX_backend_node_test(reshape_negative_dim)
+ONNX_backend_node_test(reshape_zero_dim)
+ONNX_backend_node_test(reshape_negative_dim)
 ONNX_backend_node_test(reshape_one_dim)
 ONNX_backend_node_test(reshape_reordered_all_dims)
-#ONNX_backend_node_test(reshape_zero_and_negative_dim)
+ONNX_backend_node_test(reshape_zero_and_negative_dim)
 
 ONNX_backend_node_test(sigmoid)
 ONNX_backend_node_test(sigmoid_example)
