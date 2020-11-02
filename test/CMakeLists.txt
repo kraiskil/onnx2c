@@ -28,7 +28,7 @@ function( compile_onnx onnx_file c_file )
 endfunction()
 
 
-function( ONNX_type_test node_name data_dir test_ctest_name accuracy test_data_set)
+function( ONNX_type_test_build node_name data_dir accuracy test_data_set)
 
 	add_custom_command(
 		OUTPUT
@@ -51,6 +51,10 @@ function( ONNX_type_test node_name data_dir test_ctest_name accuracy test_data_s
 		)
 	target_link_libraries( ${node_name}_${test_data_set}_test m )
 
+endfunction()
+
+function( ONNX_type_test node_name data_dir test_ctest_name accuracy test_data_set)
+	ONNX_type_test_build(${node_name} ${data_dir} ${accuracy} ${test_data_set})
 	add_test( ${test_ctest_name}
 		${node_name}_${test_data_set}_test
 		)
@@ -204,6 +208,7 @@ add_subdirectory(tfl_helloworld)
 add_subdirectory(mnist)
 add_subdirectory(velardo)
 add_subdirectory(simple_networks)
+add_subdirectory(squeezenet)
 
 # local op tests 
 ONNX_backend_node_local_test(matmul_precision)

@@ -26,13 +26,6 @@ Make sure you have ProtocolBuffers libraries installed.
 `mkdir build; cd build; cmake ..; make`
 
 
-Onnx2c sources include generated protobuffer files. If you need to update them:
-
-- update the onnx git submodule
-- grab the onnx.proto file from onnx/onnx/onnx.proto
-- remove the last lines (i.e. option `optimize_for = LITE_RUNTIME;`)
-- recompile: `protoc onnx.proto --cpp_out=src`
-
 
 Usage
 -----
