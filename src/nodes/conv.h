@@ -124,6 +124,7 @@ class Conv : public Node {
 	{
 		std::string type = x->data_type_str();
 		int num_data_dim = x->data_dim.size()-2;
+		std::string input_area; // where to read data from: tensor x or padded scratchpad
 
 		/* Print settings into comment section before code */
 		dst << "\t/* Conv" << std::endl;
@@ -147,6 +148,10 @@ class Conv : public Node {
 				dst << s << " ";
 		dst << std::endl <<  "\t */" << std::endl;
 
+		int total_pads = 0;
+		for( auto p : pads )
+			total_pads += p;
+
 		/* TODO: select between alternative implementations on how to pad:
 		 * -scratch area larger matrix with padding built-in
 		 * -special case the borders outside of the inner loop
@@ -157,37 +162,45 @@ class Conv : public Node {
 		dst << "\t/* Loop over batches */" << std::endl;
 		dst << "\tfor( uint32_t b=0; b<" << x->data_dim[0] << "; b++) {" << std::endl << std::endl;
 
-		/* Create scratch-area with paddings. Size is [channels][dim1+pads][dim2+pads]*/
-		/* TODO: don't put this on stack! Not putting it on stack needs rework in Graph::print* functions,
-		 * so it is here only to speed up onnx2c development. */
+		// Scratch (or input) size
 		std::vector<int> scr_s;
 		scr_s.push_back(x->data_dim[1]);
 		scr_s.push_back(x->data_dim[2] + pads[0] + pads[0+num_data_dim]);
 		scr_s.push_back(x->data_dim[3] + pads[1] + pads[1+num_data_dim]);
 
-		dst << "\t/* Copy over input to scratch pad memory */" << std::endl;
-		dst << "\t"       << type << " scratch[" << scr_s[0] << "]["<< scr_s[1];
-		dst <<               "]["<< scr_s[2] << "];" << std::endl;
+		if( total_pads > 0 ) {
+			/* Create scratch-area with paddings. Size is [channels][dim1+pads][dim2+pads]*/
+			/* TODO: don't put this on stack! Not putting it on stack needs rework in Graph::print* functions,
+			 * so it is here only to speed up onnx2c development. */
 
-		/* ONNX manual doesn't say explicitly (or I don't find it), but padding is
-		 * always with zeros, not copying the border values. This is known because
-		 * tests (well, the MNIST sample from ONNX zoo) passes only with zero padding */
-		dst << "\tmemset((void*)scratch, 0, sizeof(scratch));" << std::endl;
+			dst << "\t/* Copy over input to scratch pad memory */" << std::endl;
+			dst << "\t"       << type << " scratch[" << scr_s[0] << "]["<< scr_s[1];
+			dst <<               "]["<< scr_s[2] << "];" << std::endl;
 
-		dst << "\t"       << "for( uint32_t c=0; c<" << x->data_dim[1] <<"; c++) {" << std::endl;
+			/* ONNX manual doesn't say explicitly (or I don't find it), but padding is
+			 * always with zeros, not copying the border values. This is known because
+			 * tests (well, the MNIST sample from ONNX zoo) passes only with zero padding */
+			dst << "\tmemset((void*)scratch, 0, sizeof(scratch));" << std::endl;
 
-		dst << "\t\t"     << "for( uint32_t i1=" << pads[0] << ";";
-		dst <<                   "i1<" << scr_s[1]-pads[0+num_data_dim] << ";";
-		dst <<                   "i1++ ) {" << std::endl;
-		dst << "\t\t\t"   << "for( uint32_t i2=" << pads[1] << ";";
-		dst <<                   "i2<" << scr_s[2]-pads[1+num_data_dim] << ";";
-		dst <<                   " i2++ ) {" << std::endl;
+			dst << "\t"       << "for( uint32_t c=0; c<" << x->data_dim[1] <<"; c++) {" << std::endl;
 
-		dst << "\t\t\t\t" << "scratch[c][i1][i2] = " << x->cname() << "[b][c][i1-"<<pads[0]<<"][i2-"<<pads[1]<<"];" << std::endl;
-		dst << "\t\t\t}"  << std::endl;
-		dst << "\t\t}"    << std::endl;
-		dst << "\t}"      << std::endl;
+			dst << "\t\t"     << "for( uint32_t i1=" << pads[0] << ";";
+			dst <<                   "i1<" << scr_s[1]-pads[0+num_data_dim] << ";";
+			dst <<                   "i1++ ) {" << std::endl;
+			dst << "\t\t\t"   << "for( uint32_t i2=" << pads[1] << ";";
+			dst <<                   "i2<" << scr_s[2]-pads[1+num_data_dim] << ";";
+			dst <<                   " i2++ ) {" << std::endl;
 
+			dst << "\t\t\t\t" << "scratch[c][i1][i2] = " << x->cname() << "[b][c][i1-"<<pads[0]<<"][i2-"<<pads[1]<<"];" << std::endl;
+			dst << "\t\t\t}"  << std::endl;
+			dst << "\t\t}"    << std::endl;
+			dst << "\t}"      << std::endl;
+
+			input_area = "scratch";
+		}
+		else {
+			input_area = x->cname() + "[b]";
+		}
 
 		std::string out = y->cname();
 		dst << "\t/* Run the convolution */" << std::endl;
@@ -212,7 +225,7 @@ class Conv : public Node {
 		dst << "\t\tfor( uint32_t k1=0; k1<" << kernel_shape[0] << "; k1++) {" << std::endl;
 		dst << "\t\tfor( uint32_t k2=0; k2<" << kernel_shape[0] << "; k2++) {" << std::endl;
 
-		dst << "\t\t\t" << out << "[b][m][o1][o2] += scratch[c][i1+k1][i2+k2] *";
+		dst << "\t\t\t" << out << "[b][m][o1][o2] += "<< input_area << "[c][i1+k1][i2+k2] *";
 		dst <<             w->cname() << "[m][c][k1][k2];" << std::endl;
 			
 		dst << "\t\t}"      << std::endl;
