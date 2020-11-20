@@ -137,6 +137,9 @@ ONNX_backend_node_test(flatten_negative_axis2)
 ONNX_backend_node_test(flatten_negative_axis3)
 ONNX_backend_node_test(flatten_negative_axis4)
 
+ONNX_backend_node_test(globalaveragepool)
+ONNX_backend_node_test(globalaveragepool_precomputed)
+
 ONNX_backend_node_test(lstm_defaults)
 ONNX_backend_node_test(lstm_with_initial_bias)
 ONNX_backend_node_test(lstm_with_peepholes)
