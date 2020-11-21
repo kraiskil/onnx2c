@@ -170,6 +170,8 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 		name += n->op_name;
 		name +=  "_" + std::to_string(anonymous_nodes);
 		n->onnx_name = name;
+
+		anonymous_nodes++;
 	}
 
 	if( node.attribute_size() != 0 )
