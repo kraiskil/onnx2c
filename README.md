@@ -21,8 +21,10 @@ little or no interest in onnx2c are:
 Building
 --------
 
-Make sure you have ProtocolBuffers libraries installed.
+Make sure you have ProtocolBuffers libraries installed, i.e.
+`apt install libprotobuf-dev protobuf-compiler` (YMMV).
 
+Then to build, run a standard cmake build:
 `mkdir build; cd build; cmake ..; make`
 
 

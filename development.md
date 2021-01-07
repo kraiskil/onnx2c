@@ -11,18 +11,16 @@ If you are adding the implementation for a ONNX operator:
 - add onnx backed tests for the new node in `test/CMakeLists.txt`
 
 
-Updating onnx
--------------
+Protobuffer lite
+----------------
 
-Onnx is a git submodule in onnx2c. From onnx, onnx2c uses the protobuffer
-sources and the backend test suite. If the onnx submodule needs to be updated:
+Some versions (on Ubuntu 16.04 at least), the generated protobuffer
+files would not compile without the following modification to the file
+`onnx/onnx/onnx.proto`
 
-- update the onnx git submodule
-- grab the onnx.proto file from onnx/onnx/onnx.proto
 - remove the last lines (i.e. option `optimize_for = LITE_RUNTIME;`)
-- recompile: `protoc onnx.proto --cpp_out=src`
 
-`src/onnx.pb.cc` and `src/onnx.pb.h` should now be updated.
+On newer vesions (Ubuntu 20.10) this is not needed.
 
 
 Testing

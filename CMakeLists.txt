@@ -10,16 +10,24 @@ set (CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
 
+add_custom_command(
+	OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc ${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.h
+	COMMAND protoc --proto_path=${CMAKE_CURRENT_SOURCE_DIR}/onnx/onnx/ --cpp_out=. onnx.proto
+	MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/onnx/onnx/onnx.proto
+	)
+
 
 add_library(onnx2c_lib STATIC
 	src/graph.cc
 	src/graph_print.cc
 	src/node.cc
-	src/onnx.pb.cc
 	src/tensor.cc
 	src/util.cc
+	${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc
 )
 target_compile_options(onnx2c_lib
+	PUBLIC
+		-I${CMAKE_CURRENT_BINARY_DIR}
 	PRIVATE
 		-Isrc
 		-I${CMAKE_CURRENT_SOURCE_DIR}/aixlog/include
