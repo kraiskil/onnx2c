@@ -27,7 +27,7 @@ class Transpose : public Node {
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 
-		for( const auto a : node.attribute() ) {
+		for( const auto& a : node.attribute() ) {
 			if( a.name() == "perm" ) {
 				if( a.type() != onnx::AttributeProto_AttributeType_INTS )
 					ERROR("Bad attribute " << a.name());

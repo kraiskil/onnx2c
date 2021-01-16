@@ -104,7 +104,7 @@ class LSTM : public Node {
 	}
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
-		for( const auto a : node.attribute() ) {
+		for( const auto& a : node.attribute() ) {
 			LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
 
 			if( a.name() == "activation_alpha" )

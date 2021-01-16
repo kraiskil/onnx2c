@@ -33,7 +33,7 @@ class Dropout : public Node {
 	const Tensor *mask;
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
-		for( const auto a : node.attribute() ) {
+		for( const auto& a : node.attribute() ) {
 			if( a.name() == "seed" ) {
 				seed = parse_attribute_int(a);
 				seed_given=true;

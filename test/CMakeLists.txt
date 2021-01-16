@@ -9,7 +9,7 @@ set(ONNX_NODE_TEST_DATA_DIR ${ONNX_BACKEND_TEST_DATA_DIR}/node/)
 # to check output matches expected output.
 add_executable( testgen
 	onnx_backend_tests_generator.cc)
-target_link_libraries(testgen onnx2c_lib protobuf)
+target_link_libraries(testgen onnx2c_lib ${Protobuf_LIBRARIES})
 target_compile_options(testgen
 	PRIVATE
 		-I${CMAKE_CURRENT_SOURCE_DIR}/../aixlog/include

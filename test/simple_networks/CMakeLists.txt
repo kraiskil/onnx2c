@@ -11,7 +11,7 @@
 function( simple_test test_name output_size)
 	compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/${test_name}.onnx ${test_name}_generated.c)
 	add_executable(${test_name} ${test_name}_generated.c ${test_name}.c  main.c)
-	target_link_libraries(${test_name} onnx2c_lib protobuf)
+	target_link_libraries(${test_name} onnx2c_lib ${Protobuf_LIBRARIES})
 	target_compile_options(${test_name}
 		PRIVATE
 			-Wall -Werror
@@ -32,7 +32,7 @@ simple_test( maxpool_k2_s2 4 )
 function( lstm_test test_name)
 	compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/${test_name}.onnx ${test_name}_generated.c)
 	add_executable(${test_name} ${test_name}_generated.c ${test_name}.c  main_lstm.c)
-	target_link_libraries(${test_name} onnx2c_lib protobuf)
+	target_link_libraries(${test_name} onnx2c_lib ${Protobuf_LIBRARIES})
 	target_compile_options(${test_name}
 		PRIVATE
 			-Wall -Werror
