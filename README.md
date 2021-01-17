@@ -55,6 +55,9 @@ Run
 At the end of the `model.c` there is a function called 'void entry(...)'.
 Call that from your main program to run inference. Function parameters are named as in your ONNX model.
 
+Using the compiler `-ffast-math` (or equivalent) when compiling onnx2c-generated code increases computation speed.
+See the [GCC wiki on floating point maths](https://gcc.gnu.org/wiki/FloatingPointMath) for details.
+
 
 Performance
 -----------
