@@ -228,6 +228,15 @@ ONNX_backend_node_test(transpose_all_permutations_3)
 ONNX_backend_node_test(transpose_all_permutations_4)
 ONNX_backend_node_test(transpose_all_permutations_5)
 
+ONNX_backend_node_test(unsqueeze_axis_0)
+ONNX_backend_node_test(unsqueeze_axis_2)
+ONNX_backend_node_test(unsqueeze_negative_axes)
+ONNX_backend_node_test(unsqueeze_two_axes)
+ONNX_backend_node_test(unsqueeze_axis_1)
+ONNX_backend_node_test(unsqueeze_axis_3)
+ONNX_backend_node_test(unsqueeze_three_axes)
+ONNX_backend_node_test(unsqueeze_unsorted_axes)
+
 
 # More end-to-end kind of tests here
 add_subdirectory(tfl_helloworld)

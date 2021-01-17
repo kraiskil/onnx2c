@@ -269,6 +269,11 @@ int Tensor::data_num_elem(void) const
 	return dim;
 }
 
+unsigned Tensor::rank(void) const
+{
+	return data_dim.size();
+}
+
 std::string Tensor::str_dimensions(void)
 {
 	std::string rv = "";

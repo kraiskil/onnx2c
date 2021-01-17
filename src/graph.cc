@@ -243,6 +243,7 @@ bool Graph::hasUnresolvedNodes(void)
 #include "nodes/squeeze.h"
 #include "nodes/softmax.h"
 #include "nodes/transpose.h"
+#include "nodes/unsqueeze.h"
 
 Node* Graph::findNode(std::string opName)
 {
@@ -263,6 +264,7 @@ Node* Graph::findNode(std::string opName)
 	if( opName == "Squeeze" )return new Squeeze;
 	if( opName == "Softmax" )return new Softmax;
 	if( opName == "Transpose" )return new Transpose;
+	if( opName == "Unsqueeze" )return new Unsqueeze;
 
 	ERROR("Unimplemented: node operation " << opName);
 	return NULL;

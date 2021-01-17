@@ -47,6 +47,9 @@ class Tensor {
 	 * I.e. the product of the data dimensions */
 	int data_num_elem(void) const;
 
+	/* Number of data dimensions */
+	unsigned rank(void) const;
+
 	/* A string with the the C type for this tensor's data element. E.g. "float" */
 	std::string data_type_str(void) const;
 
