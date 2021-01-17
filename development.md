@@ -6,7 +6,8 @@ Adding a new node/op implementation
 
 If you are adding the implementation for a ONNX operator:
 
-- create the implementation file for it in `src/nodes/`
+- create the implementation file for it in `src/nodes/` (check out
+  `src/nodes/TEMPLATE` for a starting point)
 - add a case to the switch in `Graph::findNode()` in `src/graph.cc`
 - add onnx backed tests for the new node in `test/CMakeLists.txt`
 

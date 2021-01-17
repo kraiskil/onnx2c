@@ -1,0 +1,93 @@
+/* This file is part of onnx2c.
+ *
+ * TEMPLATE node.
+ * When implementing a new node, use this template 
+ * as a starting point.
+ * Replace all occurances of TEMPLATE in this file.
+ * Some representative dummy implementation provided.
+ * 
+ * The functions here are callbacks from the onnx2c
+ * framework. See node.h for more documentation.
+ */ 
+namespace toC {
+
+class TEMPLATE : public Node {
+	public:
+	TEMPLATE() {
+		op_name = "TEMPLATE";
+		input_1=input_2_optional=output_1=output_2_optional=NULL;
+	}
+	/* Node attributes */
+	std::vector<float> a_floatarray_attribute;
+	int an_int_attribute;
+
+	// input and output
+	const Tensor *input_1;
+	const Tensor *input_2_optional;
+	const Tensor *output_1;
+	const Tensor *output_2_optional;
+
+
+	/* Print the function parameters - use the order they are introduced in the
+	 * ONNX documentation */
+	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
+	{
+		input_1->print_tensor(dst, !decorate);
+
+		if (input_2_optional) {
+			dst << ", ";
+			input_2_optional->print_tensor(dst, !decorate);
+		}
+
+		dst << ", ";
+		output_1->print_tensor(dst, !decorate);
+
+		if (output_2_optional) {
+			dst << ", ";
+			output_2_optional->print_tensor(dst, !decorate);
+		}
+	}
+
+	/* Parse attributes, if this node has them. */
+	virtual void parseAttributes( onnx::NodeProto &node ) override {
+		for( const auto& a : node.attribute() ) {
+			LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
+
+
+
+
+	/* Body of the node implementing function */
+	virtual void print(std::ostream &dst) const override
+	{
+
+		dst << "\t/* TEMPLATE */" << std::endl;
+		dst << "\t/* Print info on this node here, for debugging purposes */" << std::endl;
+
+	}
+
+
+	/* Assign input tensors, resolve output tensor shapes, allocate output tensors */
+	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
+	{
+		input_1  = inputs[0];
+
+		if (inputs.size() == 2)
+			input_2_optional = inputs[0];
+		// else leave input_2_optional as null so other functions here know to ignore it
+
+
+		/* Create output tensors.
+		 * Set data dimensions and data type for the created tensors. */
+		Tensor *t = new Tensor;
+		t->data_dim.push_back(42);
+		t->data_type = onnx::TensorProto_DataType_FLOAT;
+		/* Store the created tensor both as reference in this node, and into
+		 * the return value vector! */
+		output_1 = t;
+		outputs.push_back(t);
+
+		/* TODO: optional outputs? */
+	}
+};
+}
+

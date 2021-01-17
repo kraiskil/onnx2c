@@ -1,11 +1,6 @@
 /* This file is part of onnx2c.
  *
  * GlobalAveragePool node.
- * When implementing a new node, use this template 
- * as a starting point.
- * Replace all occurances of GlobalAveragePool in this file.
- * Some representative dummy implementation provided.
- * See node.h for more documentation.
  */ 
 namespace toC {
 
@@ -13,10 +8,9 @@ class GlobalAveragePool : public Node {
 	public:
 	GlobalAveragePool() {
 		op_name = "GlobalAveragePool";
-		/* TODO: initialize class variables (attributes and tensors) */
 		X=Y=NULL;
 	}
-	/* Node attributes */
+
 	std::vector<float> an_attribute;
 
 	const Tensor *X;
