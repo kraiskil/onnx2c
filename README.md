@@ -43,15 +43,15 @@ cmake ..
 make
 ```
 
-### ProtoBuf lite
+#### Getting `error: ‘class onnx::ModelProto’ has no member named ‘ParseFromIstream’;` ?
 
-Some versions (on Ubuntu 16.04 at least), the generated protobuffer
-files would not compile without the following modification to the file
-`onnx/onnx/onnx.proto`
+If you have ProtoBuf 3.6 or earlier, you need the following modification to `onnx/onnx/onnx.proto`
 
 - remove the last lines (i.e. option `optimize_for = LITE_RUNTIME;`)
 
-On newer vesions (Ubuntu 20.10) this is not needed.
+With ProtoBuf 3.12 (e.g. Ubuntu 20.10 onwards) this modification is not needed.
+
+Versions between 3.6 and 3.12 are uinvestigated.
 
 
 Usage
