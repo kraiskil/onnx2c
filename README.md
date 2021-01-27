@@ -51,7 +51,7 @@ If you have ProtoBuf 3.6 or earlier, you need the following modification to `onn
 
 With ProtoBuf 3.12 (e.g. Ubuntu 20.10 onwards) this modification is not needed.
 
-Versions between 3.6 and 3.12 are uinvestigated.
+Versions between 3.6 and 3.12 are uninvestigated.
 
 
 Usage
