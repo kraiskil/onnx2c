@@ -43,7 +43,7 @@ cmake ..
 make
 ```
 
-## ProtoBuf lite
+### ProtoBuf lite
 
 Some versions (on Ubuntu 16.04 at least), the generated protobuffer
 files would not compile without the following modification to the file
