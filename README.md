@@ -43,6 +43,16 @@ cmake ..
 make
 ```
 
+## ProtoBuf lite
+
+Some versions (on Ubuntu 16.04 at least), the generated protobuffer
+files would not compile without the following modification to the file
+`onnx/onnx/onnx.proto`
+
+- remove the last lines (i.e. option `optimize_for = LITE_RUNTIME;`)
+
+On newer vesions (Ubuntu 20.10) this is not needed.
+
 
 Usage
 -----

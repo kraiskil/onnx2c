@@ -12,18 +12,6 @@ If you are adding the implementation for a ONNX operator:
 - add onnx backed tests for the new node in `test/CMakeLists.txt`
 
 
-Protobuffer lite
-----------------
-
-Some versions (on Ubuntu 16.04 at least), the generated protobuffer
-files would not compile without the following modification to the file
-`onnx/onnx/onnx.proto`
-
-- remove the last lines (i.e. option `optimize_for = LITE_RUNTIME;`)
-
-On newer vesions (Ubuntu 20.10) this is not needed.
-
-
 Testing
 -------
 
