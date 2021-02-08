@@ -159,6 +159,18 @@ ONNX_backend_node_test(flatten_negative_axis2)
 ONNX_backend_node_test(flatten_negative_axis3)
 ONNX_backend_node_test(flatten_negative_axis4)
 
+ONNX_backend_node_test(gemm_all_attributes)
+ONNX_backend_node_test(gemm_default_no_bias)
+ONNX_backend_node_test(gemm_default_zero_bias)
+ONNX_backend_node_test(gemm_alpha)
+ONNX_backend_node_test(gemm_default_scalar_bias)
+ONNX_backend_node_test(gemm_transposeA)
+ONNX_backend_node_test(gemm_beta)
+ONNX_backend_node_test(gemm_default_single_elem_vector_bias)
+ONNX_backend_node_test(gemm_transposeB)
+ONNX_backend_node_test(gemm_default_matrix_bias)
+ONNX_backend_node_test(gemm_default_vector_bias)
+
 ONNX_backend_node_test(globalaveragepool)
 ONNX_backend_node_test(globalaveragepool_precomputed)
 

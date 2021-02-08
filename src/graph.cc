@@ -233,6 +233,7 @@ bool Graph::hasUnresolvedNodes(void)
 #include "nodes/conv.h"
 #include "nodes/dropout.h"
 #include "nodes/flatten.h"
+#include "nodes/gemm.h"
 #include "nodes/globalaveragepool.h"
 #include "nodes/lstm.h"
 #include "nodes/matmul.h"
@@ -255,6 +256,7 @@ Node* Graph::findNode(std::string opName)
 	if( opName == "Dropout" )return new Dropout;
 	if( opName == "Flatten" )return new Flatten;
 	if( opName == "GlobalAveragePool" )return new GlobalAveragePool;
+	if( opName == "Gemm" )return new Gemm;
 	if( opName == "LSTM" )return new LSTM;
 	if( opName == "MatMul" )return new MatMul;
 	if( opName == "MaxPool" )return new MaxPool;
