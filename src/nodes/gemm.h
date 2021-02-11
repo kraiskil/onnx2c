@@ -127,7 +127,6 @@ class Gemm : public Node {
 		std::string B_el = transB ? "B[c][i]" : "B[i][c]";
 		std::string C_el;
 		if( C  ) {
-			dst << "\t\t\t" << type <<" Crc = 0;" << std::endl;
 			C_el = "C[";
 			if( C0 == 1 )
 				C_el += "0][";
