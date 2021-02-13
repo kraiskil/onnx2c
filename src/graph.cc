@@ -44,20 +44,16 @@ Graph::Graph(
 		addTensor( n );
 	}
 
-	// while exists unresolved nodes
-	//   search in unresolved nodes for a resolvable node (i.e. has resolved inputs)
-	//   resolve node + create output tensor
-	while( hasUnresolvedNodes() )
-	{
-		unsigned num_resolved_nodes = nodes.size();
-
-		for( auto n : onnx_graph.node() )
-			tryResolveNode( n );
-
-		if( num_resolved_nodes == nodes.size() )
-			ERROR("Failed to resolve a new node");
-	}
-
+	// Resolve all nodes.
+	// TODO: this now walks through all nodes in the order
+	// they are defined in the onnx file. This works only
+	// because all input graphs encountered thus far have
+	// been resolvable in that order.
+	// But there is no guarantee (that I found) in onnx
+	// that says nodes could not be given in other orders too.
+	// Fix this when (if) someone can produce such a file
+	for( auto n : onnx_graph.node() )
+		tryResolveNode( n );
 }
 
 
