@@ -141,38 +141,40 @@ bool Graph::nodeInputsResolved(const onnx::NodeProto &node, std::vector<const Te
 
 void Graph::tryResolveNode(onnx::NodeProto &node)
 {
-	// Check if node has all inputs resolved
 	std::vector<const Tensor*> inputs;
 	std::vector<Tensor*> outputs;
 	LOG(DEBUG) << "Resolving node " << node.name() <<std::endl;
 
+	// Early exit on error cases - cannot resolve this node (now)
 	for( auto o : nodes )
 		if( node.name() == o->onnx_name ) {
 			LOG(TRACE) << "Node " << node.name() << " already resolved"<<std::endl;
 			return;
 		}
-
 	if( nodeInputsResolved(node, inputs) == false )
 		return;
 
-	Node *n = findNode(node.op_type());
+
+	Node *n = createNode(node.op_type());
 	n->onnx_node = &node;
 	n->isResolved = false;
 	n->op_name = node.op_type();
 	n->onnx_name = node.name();
 
+	// onnx allows (or at least some tools create) nodes without names
+	// create unique names for those, e.g. "anonymous_5_relu"
 	if( n->onnx_name == "" ) {
 		std::string name = "anonymous_";
 		name += n->op_name;
 		name +=  "_" + std::to_string(anonymous_nodes);
 		n->onnx_name = name;
-
 		anonymous_nodes++;
 	}
 
 	if( node.attribute_size() != 0 )
 		n->parseAttributes( node );
 
+	// Bad name - see issue #5. "resolveNode()", maybe?
 	n->resolveOutput(inputs, outputs );
 
 
@@ -242,7 +244,7 @@ bool Graph::hasUnresolvedNodes(void)
 #include "nodes/transpose.h"
 #include "nodes/unsqueeze.h"
 
-Node* Graph::findNode(std::string opName)
+Node* Graph::createNode(std::string opName)
 {
 	if( opName == "Add" )return new Add;
 	if( opName == "AveragePool" )return new AveragePool;

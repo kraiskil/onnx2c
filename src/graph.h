@@ -34,7 +34,7 @@ public:
 	void tryResolveNode(onnx::NodeProto &node);
 	bool hasUnresolvedNodes(void);
 	bool nodeInputsResolved(const onnx::NodeProto &node, std::vector<const Tensor*> &inputs);
-	Node* findNode(std::string opName);
+	Node* createNode(std::string opName);
 
 private:
 	// The top-level onnx object.
