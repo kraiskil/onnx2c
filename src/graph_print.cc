@@ -110,7 +110,10 @@ void Graph::print_interface_function(std::ostream &dst)
 		Tensor *t = findTensor(i.name());
 
 		if( t && t->isIO && t->isAliasOf==NULL ) {
-			dst << ", ";
+			if(!isfirst)
+				dst << ", ";
+			else
+				isfirst = false;
 			t->print_tensor(dst);
 		}
 		else if( t && t->isIO && t->isAliasOf!=NULL ) {

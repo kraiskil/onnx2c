@@ -1,5 +1,6 @@
 #include "error.h"
 #include "util.h"
+#include "tensor.h"
 
 std::string cify_name(const std::string &in)
 {
@@ -77,7 +78,19 @@ std::vector<std::string> parse_attribute_strings(const onnx::AttributeProto &a)
 		rv.push_back(s);
 
 	return rv;
+}
 
+toC::Tensor* parse_attribute_tensor(const onnx::AttributeProto &a)
+{
+	if( a.type() != onnx::AttributeProto_AttributeType_TENSOR )
+		ERROR("Attribute type is not tensor");
+	if( a.has_t() == false )
+		ERROR("No tensor in attribute");
 
+	toC::Tensor *t = new toC::Tensor;
+	t->parse_onnx_tensor( a.t() );
+	t->initialize = true;
+	t->isConst = true;
+	return t;
 }
 

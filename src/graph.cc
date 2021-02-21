@@ -228,6 +228,7 @@ bool Graph::hasUnresolvedNodes(void)
 #include "nodes/averagepool.h"
 #include "nodes/batchnormalization.h"
 #include "nodes/concat.h"
+#include "nodes/constant.h"
 #include "nodes/conv.h"
 #include "nodes/dropout.h"
 #include "nodes/flatten.h"
@@ -250,6 +251,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "AveragePool" )return new AveragePool;
 	if( opName == "BatchNormalization" )return new BatchNormalization;
 	if( opName == "Concat" )return new Concat;
+	if( opName == "Constant" )return new Constant;
 	if( opName == "Conv" )return new Conv;
 	if( opName == "Dropout" )return new Dropout;
 	if( opName == "Flatten" )return new Flatten;
@@ -334,6 +336,10 @@ void Graph::addTensor(Tensor *t)
 
 		if( t->isConst == false )
 			prev->isConst = false;
+
+		prev->initialize = t->initialize || prev->initialize;
+		if( prev->initialize )
+			prev->generate=true;
 
 		LOG(TRACE) << "   now: gen " << prev->generate
 		           << "  init " << prev->initialize

@@ -174,7 +174,8 @@ int main(int argc, char *argv[])
 	for( auto r : outputs ) {
 		if( r->isAliasOf )
 			continue;
-		std::cout << ", ";
+		if( isfirst ) isfirst=false;
+		else          std::cout << ", ";
 		std::cout << r->cname();
 	}
 	std::cout << ");" << std::endl;

@@ -54,6 +54,7 @@ class Tensor {
 	std::string data_type_str(void) const;
 
 	/* Fill this Tensor from the ONNX TensorProto */
+	/* TODO: would this not be nicer as a constructor? :) */
 	void parse_onnx_tensor(const onnx::TensorProto &tensor);
 
 
