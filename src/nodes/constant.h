@@ -47,6 +47,8 @@ class Constant : public Node {
 			ERROR("Constant output tensor should have been resolved by this time");
 
 		Tensor *t = const_cast<toC::Tensor*>(output);
+		// "This operator produces a constant tensor."
+		t->isConst = true;
 		outputs.push_back(t);
 	}
 };

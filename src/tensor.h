@@ -28,7 +28,7 @@ class Tensor {
 	Tensor() :
 		generate(true),
 		initialize(false),
-		isConst(true),
+		isConst(false),
 		isIO(false),
 		isRecursive(false),
 		isAliasOf(NULL),

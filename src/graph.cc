@@ -32,7 +32,7 @@ Graph::Graph(
 
 	// 1. add initializers as resolved tensors
 	for( auto i : onnx_graph.initializer() )
-		addResolvedTensor( i );
+		addInitializedTensor( i );
 
 	// 2. add graph inputs as resolved tensors
 	for ( auto i : onnx_graph.input() ) {
@@ -57,11 +57,15 @@ Graph::Graph(
 }
 
 
-void Graph::addResolvedTensor(onnx::TensorProto &tensor)
+/* Add already resolved onnx::TensorProto. E.g. TensorProtos that
+ * are resolved already in the ONNX model (inputs and initialized ones)
+ */
+void Graph::addInitializedTensor(onnx::TensorProto &tensor)
 {
 	Tensor *t = new Tensor;
 
 	t->parse_onnx_tensor(tensor);
+	t->isConst = true;
 
 	addTensor(t);
 }
@@ -201,7 +205,6 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 			onnx_name = n->c_name() + "_recursive_"+std::to_string(o);
 		}
 		t->name = onnx_name;
-		t->isConst = false;
 
 		addTensor(t);
 	}

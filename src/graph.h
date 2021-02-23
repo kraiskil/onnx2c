@@ -25,10 +25,7 @@ public:
 	void print_includes(std::ostream &dst);
 	void print_interface_function(std::ostream &dst);
 
-	/* Add already resolved onnx::TensorProto. E.g. TensorProtos that
-	 * are resolved already in the ONNX model (inputs and initialized ones)
-	 */
-	void addResolvedTensor(onnx::TensorProto &tensor);
+	void addInitializedTensor(onnx::TensorProto &tensor);
 	Tensor* getIoTensor(onnx::ValueInfoProto &vi);
 
 	void tryResolveNode(onnx::NodeProto &node);
