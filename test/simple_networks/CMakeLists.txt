@@ -8,22 +8,24 @@
 # -add new simple_test() line.
 
 
-function( simple_test test_name output_size)
+function( simple_test test_name output_size num_chan)
 	compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/${test_name}.onnx ${test_name}_generated.c)
 	add_executable(${test_name} ${test_name}_generated.c ${test_name}.c  main.c)
 	target_link_libraries(${test_name} onnx2c_lib ${Protobuf_LIBRARIES})
 	target_compile_options(${test_name}
 		PRIVATE
 			-Wall -Werror
-			-DOUTPUT_SIZE=${output_size})
+			-DOUTPUT_SIZE=${output_size}
+			-DNUM_CHAN=${num_chan})
 	add_test(small_${test_name} ${test_name})
 endfunction()
 
-simple_test( conv_k2 16 )
-simple_test( conv_k2_maxpool_k2 4 )
-simple_test( conv_k2_s2 4 )
-simple_test( maxpool_k2 16 )
-simple_test( maxpool_k2_s2 4 )
+simple_test( conv_k2 16 1 )
+simple_test( conv_k2_maxpool_k2 4 1 )
+simple_test( conv_k2_s2 4 1 )
+simple_test( conv_3ch 16 3 )
+simple_test( maxpool_k2 16 1 )
+simple_test( maxpool_k2_s2 4 1 )
 
 
 # LSTM being a recursive model, several invocations might be needed (the 'r' parameter in the test name).

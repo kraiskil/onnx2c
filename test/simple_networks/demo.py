@@ -18,12 +18,18 @@ if __name__ == "__main__":
 		[11, 12, 13, 14, 15],
 		[16, 17, 18, 19, 20],
 		[21, 22, 23, 24, 25] ]).astype(np.float32)
+	# Create batch axis - shape (1,5,5)
 	x = x[np.newaxis, ... ]
+	# Channels axis - shape (1,5,5,1)
 	x = x[..., np.newaxis]
+
+	# duplicate x to have 3 channels - shape (1,5,5,3)
+	# (the channel values are the same for each pixel)
+	x = np.repeat(x, 3, axis=3)
 
 
 	model = tf.keras.Sequential()
-	model.add(keras.layers.Conv2D(1, (2, 2), strides=2,
+	model.add(keras.layers.Conv2D(1, (2, 2), strides=1,
 		kernel_initializer="ones"
 		))
 	#model.add(keras.layers.MaxPooling2D((2, 2), strides=2))

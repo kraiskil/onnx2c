@@ -3,13 +3,14 @@
 
 extern float result[OUTPUT_SIZE];
 
-void entry(float tensor_conv2d_input[1][5][5][1], float tensor_flatten[1][OUTPUT_SIZE]);
+void entry(float tensor_conv2d_input[1][5][5][NUM_CHAN], float tensor_flatten[1][OUTPUT_SIZE]);
 
 
 int main(void)
 {
 	float output[1][OUTPUT_SIZE];
-	entry((float (*)[5][5][1])input, output);
+	//entry((float (*)[5][5][NUM_CHAN])input, output);
+	entry(input, output);
 
 	for( int i=0; i<OUTPUT_SIZE; i++)
 	{
