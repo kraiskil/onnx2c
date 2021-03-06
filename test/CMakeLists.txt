@@ -102,6 +102,7 @@ endfunction()
 
 
 
+ONNX_backend_node_test(abs)
 
 ONNX_backend_node_test(add)
 ONNX_backend_node_test(add_bcast)
@@ -122,6 +123,9 @@ ONNX_backend_node_test(averagepool_2d_same_lower)
 
 ONNX_backend_node_test(batchnorm_epsilon)
 ONNX_backend_node_test(batchnorm_example)
+
+ONNX_backend_node_test(ceil)
+ONNX_backend_node_test(ceil_example)
 
 ONNX_backend_node_test(concat_1d_axis_0)
 ONNX_backend_node_test(concat_1d_axis_negative_1)
@@ -172,6 +176,9 @@ ONNX_backend_node_test(flatten_negative_axis1)
 ONNX_backend_node_test(flatten_negative_axis2)
 ONNX_backend_node_test(flatten_negative_axis3)
 ONNX_backend_node_test(flatten_negative_axis4)
+
+ONNX_backend_node_test(floor)
+ONNX_backend_node_test(floor_example)
 
 ONNX_backend_node_test(gemm_all_attributes)
 ONNX_backend_node_test(gemm_default_no_bias)

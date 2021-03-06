@@ -235,6 +235,7 @@ bool Graph::hasUnresolvedNodes(void)
 #include "nodes/conv.h"
 #include "nodes/dropout.h"
 #include "nodes/dynamicquantizelinear.h"
+#include "nodes/elementwise.h"
 #include "nodes/flatten.h"
 #include "nodes/gemm.h"
 #include "nodes/globalaveragepool.h"
@@ -251,9 +252,11 @@ bool Graph::hasUnresolvedNodes(void)
 
 Node* Graph::createNode(std::string opName)
 {
+	if( opName == "Abs" )return new Elementwise("Abs");
 	if( opName == "Add" )return new Arithmetic("Add");
 	if( opName == "AveragePool" )return new AveragePool;
 	if( opName == "BatchNormalization" )return new BatchNormalization;
+	if( opName == "Ceil" )return new Elementwise("Ceil");
 	if( opName == "Concat" )return new Concat;
 	if( opName == "Constant" )return new Constant;
 	if( opName == "Conv" )return new Conv;
@@ -261,6 +264,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Dropout" )return new Dropout;
 	if( opName == "DynamicQuantizeLinear" )return new DynamicQuantizeLinear;
 	if( opName == "Flatten" )return new Flatten;
+	if( opName == "Floor" )return new Elementwise("Floor");
 	if( opName == "GlobalAveragePool" )return new GlobalAveragePool;
 	if( opName == "Gemm" )return new Gemm;
 	if( opName == "LSTM" )return new LSTM;
