@@ -64,8 +64,8 @@ class TEMPLATE : public Node {
 	virtual void print(std::ostream &dst) const override
 	{
 
-		dst << "\t/* TEMPLATE */" << std::endl;
-		dst << "\t/* Print info on this node here, for debugging purposes */" << std::endl;
+		INDT_1 << "/* TEMPLATE */" << std::endl;
+		INDT_1 << "/* Print info on this node here, for debugging purposes */" << std::endl;
 
 	}
 

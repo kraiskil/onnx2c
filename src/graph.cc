@@ -227,7 +227,7 @@ bool Graph::hasUnresolvedNodes(void)
 }
 
 
-#include "nodes/add.h"
+#include "nodes/arithmetic.h"
 #include "nodes/averagepool.h"
 #include "nodes/batchnormalization.h"
 #include "nodes/concat.h"
@@ -251,12 +251,13 @@ bool Graph::hasUnresolvedNodes(void)
 
 Node* Graph::createNode(std::string opName)
 {
-	if( opName == "Add" )return new Add;
+	if( opName == "Add" )return new Arithmetic("Add");
 	if( opName == "AveragePool" )return new AveragePool;
 	if( opName == "BatchNormalization" )return new BatchNormalization;
 	if( opName == "Concat" )return new Concat;
 	if( opName == "Constant" )return new Constant;
 	if( opName == "Conv" )return new Conv;
+	if( opName == "Div" )return new Arithmetic("Div");
 	if( opName == "Dropout" )return new Dropout;
 	if( opName == "DynamicQuantizeLinear" )return new DynamicQuantizeLinear;
 	if( opName == "Flatten" )return new Flatten;
@@ -265,6 +266,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "LSTM" )return new LSTM;
 	if( opName == "MatMul" )return new MatMul;
 	if( opName == "MaxPool" )return new MaxPool;
+	if( opName == "Mul" )return new Arithmetic("Mul");
 	if( opName == "Relu" )return new Relu;
 	if( opName == "Reshape" )return new Reshape;
 	if( opName == "Sigmoid" )return new Sigmoid;

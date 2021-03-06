@@ -144,6 +144,10 @@ ONNX_backend_node_test(conv_with_strides_padding)
 ONNX_backend_node_test(conv_with_strides_and_asymmetric_padding)
 ONNX_type_test(operator_conv ${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-operator/test_operator_conv ONNX_backend_pytorch_conv 0.00001 0)
 
+ONNX_backend_node_test(div)
+ONNX_backend_node_test(div_bcast)
+ONNX_backend_node_test(div_example)
+
 ONNX_backend_node_test(dropout_default)
 ONNX_backend_node_test(dropout_default_mask_ratio)
 ONNX_backend_node_test(dropout_default_ratio)
@@ -215,6 +219,9 @@ ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_pads)
 #Has column-major order
 #ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_strides)
 
+ONNX_backend_node_test(mul)
+ONNX_backend_node_test(mul_bcast)
+ONNX_backend_node_test(mul_example)
 
 ONNX_backend_node_test(relu)
 
