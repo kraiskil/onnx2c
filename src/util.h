@@ -15,3 +15,7 @@ std::vector<float> parse_attribute_floats(const onnx::AttributeProto &a);
 std::string parse_attribute_string(const onnx::AttributeProto &a);
 std::vector<std::string> parse_attribute_strings(const onnx::AttributeProto &a);
 toC::Tensor* parse_attribute_tensor(const onnx::AttributeProto &a);
+
+#define INDT_1 dst<<"\t"
+#define INDT_2 dst<<"\t\t"
+#define INDT_3 dst<<"\t\t\t"

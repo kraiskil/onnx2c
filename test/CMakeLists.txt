@@ -151,6 +151,14 @@ ONNX_backend_node_test(dropout_default_mask)
 ONNX_backend_node_test(dropout_default_old)
 ONNX_backend_node_test(dropout_random_old)
 
+ONNX_backend_node_test(dynamicquantizelinear)
+ONNX_backend_node_test(dynamicquantizelinear_max_adjusted)
+ONNX_backend_node_test(dynamicquantizelinear_min_adjusted)
+#These are not unit tests for dynamicquantizelinear, despite the name
+#ONNX_backend_node_test(dynamicquantizelinear_max_adjusted_expanded)
+#ONNX_backend_node_test(dynamicquantizelinear_min_adjusted_expanded)
+#ONNX_backend_node_test(dynamicquantizelinear_expanded)
+
 ONNX_backend_node_test(flatten_axis0)
 ONNX_backend_node_test(flatten_axis1)
 ONNX_backend_node_test(flatten_axis2)

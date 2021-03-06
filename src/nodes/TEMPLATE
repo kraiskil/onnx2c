@@ -52,8 +52,12 @@ class TEMPLATE : public Node {
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 		for( const auto& a : node.attribute() ) {
 			LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
-
-
+			if( a.name() == "ingeger_attribute_name" )
+				an_int_attribute = parse_attribute_int(a);
+			else if( a.name() == "floatarray_attribute_name" )
+				a_floatarray_attribute = parse_attribute_floats(a);
+		}
+	}
 
 
 	/* Body of the node implementing function */
