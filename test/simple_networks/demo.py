@@ -9,8 +9,8 @@ import tensorflow as tf
 import tensorflow.keras as keras
 import keras2onnx
 
-NUM_KERNELS=2
-NUM_CHANNELS=1
+NUM_KERNELS=3
+NUM_CHANNELS=2
 
 if __name__ == "__main__":
 
