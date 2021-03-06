@@ -34,7 +34,7 @@ if __name__ == "__main__":
 	model.add(keras.layers.Conv2D(NUM_KERNELS, (2, 2), strides=1,
 		kernel_initializer="ones",
 		# For checking of biases, issue #7.
-		#bias_initializer="random_normal"
+		bias_initializer="random_normal"
 		))
 	#model.add(keras.layers.MaxPooling2D((2, 2), strides=2))
 

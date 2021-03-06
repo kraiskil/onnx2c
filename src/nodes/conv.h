@@ -219,7 +219,7 @@ class Conv : public Node {
 		if( b == NULL )
 			dst << "0;" << std::endl;
 		else
-			dst << b->cname() << "[b];" << std::endl;
+			dst << b->cname() << "[m];" << std::endl;
 
 		dst << "\t\tfor( uint32_t c=0; c<" << x->data_dim[1] << "; c++) {" << std::endl;
 		dst << "\t\tfor( uint32_t k1=0; k1<" << kernel_shape[0] << "; k1++) {" << std::endl;
