@@ -24,6 +24,7 @@ simple_test( conv_k2 16 1 )
 simple_test( conv_k2_maxpool_k2 4 1 )
 simple_test( conv_k2_s2 4 1 )
 simple_test( conv_3ch 16 3 )
+simple_test( conv_2kernels 32 1 )
 simple_test( maxpool_k2 16 1 )
 simple_test( maxpool_k2_s2 4 1 )
 

@@ -9,6 +9,8 @@ import tensorflow as tf
 import tensorflow.keras as keras
 import keras2onnx
 
+NUM_KERNELS=2
+NUM_CHANNELS=1
 
 if __name__ == "__main__":
 
@@ -25,12 +27,14 @@ if __name__ == "__main__":
 
 	# duplicate x to have 3 channels - shape (1,5,5,3)
 	# (the channel values are the same for each pixel)
-	x = np.repeat(x, 3, axis=3)
+	x = np.repeat(x, NUM_CHANNELS, axis=3)
 
 
 	model = tf.keras.Sequential()
-	model.add(keras.layers.Conv2D(1, (2, 2), strides=1,
-		kernel_initializer="ones"
+	model.add(keras.layers.Conv2D(NUM_KERNELS, (2, 2), strides=1,
+		kernel_initializer="ones",
+		# For checking of biases, issue #7.
+		#bias_initializer="random_normal"
 		))
 	#model.add(keras.layers.MaxPooling2D((2, 2), strides=2))
 
