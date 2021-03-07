@@ -14,6 +14,7 @@ class Squeeze : public Node {
 	}
 	// inputs
 	const Tensor *data;
+	const Tensor *axes_tensor;
 	// outputs
 	const Tensor *squeezed;
 
@@ -53,12 +54,22 @@ class Squeeze : public Node {
 	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
 		data = inputs[0];
+		if (inputs.size() == 2) {
+			axes_tensor = inputs[1];
+			if (axes_tensor->initialize == false)
+				ERROR("provided axes are dynamic, not implmeneted");
+			for( unsigned i=0; (int)i<axes_tensor->data_num_elem(); i++) {
+				int64_t *rd = (int64_t*)axes_tensor->data_buffer;  // axes data must be int64
+				axes.push_back(rd[i]);
+			}
+		}
 
 		// if not given, all dimensions with size 1 are squeezed
 		if( axes.size() == 0 )
 			for( unsigned i=0; i<data->data_dim.size(); i++ )
 				if( data->data_dim[i] == 1 )
 					axes.push_back(i);
+
 
 		if( axes.size() == 0 )
 			ERROR("No axes to squeeze away?");
