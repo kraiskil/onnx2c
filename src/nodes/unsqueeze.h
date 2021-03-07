@@ -82,7 +82,7 @@ class Unsqueeze : public Node {
 			if( inputs.size() != 2 )
 				ERROR("axes not provided. Malformatted ONNX?");
 			axes_tensor = inputs[1];
-			if (axes_tensor->initialize == false || axes_tensor->isConst == false )
+			if (axes_tensor->initialize == false)
 				ERROR("provided axes are dynamic, not implmeneted");
 			for( unsigned i=0; (int)i<axes_tensor->data_num_elem(); i++) {
 				int64_t *rd = (int64_t*)axes_tensor->data_buffer;  // axes data must be int64
