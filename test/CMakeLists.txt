@@ -273,6 +273,7 @@ ONNX_backend_node_test(unsqueeze_axis_3)
 ONNX_backend_node_test(unsqueeze_three_axes)
 ONNX_backend_node_test(unsqueeze_unsorted_axes)
 
+add_subdirectory(old_onnx_backend)
 
 # More end-to-end kind of tests here
 add_subdirectory(tfl_helloworld)
