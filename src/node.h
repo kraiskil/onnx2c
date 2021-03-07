@@ -20,6 +20,7 @@ class Node {
 	const onnx::NodeProto *onnx_node;
 	std::string onnx_name; //ONNX name of the individual node
 	std::string op_name;   //ONNX name of node type
+	static int64_t onnx_ir_version;
 
 	/* Create the C source name. Replace all non a-z,A-Z,0-9 or _
 	 * characters. Also prefix name since ONNX allows tensors and nodes

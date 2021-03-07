@@ -33,6 +33,7 @@ void Graph::print_file_frontmatter(std::ostream &dst)
 	dst << "// ONNX model:" << std::endl;
 	dst << "// produced by " << model.producer_name();
 	dst << ", version " << model.producer_version() << std::endl;
+	dst << "// ONNX IR version: " << onnx_ir_version() << std::endl;
 	dst << "// Model documentation: " << std::endl;
 	// TODO: beware & check for maliciously formatted doc strings!!!
 	// (and when you do that, also append "//" to every newlin in the doc_string for nicer printing :)

@@ -25,7 +25,7 @@ Graph::Graph(
 
 
 	onnx::GraphProto onnx_graph = onnx_model.graph();
-
+	Node::onnx_ir_version = onnx_ir_version();
 	// 0. add provided external initializers (from test bench
 	for( auto t : ext_inputs )
 		tensors.push_back(t);
@@ -226,6 +226,18 @@ bool Graph::hasUnresolvedNodes(void)
 	return model.graph().node_size() > (int)nodes.size();
 }
 
+// Turns out there are two versions of ONNX IR
+// the "format" and the "OperatorSetId".
+// What is interesting here is the versions of the operators
+int64_t Graph::onnx_ir_version(void)
+{
+	int opset_import_size = model.opset_import_size();
+	if( opset_import_size != 1 )
+		ERROR("Model has multiple opset versions. This is legal, but really needs better documentation on what to do now.");
+	auto foo = model.opset_import(0);
+	int64_t version = foo.version();
+	return version;
+}
 
 #include "nodes/arithmetic.h"
 #include "nodes/averagepool.h"

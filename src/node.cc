@@ -6,6 +6,7 @@
 
 using namespace toC;
 
+int64_t Node::onnx_ir_version;
 bool Node::is_output_N_used(unsigned N)
 {
 	// ONNX spec:

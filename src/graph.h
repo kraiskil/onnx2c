@@ -33,6 +33,7 @@ public:
 	bool nodeInputsResolved(const onnx::NodeProto &node, std::vector<const Tensor*> &inputs);
 	Node* createNode(std::string opName);
 
+	int64_t onnx_ir_version(void);
 private:
 	// The top-level onnx object.
 	onnx::ModelProto &model;
