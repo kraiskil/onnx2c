@@ -19,3 +19,4 @@ toC::Tensor* parse_attribute_tensor(const onnx::AttributeProto &a);
 #define INDT_1 dst<<"\t"
 #define INDT_2 dst<<"\t\t"
 #define INDT_3 dst<<"\t\t\t"
+#define INDT_4 dst<<"\t\t\t\t"
