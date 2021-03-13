@@ -28,26 +28,6 @@ class TEMPLATE : public Node {
 	const Tensor *output_2_optional;
 
 
-	/* Print the function parameters - use the order they are introduced in the
-	 * ONNX documentation */
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		input_1->print_tensor(dst, !decorate);
-
-		if (input_2_optional) {
-			dst << ", ";
-			input_2_optional->print_tensor(dst, !decorate);
-		}
-
-		dst << ", ";
-		output_1->print_tensor(dst, !decorate);
-
-		if (output_2_optional) {
-			dst << ", ";
-			output_2_optional->print_tensor(dst, !decorate);
-		}
-	}
-
 	/* Parse attributes, if this node has them. */
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 		for( const auto& a : node.attribute() ) {
@@ -57,16 +37,6 @@ class TEMPLATE : public Node {
 			else if( a.name() == "floatarray_attribute_name" )
 				a_floatarray_attribute = parse_attribute_floats(a);
 		}
-	}
-
-
-	/* Body of the node implementing function */
-	virtual void print(std::ostream &dst) const override
-	{
-
-		INDT_1 << "/* TEMPLATE */" << std::endl;
-		INDT_1 << "/* Print info on this node here, for debugging purposes */" << std::endl;
-
 	}
 
 
@@ -91,6 +61,37 @@ class TEMPLATE : public Node {
 		outputs.push_back(t);
 
 		/* TODO: optional outputs? */
+	}
+
+
+	/* Print the function parameters - use the order they are introduced in the
+	 * ONNX documentation */
+	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
+	{
+		input_1->print_tensor(dst, !decorate);
+
+		if (input_2_optional) {
+			dst << ", ";
+			input_2_optional->print_tensor(dst, !decorate);
+		}
+
+		dst << ", ";
+		output_1->print_tensor(dst, !decorate);
+
+		if (output_2_optional) {
+			dst << ", ";
+			output_2_optional->print_tensor(dst, !decorate);
+		}
+	}
+
+
+	/* Body of the node implementing function */
+	virtual void print(std::ostream &dst) const override
+	{
+
+		INDT_1 << "/* TEMPLATE */" << std::endl;
+		INDT_1 << "/* Print info on this node here, for debugging purposes */" << std::endl;
+
 	}
 };
 }
