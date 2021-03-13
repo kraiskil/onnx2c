@@ -4,10 +4,10 @@
  * Calculates an "industry standard" convolution filter.
  */
 
-#include "convolutions.h"
+#include "spatialfilter.h"
 namespace toC {
 
-class Conv : public Convolutions {
+class Conv : public SpatialFilter {
 	public:
 	Conv() {
 		op_name = "Conv";
@@ -34,7 +34,7 @@ class Conv : public Convolutions {
 	}
 
 
-	virtual void print_output_cell_init(std::ostream &dst) const
+	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const
 	{
 		INDT_3 << y->cname() << "[b][m][o0][o1] = ";
 		if( b == NULL )
@@ -42,12 +42,12 @@ class Conv : public Convolutions {
 		else
 			dst << b->cname() << "[m];" << std::endl;
 	};
-	virtual void print_output_cell_calc(std::ostream &dst) const
+	virtual void print_output_cell_calc(std::ostream &dst, const std::string &x_idx, const std::string &w_idx, const std::string &y_idx) const
 	{
 		INDT_4 << y->cname() << "[b][m][o0][o1] += "<< x->cname() << "[b][c][i0+k0][i1+k1] *";
 		   dst <<             w->cname() << "[m][c][k0][k1];" << std::endl;
 	}
-	virtual void print_output_cell_finalize(std::ostream &dst) const
+	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const
 	{
 	}
 	virtual void print(std::ostream &dst) const override

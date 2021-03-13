@@ -1,8 +1,8 @@
 /* This file is part of onnx2c.
  *
- * Convolutions, common parts.
+ * Common parts of spatial filters.
  * This is a parent class for different
- * convolution nodes.
+ * convolution and pooling nodes.
  * This class is not intended to create
  * node objects from, only to contain
  * shared code.
@@ -11,10 +11,11 @@
 #pragma once
 namespace toC {
 
-class Convolutions : public Node {
+class SpatialFilter : public Node {
 
 	public:
-	Convolutions() {
+	SpatialFilter() {
+		auto_pad = "NOTSET";
 		x=w=y=NULL;
 	}
 	// inputs
@@ -95,7 +96,7 @@ class Convolutions : public Node {
 		}
 	}
 
-	std::vector<int> resolve_output_size(void)
+	virtual std::vector<int> resolve_output_size(void)
 	{
 		std::vector<int> rv;
 		unsigned num_data_dim = x->rank()-2;
@@ -164,9 +165,9 @@ class Convolutions : public Node {
 	 * - to calculate input cell / kernel cell (this is the calculation in the innermost loop)
 	 * - to finalize the output cell
 	 */
-	virtual void print_output_cell_init(std::ostream &dst) const = 0;
-	virtual void print_output_cell_calc(std::ostream &dst) const = 0;
-	virtual void print_output_cell_finalize(std::ostream &dst) const = 0;
+	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx="") const = 0;
+	virtual void print_output_cell_calc(std::ostream &dst, const std::string &x_idx="", const std::string &w_idx="", const std::string &y_idx="") const = 0;
+	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx="") const = 0;
 	void print_loop_with_padding_checks(std::ostream &dst) const
 	{
 		unsigned n_data_dims = x->data_dim.size() -2;
@@ -180,21 +181,24 @@ class Convolutions : public Node {
 		for( int i=x->data_dim.size()-2; i>= 0; i--)
 			size_of_dim[i] = size_of_dim[i+1] * x->data_dim[i];
 
-		std::string in_idxs = "[b][c]";
+		std::string x_idx = "[b][c]";
 		std::string in_kern_idxs = "[b][c]";
-		std::string out_idxs = "[b][c]";
+		std::string y_idx = "[b][c]";
 		std::string indices_value = "(b*" + std::to_string(size_of_dim[0]) + ")+(c*" + std::to_string(size_of_dim[1]) + ")";
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string i_str = std::to_string(i);
-			in_idxs += "[i" + i_str + "]";
-			out_idxs += "[o" + i_str + "]";
+			x_idx += "[i" + i_str + "]";
+			y_idx += "[o" + i_str + "]";
 			in_kern_idxs += "[ii" + i_str + "]";
 			indices_value += "+(ii" + i_str + "*" + std::to_string(size_of_dim[i+2]) + ")";
 		}
 
 		// loop over batches and channels
 		INDT_1 << "for( uint32_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
-		INDT_1 << "for( uint32_t m=0; m<" << w->data_dim[0] << "; m++) {" << std::endl;
+		if( w )
+			INDT_1 << "for( uint32_t m=0; m<" << w->data_dim[0] << "; m++) {" << std::endl;
+		else
+			INDT_1 << "for( uint32_t c=0; c<" << x->data_dim[1] << "; c++) {" << std::endl;
 
 		// loop over outputs and inputs
 		for( unsigned i = 0; i<n_data_dims; i++) {
@@ -206,10 +210,12 @@ class Convolutions : public Node {
 			   dst <<       o_idx <<"++, "<< i_idx << "+=" << strides[i] << ") {" << std::endl;
 		}
 
-		print_output_cell_init(dst);
+		print_output_cell_init(dst, y_idx);
+
+		if( w )
+			INDT_3 <<   "for( int32_t c=0; c<" << channels << "; c++ ) {" << std::endl;
 
 		// loop over channels and kernel
-		INDT_3 <<   "for( int32_t c=0; c<" << channels << "; c++ ) {" << std::endl;
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string idx = "k" + std::to_string(i);
 			INDT_3 << "for( uint32_t " << idx << "=0; ";
@@ -225,21 +231,24 @@ class Convolutions : public Node {
 			INDT_4 <<  "if( ii" << i_str << ">=" << x->data_dim[2+i] << ") continue;" << std::endl;
 		}
 
-		print_output_cell_calc(dst);
+		print_output_cell_calc(dst, in_kern_idxs, "", y_idx);
 
 		// close kernel loop
 		for( unsigned i = 0; i<n_data_dims; i++)
 			INDT_3 << "}" << std::endl;
-		INDT_3 << "}" << std::endl;
 
-		print_output_cell_finalize(dst);
+		print_output_cell_finalize(dst, y_idx);
+
+		// channels loop
+		INDT_3 << "}" << std::endl;
 
 		// close output loop
 		for( unsigned i = 0; i<n_data_dims; i++)
 			INDT_2 << "}" << std::endl;
 		// close loops over batches and channels
 		INDT_1 << "}" << std::endl;
-		INDT_1 << "}" << std::endl;
+		if( w )
+			INDT_1 << "}" << std::endl;
 	}
 };
 }
