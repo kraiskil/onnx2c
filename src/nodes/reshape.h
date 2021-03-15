@@ -43,7 +43,12 @@ class Reshape : public Node {
 	{
 		data = inputs[0];
 		shape = inputs[1];
-		if( typeConstraint_int64(shape) == false )
+
+		/* Reshape should allow only int64_t here,
+		 * but that is a pointless restriction at this stage and does not play well
+		 * with 8-bit quantization.
+		 */
+		if( typeConstraint_integers(shape) == false )
 			ERROR("Incorrect input for node");
 
 

@@ -28,9 +28,11 @@ public:
 	void addInitializedTensor(onnx::TensorProto &tensor);
 	Tensor* getIoTensor(onnx::ValueInfoProto &vi);
 
+	void replaceWithQuantized(std::vector<const Tensor*> &inputs);
+	bool getNodeInputTensors(const onnx::NodeProto &node, std::vector<const Tensor*> &inputs);
+
 	void tryResolveNode(onnx::NodeProto &node);
 	bool hasUnresolvedNodes(void);
-	bool nodeInputsResolved(const onnx::NodeProto &node, std::vector<const Tensor*> &inputs);
 	Node* createNode(std::string opName);
 
 	int64_t onnx_ir_version(void);

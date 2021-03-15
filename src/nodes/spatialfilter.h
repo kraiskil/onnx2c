@@ -174,13 +174,16 @@ class SpatialFilter : public Node {
 		unsigned batch_size = x->data_dim[0];
 		unsigned channels = x->data_dim[1];
 
-		/* Multiply i'th data dimension index with size_of_dim to
-		 * get the Indices value */
+		/* Accumulate the size of the dimensions so that the Indices value
+		 * can be calculated directly out of the indivicual indices.
+		 * See ONNX specification on what the Indices output is */
 		std::vector<int> size_of_dim(x->data_dim.size());
 		size_of_dim[x->data_dim.size()-1]=1;
 		for( int i=x->data_dim.size()-2; i>= 0; i--)
 			size_of_dim[i] = size_of_dim[i+1] * x->data_dim[i];
 
+		/* Create various indexing strings. This makes generating the loops much cleaner,
+		 * and makes possible the code sharing in child classes. */
 		std::string x_idx = "[b][c]";
 		std::string in_kern_idxs = "[b][c]";
 		std::string y_idx = "[b][c]";
@@ -193,12 +196,20 @@ class SpatialFilter : public Node {
 			indices_value += "+(ii" + i_str + "*" + std::to_string(size_of_dim[i+2]) + ")";
 		}
 
-		// loop over batches and channels
+		/* Create the loops over batches and channels.
+		 * In case this SpatialFilter has a weights input (w), this first loop is over
+		 * output channels (M). Othervise input channels==outputchannels, and it is named C
+		 */
 		INDT_1 << "for( uint32_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
+		if( quantize ) {
+			INDT_2 << "int32_t batch_min = INT32_MAX;" << std::endl;
+			INDT_2 << "int32_t batch_max = INT32_MIN;" << std::endl;
+		}
 		if( w )
 			INDT_1 << "for( uint32_t m=0; m<" << w->data_dim[0] << "; m++) {" << std::endl;
 		else
 			INDT_1 << "for( uint32_t c=0; c<" << x->data_dim[1] << "; c++) {" << std::endl;
+
 
 		// loop over outputs and inputs
 		for( unsigned i = 0; i<n_data_dims; i++) {

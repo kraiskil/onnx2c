@@ -79,7 +79,17 @@ class Arithmetic : public Node {
 			Cidx +="[" + lv + "]";
 		}
 
-		INDT_2 << Cidx << " = " << Aidx << operand << Bidx << ";" << std::endl;
+
+		if( quantize ) {
+			INDT_2 << "int32_t tmp = " << Aidx << operand << Bidx << ";" << std::endl;
+			// TODO: division amount here depends on operand
+			INDT_2 << "tmp = tmp/2;" << std::endl;
+			INDT_2 << "tmp = tmp > 127?127:tmp;" << std::endl;
+			INDT_2 << "tmp = tmp < -127?-127:tmp;" << std::endl;
+			INDT_2 << Cidx << "= tmp;" << std::endl;
+		}
+		else
+			INDT_2 << Cidx << " = " << Aidx << operand << Bidx << ";" << std::endl;
 
 		for( unsigned r=0; r<C->rank(); r++) {
 			INDT_1 << "}" << std::endl;

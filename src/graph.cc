@@ -9,6 +9,8 @@
 using namespace toC;
 
 int Graph::anonymous_nodes=0;
+extern bool quantize;
+
 
 Graph::Graph(
 	onnx::ModelProto &onnx_model,
@@ -31,10 +33,12 @@ Graph::Graph(
 		tensors.push_back(t);
 
 	// 1. add initializers as resolved tensors
+	// in case of quantization, make quantized copies here
 	for( auto i : onnx_graph.initializer() )
 		addInitializedTensor( i );
 
 	// 2. add graph inputs as resolved tensors
+	// in case of quantization, convert all IO to INT8
 	for ( auto i : onnx_graph.input() ) {
 		Tensor *n = getIoTensor( i );
 		addTensor( n );
@@ -68,6 +72,12 @@ void Graph::addInitializedTensor(onnx::TensorProto &tensor)
 	t->isConst = true;
 
 	addTensor(t);
+
+	if( quantize ) {
+		t = t->make_quantized_copy();
+		if( t )
+			addTensor(t);
+	}
 }
 
 Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
@@ -94,6 +104,10 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 		ERROR("Non-valid data type " << datatype << " in tensor " << t->name);
 	t->data_type = static_cast<onnx::TensorProto_DataType>(datatype);
 
+	// TODO: this is a bit coarse
+	if( quantize )
+		t->data_type = onnx::TensorProto_DataType_INT8;
+
 	for( onnx::TensorShapeProto_Dimension d : tsp.dim() ) {
 
 		// dim_param is a string that defines this dimension's variable name
@@ -115,7 +129,7 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 
 
 
-bool Graph::nodeInputsResolved(const onnx::NodeProto &node, std::vector<const Tensor*> &inputs)
+bool Graph::getNodeInputTensors(const onnx::NodeProto &node, std::vector<const Tensor*> &inputs)
 {
 	// if all inputs can be found in the tensors-vector, then yes, inputs are resolved
 	for( auto i : node.input() )
@@ -155,14 +169,27 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 			LOG(TRACE) << "Node " << node.name() << " already resolved"<<std::endl;
 			return;
 		}
-	if( nodeInputsResolved(node, inputs) == false )
+	if( getNodeInputTensors(node, inputs) == false )
 		return;
 
 
-	Node *n = createNode(node.op_type());
+	// ONNX has a few nodes that have quantized alternatives.
+	// Switch to those here.
+	// For the rest, rely on optional quantization in the
+	// onnx2c implementation.
+	std::string new_node = node.op_type();
+	if( quantize ) {
+		replaceWithQuantized(inputs);
+		if( new_node == "Conv" )
+			new_node = "ConvInteger";
+		if( new_node == "MatMul" )
+			new_node = "MatMulInteger";
+	}
+	Node *n = createNode(new_node);
+
 	n->onnx_node = &node;
 	n->isResolved = false;
-	n->op_name = node.op_type();
+	n->op_name = new_node;
 	n->onnx_name = node.name();
 
 	// onnx allows (or at least some tools create) nodes without names
@@ -384,5 +411,13 @@ Tensor *Graph::findTensor(const std::string &name) const
 		if( o->name == name )
 			return o;
 	return NULL;
+}
+
+void Graph::replaceWithQuantized(std::vector<const Tensor*> &inputs)
+{
+	for( unsigned i=0; i<inputs.size(); i++ ) {
+		if(inputs[i]->quantizedCopy)
+			inputs[i] = inputs[i]->quantizedCopy;
+	}
 }
 

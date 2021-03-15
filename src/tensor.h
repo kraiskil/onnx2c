@@ -19,6 +19,8 @@ class Tensor {
 	                 // may additionally be used as input for other nodes
 	const Tensor *isAliasOf; // Recursive tensors might (but need not) be defined
 	                         // twice: as the input and the output.
+	const Tensor *quantizedCopy; // non-NULL if there is a quantized version of this
+	bool isQuantized;  // is this a quantized copy
 	std::vector<int> data_dim;
 	onnx::TensorProto_DataType data_type;
 	void *data_buffer;// if initialized, contains the initialization data
@@ -32,6 +34,8 @@ class Tensor {
 		isIO(false),
 		isRecursive(false),
 		isAliasOf(NULL),
+		quantizedCopy(NULL),
+		isQuantized(false),
 		data_buffer(NULL)
 	{}
 
@@ -75,6 +79,8 @@ class Tensor {
 
 	/* Format dimensions into a string */
 	std::string str_dimensions(void);
+
+	Tensor* make_quantized_copy(void);
 };
 
 }

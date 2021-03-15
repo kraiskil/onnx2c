@@ -1,5 +1,6 @@
 #include "tensor.h"
 #include "util.h"
+#include <limits>
 
 using namespace toC;
 void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
@@ -140,8 +141,14 @@ std::string Tensor::data_type_str(void) const
 	{
 		case onnx::TensorProto_DataType_FLOAT:
 			return "float"; break;
+		case onnx::TensorProto_DataType_INT8:
+			return "int8_t"; break;
 		case onnx::TensorProto_DataType_UINT8:
 			return "uint8_t"; break;
+		case onnx::TensorProto_DataType_INT16:
+			return "int16_t"; break;
+		case onnx::TensorProto_DataType_UINT16:
+			return "uint16_t"; break;
 		case onnx::TensorProto_DataType_INT32:
 			return "int32_t"; break;
 		case onnx::TensorProto_DataType_INT64:
@@ -163,6 +170,13 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 		{
 			float *f = static_cast<float*>(data_buffer);
 			dst << std::showpoint << f[element]<< "f";
+			break;
+		}
+		case onnx::TensorProto_DataType_INT8:
+		{
+			int8_t *f = static_cast<int8_t*>(data_buffer);
+			// don't print as characters
+			dst << static_cast<int>(f[element]);
 			break;
 		}
 		case onnx::TensorProto_DataType_UINT8:
@@ -283,4 +297,101 @@ std::string Tensor::str_dimensions(void)
 	}
 	return rv;
 }
+
+Tensor* Tensor::make_quantized_copy(void)
+{
+	LOG(DEBUG) << "checking if " << name << " can be quantized" << std::endl;
+	// uh... when is a tensor not quantizable? When it already is integers? When it already is 8-bit integers?
+	if( data_type != onnx::TensorProto_DataType_FLOAT )
+	{
+		LOG(DEBUG) << "type is not float -> no quantization" << std::endl;
+		return NULL;
+	}
+	LOG(DEBUG) << "quantizing it" << std::endl;
+
+	Tensor *t = new Tensor();
+	t->generate = generate;
+	t->initialize = initialize;
+	t->isConst = isConst;
+	t->isIO = isIO;
+	t->isRecursive = isRecursive;
+	// TODO: alias?
+	t->isQuantized = true;
+	quantizedCopy = t;
+
+	t->data_dim = data_dim;
+	t->data_buffer = calloc(data_num_elem(), 1);
+	t->name = name + "_quantized";
+
+
+	/* Calculate data max and min values.
+	 * TODO: do we want to quantize over channels, filter, etc. separate?
+	 *       Would need more context info at this point. Maybe easier to let
+	 *       the frontend NN framweworks mature a bit, and not even try to quantize in
+	 *       onnx2c? But for now, do a global quantization.
+	 */
+
+	/* TODO: rewrite-this */
+	if( data_type == onnx::TensorProto_DataType_FLOAT )
+	{
+
+		float maxval=-std::numeric_limits<float>::infinity();
+		float minval=std::numeric_limits<float>::infinity();
+		float *odata = (float*)data_buffer;
+		int8_t *qdata = (int8_t*)t->data_buffer;
+		t->data_type = onnx::TensorProto_DataType_INT8;
+
+		for( int i=0; i<data_num_elem(); i++)
+		{
+			if( odata[i] < minval )
+				minval = odata[i];
+			if( odata[i] > maxval )
+				maxval = odata[i];
+		}
+		LOG(DEBUG) << "Input tensor minval: " << minval << ", maxval: " << maxval << std::endl;
+
+		if( maxval < 0 )
+			maxval = 0;
+		if( minval > 0 )
+			minval = 0;
+
+		// NB: here we cut a bit corners.
+		// Assume input is centered around zero.
+		// This is
+		// a) probable
+		// b) much easier to generate. If x and w zero_values tensors are not given, they are implicitly 0
+		if( -minval > maxval )
+			maxval = -minval;
+
+
+		for( int i=0; i<data_num_elem(); i++) {
+			float fv = (odata[i] / maxval) * 127;
+			assert( fv <= 127 );
+			assert( fv >= -127 );
+
+			qdata[i] = (int8_t)fv;
+			assert( odata[i] * qdata[i] >= 0 );
+		}
+	}
+	else if( data_type == onnx::TensorProto_DataType_INT64 )
+	{
+		int64_t *odata = (int64_t*)data_buffer;
+		uint16_t *qdata = (uint16_t*)t->data_buffer;
+		t->data_type = onnx::TensorProto_DataType_UINT16;
+
+
+		for( int i=0; i<data_num_elem(); i++) {
+			if( odata[i] < 0 || odata[i] > 0xffff )
+				ERROR("Unimplemented: quantization in this case");
+
+			qdata[i] =(uint16_t) odata[i];
+		}
+
+	}
+	else
+		ERROR("Unimplemented quantization data type");
+
+	return t;
+}
+
 

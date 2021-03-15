@@ -20,6 +20,7 @@
 
 using namespace toC;
 
+bool quantize=false;
 
 bool load_input_data(const std::string &filename, onnx::TensorProto &result)
 {

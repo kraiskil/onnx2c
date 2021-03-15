@@ -47,8 +47,12 @@ class MaxPool : public Pooling {
 		std::string type_min_value;
 		if( type == "float" )
 			type_min_value = "-FLT_MAX";
+		else if( type == "int8_t" )
+			type_min_value = "INT8_MIN";
 		else if( type == "uint8_t" )
 			type_min_value = "0";
+		else if( type == "int32_t" )
+			type_min_value = "INT32_MIN";
 		else
 			ERROR("Unimplemented: minimum value for this type");
 
@@ -94,18 +98,10 @@ class MaxPool : public Pooling {
 		print_header_info_comment(dst);
 		print_loop_with_padding_checks(dst);
 	}
- 
+
 	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
 		x = inputs[0];
-
-		if( !(  typeConstraint_plainFloatingPoints(x)
-		      ||typeConstraint_8bit(x)) )
-			ERROR("Incorrect input for node"); 
-
-		if( x->data_dim[0] != 1 )
-			ERROR("Unimplemented: AveragePool batches bigger than 1");
-
 
 		resolve_strides();
 		resolve_dilations();

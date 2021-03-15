@@ -137,13 +137,28 @@ class Gemm : public Node {
 			else
 				C_el += "c]";
 		}
-		dst << "\t\t\t" << type <<" ABrc = 0;" << std::endl;
+		if( quantize )
+			INDT_3 << "int32_t ABrc = 0;" << std::endl;
+		else
+			INDT_3 << type <<" ABrc = 0;" << std::endl;
 		dst << "\t\t\t" << "for( uint32_t i=0; i<K; i++ ) {" << std::endl;
 		dst << "\t\t\t\t" << "ABrc += " << A_el << "*" << B_el << ";" << std::endl;
 		dst << "\t\t\t" << "}" << std::endl;
-		dst << "\t\t\t" << "Y[r][c] = ABrc * alpha;" << std::endl;
-		if( C )
-			dst << "\t\t\t" << "Y[r][c] += " << C_el << " * beta;" << std::endl;
+
+		if( quantize ) {
+			INDT_3 << "int32_t tmp = ABrc * alpha;" << std::endl;
+			if( C )
+				INDT_3 << "tmp += " << C_el << " * beta;" << std::endl;
+			INDT_3 << "tmp = tmp/(K*16);" << std::endl;
+			INDT_3 << "tmp = tmp > 127?127:tmp;" << std::endl;
+			INDT_3 << "tmp = tmp < -127?-127:tmp;" << std::endl;
+			INDT_3 << "Y[r][c] = tmp;" << std::endl;
+		}
+		else {
+			INDT_3 << "Y[r][c] = ABrc * alpha;" << std::endl;
+			if( C )
+				INDT_3 << "Y[r][c] += " << C_el << " * beta;" << std::endl;
+		}
 
 		dst << "\t\t}" << std::endl;
 		dst << std::endl;

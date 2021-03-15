@@ -45,7 +45,10 @@ class ConvInteger : public SpatialFilter {
 
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const
 	{
-		INDT_3 << y->cname() << "[b][m][o0][o1] = 0;" << std::endl;
+		if( quantize )
+			INDT_3 << "int32_t cell = 0;" << std::endl;
+		else
+			INDT_3 << y->cname() << "[b][m][o0][o1] = 0;" << std::endl;
 	}
 	virtual void print_output_cell_calc(std::ostream &dst, const std::string &x_idx, const std::string &w_idx, const std::string &y_idx) const
 	{
@@ -54,13 +57,27 @@ class ConvInteger : public SpatialFilter {
 			x_zero = x_zero_point->cname() + "[0]";
 		else
 			x_zero = "0";
+		std::string dest;
+		if( quantize )
+			dest = "cell";
+		else
+			dest = y->cname() + "[b][m][o0][o1]";
 
-		INDT_4 << y->cname() << "[b][m][o0][o1] += ("<< x->cname() << "[b][c][i0+k0][i1+k1] - " << x_zero << ") *";
+		INDT_4 << dest << "+= ("<< x->cname() << "[b][c][i0+k0][i1+k1] - " << x_zero << ") *";
 		   dst <<                w->cname() << "[m][c][k0][k1];" << std::endl;
 	}
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const
 	{
+		if( quantize ) {
+			// TODO: this assumes 2D filter
+			int divisor = kernel_shape[0]*kernel_shape[1]*16;
+			INDT_3 << "int32_t tmp = cell/" << divisor << ";" << std::endl;
+			INDT_3 << "tmp = tmp > 127?127:tmp;" << std::endl;
+			INDT_3 << "tmp = tmp < -127?-127:tmp;" << std::endl;
+			INDT_3 << y->cname() + "[b][m][o0][o1] = tmp;" << std::endl;
+		}
 	}
+
 
 	virtual void print(std::ostream &dst) const override
 	{
@@ -80,10 +97,6 @@ class ConvInteger : public SpatialFilter {
 			ERROR("unimplemented: weight zero points");
 		}
 
-		if(  typeConstraint_8bit(x) == false
-		   ||typeConstraint_8bit(w) == false)
-			ERROR("Incorrect input for node");
-
 		if( x->data_dim.size() != 4 )
 			ERROR("Unimplemented: ConvInteger for non 2D images");
 
@@ -102,7 +115,11 @@ class ConvInteger : public SpatialFilter {
 
 		Tensor *rv = new Tensor;
 		rv->data_dim = resolve_output_size();
-		rv->data_type = onnx::TensorProto_DataType_INT32;
+		// ONNX specs say int32. local quantization is non conformant
+		if( quantize )
+			rv->data_type = onnx::TensorProto_DataType_INT8;
+		else
+			rv->data_type = onnx::TensorProto_DataType_INT32;
 		y=rv;
 		outputs.push_back(rv);
 	}
