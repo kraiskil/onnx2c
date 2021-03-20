@@ -66,6 +66,33 @@ bool Node::typeConstraint_8bit(const Tensor *t) const
 	);
 }
 
+bool Node::typeConstraint_integers(const Tensor *t) const
+{
+	return (   typeConstraint_unsigned_integers(t)
+		|| typeConstraint_signed_integers(t)
+	);
+}
+
+bool Node::typeConstraint_unsigned_integers(const Tensor *t) const
+{
+	return (
+		   t->data_type == onnx::TensorProto_DataType_UINT8
+		|| t->data_type == onnx::TensorProto_DataType_UINT16
+		|| t->data_type == onnx::TensorProto_DataType_UINT32
+		|| t->data_type == onnx::TensorProto_DataType_UINT64
+	);
+}
+bool Node::typeConstraint_signed_integers(const Tensor *t) const
+{
+	return (
+		   t->data_type == onnx::TensorProto_DataType_INT8
+		|| t->data_type == onnx::TensorProto_DataType_INT16
+		|| t->data_type == onnx::TensorProto_DataType_INT32
+		|| t->data_type == onnx::TensorProto_DataType_INT64
+	);
+}
+
+
 void Node::multidirectional_broadcast_size(
 	const std::vector<int> A,
 	const std::vector<int> B,

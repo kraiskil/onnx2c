@@ -71,6 +71,13 @@ class Node {
 	bool typeConstraint_int64(const Tensor *t) const;
 	/* int8 or uint8 */
 	bool typeConstraint_8bit(const Tensor *t) const;
+	/* any integer, signed or not */
+	bool typeConstraint_integers(const Tensor *t) const;
+	/* only unsigned integers */
+	bool typeConstraint_unsigned_integers(const Tensor *t) const;
+	/* only signed integers */
+	bool typeConstraint_signed_integers(const Tensor *t) const;
+
 
 	/* Do Multidirectional Broadcasting dimension extensions:
 	 * https://github.com/onnx/onnx/blob/master/docs/Broadcasting.md
