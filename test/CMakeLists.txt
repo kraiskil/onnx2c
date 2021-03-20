@@ -202,9 +202,10 @@ ONNX_backend_node_test(lstm_with_initial_bias)
 ONNX_backend_node_test(lstm_with_peepholes)
 
 ONNX_backend_node_test(matmul_2d)
-# only 2d matmul implemented. _integer has multiple outputs
 #ONNX_backend_node_test(matmul_3d)
 #ONNX_backend_node_test(matmul_4d)
+
+ONNX_backend_node_test(matmulinteger)
 
 
 ONNX_backend_node_test(maxpool_1d_default)

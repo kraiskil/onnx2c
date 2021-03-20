@@ -254,6 +254,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/globalaveragepool.h"
 #include "nodes/lstm.h"
 #include "nodes/matmul.h"
+#include "nodes/matmulinteger.h"
 #include "nodes/maxpool.h"
 #include "nodes/relu.h"
 #include "nodes/reshape.h"
@@ -283,6 +284,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Gemm" )return new Gemm;
 	if( opName == "LSTM" )return new LSTM;
 	if( opName == "MatMul" )return new MatMul;
+	if( opName == "MatMulInteger" )return new MatMulInteger;
 	if( opName == "MaxPool" )return new MaxPool;
 	if( opName == "Mul" )return new Arithmetic("Mul");
 	if( opName == "Relu" )return new Relu;
