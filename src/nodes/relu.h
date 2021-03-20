@@ -38,7 +38,8 @@ class Relu : public Node {
 	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
 		X = inputs[0];
-		if(  typeConstraint_allFloatingPoints(X) == false )
+		if((  typeConstraint_allFloatingPoints(X)
+		    ||typeConstraint_signed_integers(X)   ) == false )
 			ERROR("Incorrect input for Relu"); 
 
 		if( X->data_dim[1] != 0 && !(X->data_dim[0]!=1 || X->data_dim[1]!=1) )
