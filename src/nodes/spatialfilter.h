@@ -235,20 +235,20 @@ class SpatialFilter : public Node {
 
 		// close kernel loop
 		for( unsigned i = 0; i<n_data_dims; i++)
-			INDT_3 << "}" << std::endl;
+			INDT_3 << "} /* k */" << std::endl;
 
+		// close input channels loop when it is separate from output channels
+		if( w )
+			INDT_3 << "} /* c */" << std::endl;
 		print_output_cell_finalize(dst, y_idx);
-
-		// channels loop
-		INDT_3 << "}" << std::endl;
 
 		// close output loop
 		for( unsigned i = 0; i<n_data_dims; i++)
-			INDT_2 << "}" << std::endl;
-		// close loops over batches and channels
-		INDT_1 << "}" << std::endl;
-		if( w )
-			INDT_1 << "}" << std::endl;
+			INDT_2 << "} /* o */" << std::endl;
+
+		// close loops over batches and output channels
+		INDT_1 << "} /* m or c, depending on this node's operator */" << std::endl;
+		INDT_1 << "} /* b */" << std::endl;
 	}
 };
 }
