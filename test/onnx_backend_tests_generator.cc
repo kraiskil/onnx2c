@@ -20,7 +20,10 @@
 
 using namespace toC;
 
+// TODO: these are command line options to the main onnx2c binary
+//       we should not need to duplicate them here.
 bool quantize=false;
+bool target_avr=false;
 
 bool load_input_data(const std::string &filename, onnx::TensorProto &result)
 {

@@ -54,17 +54,18 @@ class ConvInteger : public SpatialFilter {
 	{
 		std::string x_zero;
 		if( x_zero_point )
-			x_zero = x_zero_point->cname() + "[0]";
+			x_zero = constant_acces_code( x_zero_point->cname() + "[0]");
 		else
 			x_zero = "0";
+
+		INDT_4 << w->data_type_str() << " w = " << constant_acces_code( w->cname() + "[m][c][k0][k1]") << ";" << std::endl;
 		std::string dest;
 		if( quantize )
 			dest = "cell";
 		else
 			dest = y->cname() + "[b][m][o0][o1]";
 
-		INDT_4 << dest << "+= ("<< x->cname() << "[b][c][i0+k0][i1+k1] - " << x_zero << ") *";
-		   dst <<                w->cname() << "[m][c][k0][k1];" << std::endl;
+		INDT_4 << dest << "+= ("<< x->cname() << "[b][c][i0+k0][i1+k1] - " << x_zero << ") * w;" << std::endl;
 	}
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const
 	{

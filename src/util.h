@@ -16,6 +16,13 @@ std::string parse_attribute_string(const onnx::AttributeProto &a);
 std::vector<std::string> parse_attribute_strings(const onnx::AttributeProto &a);
 toC::Tensor* parse_attribute_tensor(const onnx::AttributeProto &a);
 
+/* Wrap all constant accesses into with this function.
+ * If targetting AVR, the constants are stored in another memory space than data,
+ * this wrapper takes care of that.
+ * NB: this is a late add-on. Not all nodes are using this
+ */
+std::string constant_acces_code(const std::string plain);
+
 #define INDT_1 dst<<"\t"
 #define INDT_2 dst<<"\t\t"
 #define INDT_3 dst<<"\t\t\t"

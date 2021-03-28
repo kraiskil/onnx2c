@@ -26,6 +26,18 @@ BatchNormalization after a quantized node to get an optimal
 "dynamic range" for the tensors.
 
 
+AVR:
+----
+If your target is AVR (~"Arduino"), the low amount of RAM will limit
+the size of the network that will fit onto the MCU.
+In order for constant tensor to be stored in flash, which usually has more
+space, they must be tagged for the compiler. For this, use the `-avr` option
+
+    onnx2c -quantize -avr <inputmodel.onnx>
+
+(NB: order is important. Onnx2c needs to use a proper command line parser library...)
+
+
 Related work:
 -------------
 At least pytorch and onnxruntime have quantization tools available.

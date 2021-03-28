@@ -8,6 +8,7 @@
 #include "tensor.h"
 
 bool quantize=false;
+bool target_avr=false;
 
 int main(int argc, char *argv[])
 {
@@ -32,6 +33,10 @@ int main(int argc, char *argv[])
 		fileargno++;
 	}
 
+	if ( strncmp(argv[fileargno], "-avr", 4 ) == 0 ) {
+		target_avr = true;
+		fileargno++;
+	}
 
 	std::ifstream input(argv[fileargno]);
 	if (!input.good()) {

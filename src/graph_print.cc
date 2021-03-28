@@ -52,6 +52,8 @@ void Graph::print_global_tensors(std::ostream &dst)
 		dst << "static ";
 		t->print_tensor(dst);
 		if( t->initialize ) {
+			if( target_avr && t->isConst )
+				dst << " PROGMEM";
 			dst << " = "<<std::endl;
 			t->print_tensor_initializer(dst);
 		}
@@ -84,6 +86,11 @@ void Graph::print_includes(std::ostream &dst)
 	dst << "#include <string.h>" << std::endl;
 
 	dst << "#define MAX(X,Y) ( X > Y ? X : Y)" << std::endl;
+
+	if( target_avr ) {
+		dst << "#include <avr/pgmspace.h>" << std::endl;
+		dst << "#define RD_PROGMEM(x) pgm_read_byte(&(x));" << std::endl;
+	}
 }
 
 void Graph::print_interface_function(std::ostream &dst)

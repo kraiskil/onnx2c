@@ -9,7 +9,6 @@
 using namespace toC;
 
 int Graph::anonymous_nodes=0;
-extern bool quantize;
 
 
 Graph::Graph(

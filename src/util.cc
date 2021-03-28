@@ -2,6 +2,9 @@
 #include "util.h"
 #include "tensor.h"
 
+// command line option
+extern bool target_avr;
+
 std::string cify_name(const std::string &in)
 {
 	// Replace all non-allowed characters with underscore
@@ -94,3 +97,11 @@ toC::Tensor* parse_attribute_tensor(const onnx::AttributeProto &a)
 	return t;
 }
 
+std::string constant_acces_code(const std::string plain)
+{
+	if( !target_avr )
+		return plain;
+
+	std::string rv = "RD_PROGMEM(" + plain + ")";
+	return rv;
+}

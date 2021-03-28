@@ -4,6 +4,10 @@
 #include "node.h"
 #include "tensor.h"
 
+/* Command line options */
+extern bool quantize;
+extern bool target_avr;
+
 namespace toC {
 
 class Graph {

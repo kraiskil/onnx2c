@@ -73,16 +73,10 @@ class Gemm : public Node {
 	{
 		int A0 = A->data_dim[0];
 		int A1 = A->data_dim[1];
-		int B0 = B->data_dim[0];
-		int B1 = B->data_dim[1];
 		int C0,C1; C0=C1=0;
 		if( C ) {
-			if ( C->rank() < 2 ) {
-				C0 = 1;
-				C1 = C->data_dim[0];
-			}
-			else {
-				C0 = C->data_dim[0];
+			C0 = C->data_dim[0];
+			if ( C->rank() > 1 ) {
 				C1 = C->data_dim[1];
 			}
 		}
@@ -99,8 +93,6 @@ class Gemm : public Node {
 		dst << "\t   transA  = " << transA << std::endl;
 		dst << "\t   transB  = " << transB << std::endl;
 		dst << "\t   A       = ("<< A0 << "x"<< A1 << ")"<< std::endl;
-		dst << "\t   B       = ("<< B0 << "x"<< B1 << ")"<< std::endl;
-		dst << "\t   C       = ("<< C0 << "x"<< C1 << ")"<< std::endl;
 		dst << "\t   datatype= "<< type << std::endl;
 		dst << "\t */" << std::endl;
 
@@ -108,60 +100,70 @@ class Gemm : public Node {
 		dst << "\t" << "const int M = " << M << ";" << std::endl;
 		dst << "\t" << "const int K = " << K << ";" << std::endl;
 		dst << "\t" << "const int N = " << N << ";" << std::endl;
-		// float (*A)[N] = (float (*)[K]) input_a;
 		// C has some ugly syntax sometimes, but now we can do A[r][c]
 		dst << "\t" << type << " (*A)["<<A1<<"]  = (" << type << "(*)["<<A1<<"])" << A->cname() << ";" << std::endl;
-		dst << "\t" << type << " (*B)["<<B1<<"]  = (" << type << "(*)["<<B1<<"])" << B->cname() << ";" << std::endl;
-		if( C )
-			dst << "\t" << type << " (*C)["<<C1<<"]  = (" << type << "(*)["<<C1<<"])" << C->cname() << ";" << std::endl;
 		dst << "\t" << type << " (*Y)["<<N<<"]  = (" << type << "(*)["<<N<<"])" << Y->cname() << ";" << std::endl;
 		dst << "\t" << "float alpha = " << alpha << ";" << std::endl;
 		dst << "\t" << "float beta = " << beta << ";" << std::endl;
 
-		// Loop output rows, columns
-		dst << "\t" << "for( uint32_t r=0; r<M; r++ )" << std::endl;
-		dst << "\t\t" << "for( uint32_t c=0; c<N; c++ ) {" << std::endl;
-
-		// Calculate the dot produt for Y[r][c]
 		std::string A_el = transA ? "A[i][r]" : "A[r][i]";
-		std::string B_el = transB ? "B[c][i]" : "B[i][c]";
-		std::string C_el;
+		std::string B_idx = transB ? "[c][i]" : "[i][c]";
+		std::string C_idx;
 		if( C  ) {
-			C_el = "C[";
+			C_idx = "";
 			if( C0 == 1 )
-				C_el += "0][";
+				C_idx += "[0]";
 			else
-				C_el += "r][";
-			if( C1 == 1 )
-				C_el += "0]";
-			else
-				C_el += "c]";
+				C_idx += "[r]";
+			if( C->rank() > 1 ) {
+				if( C1 == 1 )
+					C_idx += "[0]";
+				else
+					C_idx += "[c]";
+			}
 		}
-		if( quantize )
+
+
+		// Now genereate the calculation source code
+
+		// Loop output rows, columns
+		INDT_1 << "for( uint32_t r=0; r<M; r++ )" << std::endl;
+		INDT_2 << "for( uint32_t c=0; c<N; c++ ) {" << std::endl;
+
+		/* Calculate the matrix muliplication dot inner dot product */
+		if( quantize ) {
 			INDT_3 << "int32_t ABrc = 0;" << std::endl;
-		else
+		}
+		else {
 			INDT_3 << type <<" ABrc = 0;" << std::endl;
-		dst << "\t\t\t" << "for( uint32_t i=0; i<K; i++ ) {" << std::endl;
-		dst << "\t\t\t\t" << "ABrc += " << A_el << "*" << B_el << ";" << std::endl;
-		dst << "\t\t\t" << "}" << std::endl;
+		}
+		INDT_3 << "for( uint32_t i=0; i<K; i++ ) {" << std::endl;
+		INDT_4 <<   B->data_type_str() << " B = " << constant_acces_code( B->cname() + B_idx ) << ";" << std::endl;
+		INDT_4 <<   "ABrc += " << A_el << " * B;" << std::endl;
+		INDT_3 << "}" << std::endl;
+
+
+		/* Add scale & bias, store result in output */
+		if( quantize )
+			INDT_3 << "int32_t tmp = ABrc * alpha;" << std::endl;
+		else
+			INDT_3 << type <<" tmp = ABrc * alpha;" << std::endl;
+
+		if( C ) {
+			INDT_3 << C->data_type_str() << " C = " << constant_acces_code( C->cname() + C_idx ) << ";" << std::endl;
+			INDT_3 << "tmp += C * beta;" << std::endl;
+		}
 
 		if( quantize ) {
-			INDT_3 << "int32_t tmp = ABrc * alpha;" << std::endl;
-			if( C )
-				INDT_3 << "tmp += " << C_el << " * beta;" << std::endl;
 			INDT_3 << "tmp = tmp/(K*16);" << std::endl;
 			INDT_3 << "tmp = tmp > 127?127:tmp;" << std::endl;
 			INDT_3 << "tmp = tmp < -127?-127:tmp;" << std::endl;
-			INDT_3 << "Y[r][c] = tmp;" << std::endl;
-		}
-		else {
-			INDT_3 << "Y[r][c] = ABrc * alpha;" << std::endl;
-			if( C )
-				INDT_3 << "Y[r][c] += " << C_el << " * beta;" << std::endl;
 		}
 
-		dst << "\t\t}" << std::endl;
-		dst << std::endl;
+		INDT_3 << "Y[r][c] = tmp;" << std::endl;
+
+
+		INDT_1 << "}" << std::endl;
 	}
 
 

@@ -210,9 +210,13 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 	}
 }
 
-/* Print the tensor initializer.
- * Default values are for "external callers". Override only when this recurses
- * back to itself. */
+/* Print the tensor initialization values.
+ * dim: the dimension from which to print.
+ * offs: the offset into this dimension from where to print.
+ * This function recurses back into itself to print all more inner dimenstions there are.
+ * I.e. if calling with dim=0, offs=0 (which are default values),
+ * it prints the entire variable initialzation.
+ */
 void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs)
 {
 	if( data_dim[dim] == 0 )
