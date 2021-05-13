@@ -37,6 +37,11 @@ space, they must be tagged for the compiler. For this, use the `-avr` option
 
 (NB: order is important. Onnx2c needs to use a proper command line parser library...)
 
+Example:
+--------
+`examples/atmega_mnist` shows a full example with a MNIST character
+recognition two-layer CNN running on an Arduino UNO (2k RAM, 32k flash).
+
 
 Related work:
 -------------
@@ -49,5 +54,3 @@ onnx files, and does the quantization "in the backend".
 
 Such front-end quantized networks should of course work with onnx2c too.
 No `-quantize` option should be given when compiling such quantized networks.
-
-TODO: add links to the onnxruntime and pytorch quantization tools.
