@@ -86,6 +86,8 @@ void Graph::print_includes(std::ostream &dst)
 	dst << "#include <string.h>" << std::endl;
 
 	dst << "#define MAX(X,Y) ( X > Y ? X : Y)" << std::endl;
+	dst << "#define MIN(X,Y) ( X < Y ? X : Y)" << std::endl;
+	dst << "#define CLIP(X,L) ( MAX(MIN(X,L), -L) )" << std::endl;
 
 	if( target_avr ) {
 		dst << "#include <avr/pgmspace.h>" << std::endl;

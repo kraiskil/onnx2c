@@ -81,6 +81,12 @@ class Tensor {
 	std::string str_dimensions(void);
 
 	Tensor* make_quantized_copy(void);
+
+	/* Node definitions include the concept of optional inputs/outputs.
+	 * This function tells wether a given tensor must be included or if it can be left out.
+	 * This will return valid data only after all nodes have been resolved! (I.e. use it during printout phase)
+	 */
+	bool is_used(void);
 };
 
 }

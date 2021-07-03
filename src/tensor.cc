@@ -398,4 +398,8 @@ Tensor* Tensor::make_quantized_copy(void)
 	return t;
 }
 
+bool Tensor::is_used(void)
+{
+	return name != "";
+}
 
