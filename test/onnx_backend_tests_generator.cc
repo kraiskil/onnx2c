@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 		t->isIO = true;
 		// These input vectors could be const in the generated test
 		// cases, but that would break the logic: IO can't be const
-		t->isConst=false;
+		//t->isConst=false;
 		if( t->name == "" )
 			t->name = std::string("input_") + std::to_string(input_number);
 	

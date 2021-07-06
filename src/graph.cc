@@ -288,6 +288,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/matmul.h"
 #include "nodes/matmulinteger.h"
 #include "nodes/maxpool.h"
+#include "nodes/range.h"
 #include "nodes/relu.h"
 #include "nodes/reshape.h"
 #include "nodes/sigmoid.h"
@@ -319,6 +320,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "MatMulInteger" )return new MatMulInteger;
 	if( opName == "MaxPool" )return new MaxPool;
 	if( opName == "Mul" )return new Arithmetic("Mul");
+	if( opName == "Range" )return new Range;
 	if( opName == "Relu" )return new Relu;
 	if( opName == "Reshape" )return new Reshape;
 	if( opName == "Sigmoid" )return new Sigmoid;
@@ -365,7 +367,7 @@ void Graph::addTensor(Tensor *t)
 		LOG(TRACE) << "   new: gen " << t->generate
 		           << "  init " << t->initialize
 		           << "  IO " << t->isIO
-		           << "  const " << prev->isConst
+		           << "  const " << t->isConst
 		           << "  recurs " << t->isRecursive
 		           << std::endl;
 
@@ -384,9 +386,6 @@ void Graph::addTensor(Tensor *t)
 		// Recursive nodes might need to initialize internal tensors
 		if( t->data_buffer )
 			prev->data_buffer = t->data_buffer;
-
-		if( t->isConst == false )
-			prev->isConst = false;
 
 		prev->initialize = t->initialize || prev->initialize;
 		if( prev->initialize )

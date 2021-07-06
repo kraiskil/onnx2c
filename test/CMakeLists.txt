@@ -234,6 +234,12 @@ ONNX_backend_node_test(mul)
 ONNX_backend_node_test(mul_bcast)
 ONNX_backend_node_test(mul_example)
 
+ONNX_backend_node_test(range_float_type_positive_delta)
+ONNX_backend_node_test(range_int32_type_negative_delta)
+# Not unit tests - needs Cast node
+#ONNX_backend_node_test(range_float_type_positive_delta_expanded)
+#ONNX_backend_node_test(range_int32_type_negative_delta_expanded)
+
 ONNX_backend_node_test(relu)
 
 ONNX_backend_node_test(reshape_extended_dims)
