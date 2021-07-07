@@ -21,7 +21,7 @@ namespace toC {
 		void print_parameters(std::ostream &dst, bool decorate) const override {
 			size_t input_count = node_inputs.size();
 			for (size_t i = 0; i < input_count; i++) {
-				node_inputs[i]->print_tensor(dst, !decorate);
+				node_inputs[i]->print_tensor_as_const(dst, !decorate);
 				dst << ", ";
 			}
 			concat_result->print_tensor(dst, !decorate);

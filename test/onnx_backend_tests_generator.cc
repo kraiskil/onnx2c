@@ -153,9 +153,11 @@ int main(int argc, char *argv[])
 	for( auto o : references ) {
 		std::string refname = "reference_" + o->cname();
 		std::cout << "static ";
+#if 0
 		if( o->isAliasOf )
 			o->isAliasOf->print_tensor(std::cout, false, refname);
 		else
+#endif
 			o->print_tensor(std::cout, false, refname);
 		std::cout << " = ";
 		o->print_tensor_initializer(std::cout);
@@ -169,15 +171,15 @@ int main(int argc, char *argv[])
 	std::cout << "\t"<<  "entry(";
 	bool isfirst = true;
 	for( auto i : inputs) {
-		if( i-> isAliasOf )
-			continue;
+//		if( i-> isAliasOf )
+//			continue;
 		if( isfirst ) isfirst=false;
 		else          std::cout << ", ";
 		std::cout << i->cname();
 	}
 	for( auto r : outputs ) {
-		if( r->isAliasOf )
-			continue;
+//		if( r->isAliasOf )
+//			continue;
 		if( isfirst ) isfirst=false;
 		else          std::cout << ", ";
 		std::cout << r->cname();
@@ -191,7 +193,8 @@ int main(int argc, char *argv[])
 	std::cout << "\t{" << std::endl;
 		Tensor *r = references[i];
 		Tensor *o = outputs[i];
-		std::string outname = o->isAliasOf? o->isAliasOf->cname() : o->cname();
+		//std::string outname = o->isAliasOf? o->isAliasOf->cname() : o->cname();
+		std::string outname = o->cname();
 		std::string refname = "reference_" + r->cname();
 		std::string type = r->data_type_str();
 

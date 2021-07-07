@@ -22,12 +22,12 @@ class Conv : public SpatialFilter {
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		x->print_tensor(dst, !decorate);
+		x->print_tensor_as_const(dst, !decorate);
 		dst << ", ";
-		w->print_tensor(dst, !decorate);
+		w->print_tensor_as_const(dst, !decorate);
 		dst << ", ";
 		if( b ) {
-			b->print_tensor(dst, !decorate);
+			b->print_tensor_as_const(dst, !decorate);
 			dst << ", ";
 		}
 		y->print_tensor(dst, !decorate);

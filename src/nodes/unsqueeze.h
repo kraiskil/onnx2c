@@ -37,12 +37,12 @@ class Unsqueeze : public Node {
 	 * ONNX documentation */
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		data->print_tensor(dst, !decorate);
+		data->print_tensor_as_const(dst, !decorate);
 
 		/* Axes is "optional" for ONNX versions earlier than 13 */
 		if( axes_tensor ) {
 			dst << ", ";
-			axes_tensor->print_tensor(dst, !decorate);
+			axes_tensor->print_tensor_as_const(dst, !decorate);
 		}
 
 		dst << ", ";

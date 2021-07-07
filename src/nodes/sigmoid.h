@@ -20,7 +20,7 @@ class Sigmoid : public Node {
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		X->print_tensor(dst, !decorate);
+		X->print_tensor_as_const(dst, !decorate);
 		dst << ", ";
 		Y->print_tensor(dst, !decorate);
 	}

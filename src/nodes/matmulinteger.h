@@ -29,16 +29,16 @@ class MatMulInteger : public Node {
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		A->print_tensor(dst, !decorate);
+		A->print_tensor_as_const(dst, !decorate);
 		dst << ", ";
-		B->print_tensor(dst, !decorate);
+		B->print_tensor_as_const(dst, !decorate);
 		dst << ", ";
 		if( a_zero_point ) {
-			a_zero_point->print_tensor(dst, !decorate);
+			a_zero_point->print_tensor_as_const(dst, !decorate);
 			dst << ", ";
 		}
 		if( b_zero_point ) {
-			b_zero_point->print_tensor(dst, !decorate);
+			b_zero_point->print_tensor_as_const(dst, !decorate);
 			dst << ", ";
 		}
 		Y->print_tensor(dst, !decorate);

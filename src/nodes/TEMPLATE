@@ -68,11 +68,11 @@ class TEMPLATE : public Node {
 	 * ONNX documentation */
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		input_1->print_tensor(dst, !decorate);
+		input_1->print_tensor_as_const(dst, !decorate);
 
 		if (input_2_optional) {
 			dst << ", ";
-			input_2_optional->print_tensor(dst, !decorate);
+			input_2_optional->print_tensor_as_const(dst, !decorate);
 		}
 
 		dst << ", ";

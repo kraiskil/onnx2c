@@ -43,15 +43,15 @@ class Dropout : public Node {
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		data->print_tensor(dst, !decorate);
+		data->print_tensor_as_const(dst, !decorate);
 		dst << ", ";
 
 		if( ratio ) {
-			ratio->print_tensor(dst, !decorate);
+			ratio->print_tensor_as_const(dst, !decorate);
 			dst << ", ";
 		}
 		if( training_mode ) {
-			training_mode->print_tensor(dst, !decorate);
+			training_mode->print_tensor_as_const(dst, !decorate);
 			dst << ", ";
 		}
 

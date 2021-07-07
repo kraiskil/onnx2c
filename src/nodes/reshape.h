@@ -15,9 +15,9 @@ class Reshape : public Node {
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		data->print_tensor(dst, !decorate);
+		data->print_tensor_as_const(dst, !decorate);
 		dst << ", ";
-		shape->print_tensor(dst, !decorate);
+		shape->print_tensor_as_const(dst, !decorate);
 		dst << ", ";
 		reshaped->print_tensor(dst, !decorate);
 	}

@@ -106,12 +106,13 @@ void Graph::print_interface_function(std::ostream &dst)
 		 * the "actual" input data */
 		Tensor *t=findTensor(i.name());
 
-		if( t && t->isIO && t->isAliasOf==NULL ) {
+		if( t && t->isIO ) {
 			if(!isfirst)
 				dst << ", ";
 			else
 				isfirst = false;
-			t->print_tensor(dst);
+
+			t->print_tensor_as_const(dst);
 		}
 	}
 	for ( auto i : model.graph().output() ) {
@@ -119,15 +120,12 @@ void Graph::print_interface_function(std::ostream &dst)
 		 * inputs are handled */
 		Tensor *t = findTensor(i.name());
 
-		if( t && t->isIO && t->isAliasOf==NULL ) {
+		if( t && t->isIO ) {
 			if(!isfirst)
 				dst << ", ";
 			else
 				isfirst = false;
 			t->print_tensor(dst);
-		}
-		else if( t && t->isIO && t->isAliasOf!=NULL ) {
-			dst << "/* "<<t->name << " aliased to " << t->isAliasOf->cname() << " */ ";
 		}
 	}
 

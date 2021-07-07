@@ -74,40 +74,40 @@ class LSTM : public Node {
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		X->print_tensor(dst, !decorate, !decorate?"":"X");
+		X->print_tensor_as_const(dst, !decorate, !decorate?"":"X");
 		dst << ", ";
-		W->print_tensor(dst, !decorate, !decorate?"":"W");
+		W->print_tensor_as_const(dst, !decorate, !decorate?"":"W");
 		dst << ", ";
-		R->print_tensor(dst, !decorate, !decorate?"":"R");
+		R->print_tensor_as_const(dst, !decorate, !decorate?"":"R");
 		if( B ) {
 			dst << ", ";
-			B->print_tensor(dst, !decorate, !decorate?"":"B");
+			B->print_tensor_as_const(dst, !decorate, !decorate?"":"B");
 		}
 		if( sequence_lens ) {
 			dst << ", ";
-			sequence_lens->print_tensor(dst, !decorate, !decorate?"":"sequence_lens");
+			sequence_lens->print_tensor_as_const(dst, !decorate, !decorate?"":"sequence_lens");
 		}
 		if( initial_h ) {
 			dst << ", ";
-			initial_h->print_tensor(dst, !decorate, !decorate?"":"Y_h");
+			initial_h->print_tensor_as_const(dst, !decorate, !decorate?"":"initial_h");
 		}
 		if( initial_c ) {
 			dst << ", ";
-			initial_c->print_tensor(dst, !decorate, !decorate?"":"Y_c");
+			initial_c->print_tensor_as_const(dst, !decorate, !decorate?"":"initial_c");
 		}
 		if( P ) {
 			dst << ", ";
-			P->print_tensor(dst, !decorate, !decorate?"":"P");
+			P->print_tensor_as_const(dst, !decorate, !decorate?"":"P");
 		}
 		if( Y->is_used() ) {
 			dst << ", ";
 			Y->print_tensor(dst, !decorate, !decorate?"":"Y");
 		}
-		if( Y_h->is_used() && Y_h->isAliasOf==NULL ) {
+		if( Y_h->is_used() ) {
 			dst << ", ";
 			Y_h->print_tensor(dst, !decorate, !decorate?"":"Y_h");
 		}
-		if( Y_c->is_used() && Y_c->isAliasOf==NULL) {
+		if( Y_c->is_used() ) {
 			dst << ", ";
 			Y_c->print_tensor(dst, !decorate, !decorate?"":"Y_c");
 		}
@@ -490,9 +490,7 @@ class LSTM : public Node {
 		Y->data_dim = y_size;
 
 		// Y_h and Y_c are special: optional as outputs to the rest of the network,
-		// but mandatory as outputs to this node itself. Also, they alias
-		// on top of initial_[h,c], which is implemented copying initializers
-		// for Y_[h,c].
+		// but mandatory as outputs to this node itself. 
 		std::vector<int> ych_size;
 		if( layout == 0 )
 			ych_size = std::vector<int>({ num_directions, batch_size, hidden_size });
@@ -502,34 +500,20 @@ class LSTM : public Node {
 		Y_h = new Tensor;
 		Y_h->data_type = X->data_type;
 		Y_h->data_dim = ych_size;
-
 		Y_h->isRecursive=true;
-		if( initial_h ) {
-			Y_h->isAliasOf = initial_h;
-			Y_h->generate=false;
-		}
-		else {
-			Y_h->data_buffer = calloc(Y_h->data_num_elem(), Y_h->data_elem_size());
-			if( Y_h->data_buffer == NULL )
-				ERROR("Memory allocation failed");
-			Y_h->initialize = true;
-		}
+		Y_h->data_buffer = calloc(Y_h->data_num_elem(), Y_h->data_elem_size());
+		if( Y_h->data_buffer == NULL )
+			ERROR("Memory allocation failed");
+		Y_h->initialize = true;
 
 		Y_c = new Tensor;
 		Y_c->data_type = X->data_type;
 		Y_c->data_dim = ych_size;
-
 		Y_c->isRecursive=true;
-		if( initial_c ) {
-			Y_c->isAliasOf = initial_c;
-			Y_c->generate=false;
-		}
-		else {
-			Y_c->data_buffer = calloc(Y_c->data_num_elem(), Y_c->data_elem_size());
-			if( Y_c->data_buffer == NULL )
-				ERROR("Memory allocation failed");
-			Y_c->initialize = true;
-		}
+		Y_c->data_buffer = calloc(Y_c->data_num_elem(), Y_c->data_elem_size());
+		if( Y_c->data_buffer == NULL )
+			ERROR("Memory allocation failed");
+		Y_c->initialize = true;
 
 		outputs.push_back(Y);
 		outputs.push_back(Y_h);

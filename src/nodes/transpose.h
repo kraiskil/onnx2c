@@ -19,7 +19,7 @@ class Transpose : public Node {
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		data->print_tensor(dst, !decorate);
+		data->print_tensor_as_const(dst, !decorate);
 		dst << ", ";
 		transposed->print_tensor(dst, !decorate);
 	}

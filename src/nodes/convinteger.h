@@ -28,16 +28,16 @@ class ConvInteger : public SpatialFilter {
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		x->print_tensor(dst, !decorate);
+		x->print_tensor_as_const(dst, !decorate);
 		dst << ", ";
-		w->print_tensor(dst, !decorate);
+		w->print_tensor_as_const(dst, !decorate);
 		dst << ", ";
 		if( x_zero_point ) {
-			x_zero_point->print_tensor(dst, !decorate);
+			x_zero_point->print_tensor_as_const(dst, !decorate);
 			dst << ", ";
 		}
 		if( w_zero_point ) {
-			w_zero_point->print_tensor(dst, !decorate);
+			w_zero_point->print_tensor_as_const(dst, !decorate);
 			dst << ", ";
 		}
 		y->print_tensor(dst, !decorate);

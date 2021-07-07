@@ -21,7 +21,7 @@ class AveragePool : public Pooling {
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		x->print_tensor(dst, !decorate);
+		x->print_tensor_as_const(dst, !decorate);
 		dst << ", ";
 		y->print_tensor(dst, !decorate);
 		if( Indices->name != "" ) {

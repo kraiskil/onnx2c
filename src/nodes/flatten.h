@@ -15,7 +15,7 @@ class Flatten : public Node {
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		input->print_tensor(dst, !decorate);
+		input->print_tensor_as_const(dst, !decorate);
 		dst << ", ";
 		output->print_tensor(dst, !decorate);
 	}

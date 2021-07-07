@@ -32,10 +32,10 @@ class Arithmetic : public Node {
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		A->print_tensor(dst, !decorate);
+		A->print_tensor_as_const(dst, !decorate);
 
 		dst << ", ";
-		B->print_tensor(dst, !decorate);
+		B->print_tensor_as_const(dst, !decorate);
 
 		dst << ", ";
 		C->print_tensor(dst, !decorate);

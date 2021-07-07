@@ -360,14 +360,12 @@ void Graph::addTensor(Tensor *t)
 		           << "  IO " << prev->isIO
 		           << "  const " << prev->isConst
 		           << "  recurs " << prev->isRecursive
-		           << "  alias " << !!prev->isAliasOf
 		           << std::endl;
 		LOG(TRACE) << "   new: gen " << t->generate
 		           << "  init " << t->initialize
 		           << "  IO " << t->isIO
 		           << "  const " << prev->isConst
 		           << "  recurs " << t->isRecursive
-		           << "  alias " << !!t->isAliasOf
 		           << std::endl;
 
 
@@ -378,15 +376,17 @@ void Graph::addTensor(Tensor *t)
 			// This is because recursion means recursion to same node, not a general loop in the network
 			if( prev->isIO == false )
 				ERROR("Update logic failure (i.e. this is an assert fail)");
+			/*
 			if( t->isAliasOf ) {
 				prev->generate = false;
 				prev->initialize = false;
 				prev->isAliasOf = t->isAliasOf;
 			}
 			else {
+			*/
 				prev->generate = t->generate;
 				prev->initialize = t->initialize;
-			}
+			//}
 			prev->isRecursive = true;
 		}
 		// Recursive nodes might need to initialize internal tensors
@@ -405,7 +405,6 @@ void Graph::addTensor(Tensor *t)
 		           << "  IO " << prev->isIO
 		           << "  const " << prev->isConst
 		           << "  recurs " << prev->isRecursive
-		           << "  alias " << !!prev->isAliasOf
 		           << std::endl;
 	}
 }

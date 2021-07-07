@@ -17,8 +17,6 @@ class Tensor {
 	                 // IO tensors still get initialized e.g. in the test suite
 	bool isRecursive;// tensor that one node uses both output and input.
 	                 // may additionally be used as input for other nodes
-	const Tensor *isAliasOf; // Recursive tensors might (but need not) be defined
-	                         // twice: as the input and the output.
 	const Tensor *quantizedCopy; // non-NULL if there is a quantized version of this
 	bool isQuantized;  // is this a quantized copy
 	std::vector<int> data_dim;
@@ -33,7 +31,6 @@ class Tensor {
 		isConst(false),
 		isIO(false),
 		isRecursive(false),
-		isAliasOf(NULL),
 		quantizedCopy(NULL),
 		isQuantized(false),
 		data_buffer(NULL)
@@ -63,11 +60,21 @@ class Tensor {
 
 
 	/* Print the 'float foo[N][N]' part of the tensor.
-	 * If anternate_name is given, use that instead of 'foo',
+	 * This is used to print out tensor initializers, parameters to function calls, and
+	 * parameters in function definitions.
+	 *
+	 * If alternate_name is given, use that instead of the tensor's cname(),
+	 * If not a callsite, print as a 'const' tensor if asConst.
 	 * This is intended to print the tensors in a function declaration, definition and callsites.
 	 * If callsite is true, skip the "float" and "[N][N]" parts.
 	 */
-	void print_tensor(std::ostream &destination, bool callsite=false, std::string alternate_name = "") const;
+	void print_tensor(std::ostream &destination, bool callsite=false, std::string alternate_name = "", bool asConst=false) const;
+
+	/* Shortcut to previous */
+	void print_tensor_as_const(std::ostream &destination, bool callsite=false, std::string alternate_name = "") const
+	{
+		print_tensor(destination, callsite, alternate_name, true);
+	}
 
 	/* Print a tensor's initialization to output stream.
 	 * i.e. everything after the "=" in "float foo[43] = { 42, 42, ... };"

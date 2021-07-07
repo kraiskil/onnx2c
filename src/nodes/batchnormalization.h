@@ -44,19 +44,19 @@ class BatchNormalization : public Node {
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		input -> print_tensor(dst, !decorate);
+		input -> print_tensor_as_const(dst, !decorate);
 		if (scale) {
 			dst << ", ";
-			scale -> print_tensor(dst, !decorate);
+			scale -> print_tensor_as_const(dst, !decorate);
 		}
 		if (bias) {
 			dst << ", ";
-			bias -> print_tensor(dst, !decorate);
+			bias -> print_tensor_as_const(dst, !decorate);
 		}
 		dst << ", ";
-		mean -> print_tensor(dst, !decorate);
+		mean -> print_tensor_as_const(dst, !decorate);
 		dst << ", ";
-		var -> print_tensor(dst, !decorate);
+		var -> print_tensor_as_const(dst, !decorate);
 		dst << ", ";
 		output -> print_tensor(dst, !decorate);
 	}

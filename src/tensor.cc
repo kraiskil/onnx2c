@@ -109,9 +109,11 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 
 std::string Tensor::cname(void) const
 {
+	/*
 	if( isAliasOf )
 		return isAliasOf->cname();
 	else
+	*/
 		return "tensor_" + cify_name(name);
 }
 
@@ -259,13 +261,13 @@ void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs)
 	dst << "}";
 }
 
-void Tensor::print_tensor(std::ostream &dst, bool is_callsite, std::string alternate_name) const
+void Tensor::print_tensor(std::ostream &dst, bool is_callsite, std::string alternate_name, bool as_const) const
 {
-	if( isAliasOf )
-		ERROR("printing an aliased tensor does not make sense");
+//	if( isAliasOf )
+//		ERROR("printing an aliased tensor does not make sense");
 
 	if( is_callsite == false ) {
-		if( isConst )
+		if( isConst || as_const )
 			dst << "const ";
 		dst << data_type_str() << " ";
 	}
