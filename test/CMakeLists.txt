@@ -295,6 +295,7 @@ ONNX_backend_node_local_test(lstm_clip)
 ONNX_backend_node_local_test(lstm_intermediate_h)
 ONNX_backend_node_local_test(lstm_reverse)
 ONNX_backend_node_local_test(lstm_seq_length)
+ONNX_backend_node_local_test(lstm_simple)
 ONNX_backend_node_local_test(lstm_y_c)
 
 
