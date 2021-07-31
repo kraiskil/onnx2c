@@ -130,13 +130,19 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 
 bool Graph::getNodeInputTensors(const onnx::NodeProto &node, std::vector<const Tensor*> &inputs)
 {
+	// TODO: ugly. Move where?
+	static const Tensor unused;
+
 	// if all inputs can be found in the tensors-vector, then yes, inputs are resolved
 	for( auto i : node.input() )
 	{
 		bool input_resolved = false;
 		// Unused inputs don't need to be resolved.
-		if( i == "" )
+		if( i == "" ) {
+			input_resolved = true;
+			inputs.push_back(&unused);
 			continue;
+		}
 
 		for( auto t : tensors ) {
 			if ( t->name == i ) {
