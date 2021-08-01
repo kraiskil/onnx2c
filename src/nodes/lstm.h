@@ -374,18 +374,32 @@ class LSTM : public Node {
 		INDT_1<<  "/* Output gate */" << std::endl;
 		INDT_1<<  data_type << " ot[bs][hs];" << std::endl;
 		dst << std::endl;
-		INDT_1<<  "for( int s=0; s<sequence_lenght; s++) {" << std::endl;
 
+		/* Initialize cell and hidden state at the start of a run.
+		 * TODO: should these not be reset at the start of each sequence run?
+		 *       The documentation doesn't say, but this passes backend tests...
+		 */
+		if( initial_h && initial_h->is_used() )
+			INDT_1 << "memcpy(Y_h, initial_h, sizeof(*initial_h));" << std::endl;
+		else
+			INDT_1 << "memset(Y_h, 0, sizeof(*Y_h));" << std::endl;
+		if( initial_c && initial_c->is_used() )
+			INDT_1 << "memcpy(Y_c, initial_c, sizeof(*initial_c));" << std::endl;
+		else
+			INDT_1 << "memset(Y_c, 0, sizeof(*Y_c));" << std::endl;
 		dst << std::endl;
-		INDT_1<<  "/* Forward lane */" << std::endl;
+
+		/* Loop over sequences */
+		INDT_1<<  "for( int s=0; s<sequence_lenght; s++) {" << std::endl;
+		dst << std::endl;
+		INDT_2<<  "/* Forward lane */" << std::endl;
 		print_lstm_kernel(dst, /* forward= */ true);
 
 		if( direction == "bidirectional" ) {
 			dst << std::endl;
-			INDT_1<<  "/* Backward lane */" << std::endl;
+			INDT_2<<  "/* Backward lane */" << std::endl;
 			print_lstm_kernel(dst, /* forward= */ false);
 		}
-
 		INDT_1<<  "} /* sequences */" << std::endl;
 
 	}

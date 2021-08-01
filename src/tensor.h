@@ -93,7 +93,7 @@ class Tensor {
 	 * This function tells wether a given tensor must be included or if it can be left out.
 	 * This will return valid data only after all nodes have been resolved! (I.e. use it during printout phase)
 	 */
-	bool is_used(void);
+	bool is_used(void) const;
 };
 
 }

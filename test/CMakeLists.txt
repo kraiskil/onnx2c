@@ -298,6 +298,7 @@ ONNX_backend_node_local_test(lstm_missing_inputs)
 ONNX_backend_node_local_test(lstm_reverse)
 ONNX_backend_node_local_test(lstm_seq_length)
 ONNX_backend_node_local_test(lstm_simple)
+ONNX_backend_node_local_test(lstm_with_initial_state)
 ONNX_backend_node_local_test(lstm_y_c)
 
 

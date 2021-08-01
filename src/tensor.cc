@@ -400,7 +400,7 @@ Tensor* Tensor::make_quantized_copy(void)
 	return t;
 }
 
-bool Tensor::is_used(void)
+bool Tensor::is_used(void) const
 {
 	return name != "";
 }
