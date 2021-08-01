@@ -19,6 +19,8 @@ class Arithmetic : public Node {
 			operand = "+";
 		else if (op == "Mul" )
 			operand = "*";
+		else if (op == "Sub" )
+			operand = "-";
 		else
 			ERROR("Arithmetic operand not implemented");
 

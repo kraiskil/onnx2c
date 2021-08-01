@@ -260,6 +260,11 @@ ONNX_backend_node_test(softmax_example)
 ONNX_backend_node_test(softmax_large_number)
 ONNX_backend_node_test(softmax_negative_axis)
 
+ONNX_backend_node_test(sub)
+ONNX_backend_node_test(sub_bcast)
+ONNX_backend_node_test(sub_example)
+ONNX_backend_node_test(sub_uint8)
+
 ONNX_backend_node_test(transpose_default)
 ONNX_backend_node_test(transpose_all_permutations_0)
 ONNX_backend_node_test(transpose_all_permutations_1)

@@ -324,6 +324,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Sigmoid" )return new Sigmoid;
 	if( opName == "Squeeze" )return new Squeeze;
 	if( opName == "Softmax" )return new Softmax;
+	if( opName == "Sub" )return new Arithmetic("Sub");
 	if( opName == "Transpose" )return new Transpose;
 	if( opName == "Unsqueeze" )return new Unsqueeze;
 
