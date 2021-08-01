@@ -197,6 +197,7 @@ ONNX_backend_node_test(gemm_default_vector_bias)
 ONNX_backend_node_test(globalaveragepool)
 ONNX_backend_node_test(globalaveragepool_precomputed)
 
+ONNX_backend_node_test(lstm_batchwise)
 ONNX_backend_node_test(lstm_defaults)
 ONNX_backend_node_test(lstm_with_initial_bias)
 ONNX_backend_node_test(lstm_with_peepholes)

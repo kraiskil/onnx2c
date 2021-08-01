@@ -32,7 +32,7 @@ int parse_attribute_int(const onnx::AttributeProto &a)
 std::vector<int> parse_attribute_ints(const onnx::AttributeProto &a)
 {
 	if( a.ints_size() == 0 )
-		ERROR("Not a floats attribute");
+		ERROR("Not a ints attribute");
 
 	std::vector<int> rv;
 

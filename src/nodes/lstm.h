@@ -35,6 +35,7 @@ class LSTM : public Node {
 		Y=NULL;
 		Y_h=NULL;
 		Y_c=NULL;
+		layout=0;
 	}
 
 	// inputs
@@ -60,6 +61,15 @@ class LSTM : public Node {
 	std::string direction;
 	int hidden_size;
 	int input_forget;
+	int layout;
+
+	// "implicit" attributes, taken from input tensor dimensions
+	int seq_length;
+	int batch_size;
+	int num_directions;
+	int input_size;
+
+
 
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
@@ -130,6 +140,8 @@ class LSTM : public Node {
 				hidden_size = parse_attribute_int(a);
 			else if( a.name() == "input_forget" )
 				input_forget = parse_attribute_int(a);
+			else if( a.name() == "layout" )
+				layout = parse_attribute_int(a);
 			else
 				ERROR("Bad attribute " << a.name() << " for LSTM");
 		}
@@ -189,96 +201,119 @@ class LSTM : public Node {
 		int g_act;
 		int h_act;
 		std::string di;
+		std::string X_sbi;  // input data, indexed with s(equence), b(atch), i(input)
+		std::string Yh_dbh; // Y_h, indexed with direction, batch, hidden
+		std::string Yc_dbh; // Y_h, indexed with direction, batch, hidden
+		std::string Y_snbh; // Y, indexed with sequence, numdir, batch, hidden
 		if( forward ) {
 			dir=0;
 			f_act=0;
 			g_act=1;
 			h_act=2;
-			di="k";
+			di="i";
 		}
 		else {
 			dir=1;
 			f_act=3;
 			g_act=4;
 			h_act=5;
-			di="ds-1-k";
+			di="ds-1-i";
 		}
 
-		INDT_2<<  "for( int i=0; i<bs; i++)" << std::endl;
-		INDT_2<<  "for( int j=0; j<hs; j++) {" << std::endl;
-		INDT_3<<  "ft[i][j]=0;" << std::endl;
-		INDT_3<<  "it[i][j]=0;" << std::endl;
-		INDT_3<<  "ct[i][j]=0;" << std::endl;
+		if( layout == 0 ) {
+			X_sbi = "X[s][b]["+di+"]";
+			Y_snbh = "Y[s][" + std::to_string(dir) + "][b][h]";
+		}
+		else { //layout==1
+			X_sbi = "X[b][s]["+di+"]";
+			Y_snbh = "Y[b][s][" + std::to_string(dir) + "][h]";
+		}
+
+		Yh_dbh = "Y_h[" + std::to_string(dir) + "][b][k]";
+		Yc_dbh = "Y_c[" + std::to_string(dir) + "][b][h]";
+
+
+		/* With all the helper strings above, print out the kernel.
+		 * indexes:
+		 * - b: batch size
+		 * - h: hidden size
+		 * - i: data size
+		 * - k: hidden size, when it disappears as the inner dimension in a multiplication
+		 */
+		INDT_2<<  "for( int b=0; b<bs; b++)" << std::endl;
+		INDT_2<<  "for( int h=0; h<hs; h++) {" << std::endl;
+		INDT_3<<  "ft[b][h]=0;" << std::endl;
+		INDT_3<<  "it[b][h]=0;" << std::endl;
+		INDT_3<<  "ct[b][h]=0;" << std::endl;
 
 		// Xt*W
-		INDT_3<<  "for( int k=0; k<ds; k++) {" << std::endl;
-		INDT_4<<  "ft[i][j] += X[s][i]["<<di<<"]*W["<<dir<<"][fidx+j][k];" << std::endl;
-		INDT_4<<  "it[i][j] += X[s][i]["<<di<<"]*W["<<dir<<"][iidx+j][k];" << std::endl;
-		INDT_4<<  "ct[i][j] += X[s][i]["<<di<<"]*W["<<dir<<"][cidx+j][k];" << std::endl;
+		INDT_3<<  "for( int i=0; i<ds; i++) {" << std::endl;
+		INDT_4<<  "ft[b][h] += " << X_sbi << "*W["<<dir<<"][fidx+h][i];" << std::endl;
+		INDT_4<<  "it[b][h] += " << X_sbi << "*W["<<dir<<"][iidx+h][i];" << std::endl;
+		INDT_4<<  "ct[b][h] += " << X_sbi << "*W["<<dir<<"][cidx+h][i];" << std::endl;
 		INDT_3<<  "}" << std::endl;
 
 		// Ht-1*R
 		INDT_3<<  "for( int k=0; k<hs; k++) {" << std::endl;
-		INDT_4<<  "ft[i][j] += Y_h["<<dir<<"][i][k]*R["<<dir<<"][fidx+j][k];" << std::endl;
-		INDT_4<<  "ct[i][j] += Y_h["<<dir<<"][i][k]*R["<<dir<<"][cidx+j][k];" << std::endl;
-		INDT_4<<  "it[i][j] += Y_h["<<dir<<"][i][k]*R["<<dir<<"][iidx+j][k];" << std::endl;
+		INDT_4<<  "ft[b][h] += " << Yh_dbh << "*R["<<dir<<"][fidx+h][k];" << std::endl;
+		INDT_4<<  "ct[b][h] += " << Yh_dbh << "*R["<<dir<<"][cidx+h][k];" << std::endl;
+		INDT_4<<  "it[b][h] += " << Yh_dbh << "*R["<<dir<<"][iidx+h][k];" << std::endl;
 		INDT_3<<  "}" << std::endl;
 
 		if( B ) { // Bias
-		INDT_3<<  "ft[i][j] += B["<<dir<<"][fidx+j];" << std::endl;
-		INDT_3<<  "ft[i][j] += B["<<dir<<"][Rb+fidx+j];" << std::endl;
-		INDT_3<<  "it[i][j] += B["<<dir<<"][iidx+j];" << std::endl;
-		INDT_3<<  "it[i][j] += B["<<dir<<"][Rb+iidx+j];" << std::endl;
-		INDT_3<<  "ct[i][j] += B["<<dir<<"][cidx+j];" << std::endl;
-		INDT_3<<  "ct[i][j] += B["<<dir<<"][Rb+cidx+j];" << std::endl;
+		INDT_3<<  "ft[b][h] += B["<<dir<<"][fidx+h];" << std::endl;
+		INDT_3<<  "ft[b][h] += B["<<dir<<"][Rb+fidx+h];" << std::endl;
+		INDT_3<<  "it[b][h] += B["<<dir<<"][iidx+h];" << std::endl;
+		INDT_3<<  "it[b][h] += B["<<dir<<"][Rb+iidx+h];" << std::endl;
+		INDT_3<<  "ct[b][h] += B["<<dir<<"][cidx+h];" << std::endl;
+		INDT_3<<  "ct[b][h] += B["<<dir<<"][Rb+cidx+h];" << std::endl;
 		}
 		if( P ) { // Peephole
-		INDT_3<<  "ft[i][j] += P["<<dir<<"][fidx+j]*Y_c["<<dir<<"][i][j];" << std::endl;
-		INDT_3<<  "it[i][j] += P["<<dir<<"][iidx+j]*Y_c["<<dir<<"][i][j];" << std::endl;
+		INDT_3<<  "ft[b][h] += P["<<dir<<"][fidx+h]*" << Yc_dbh << ";" << std::endl;
+		INDT_3<<  "it[b][h] += P["<<dir<<"][iidx+h]*" << Yc_dbh << ";" << std::endl;
 		// Cell gate does not have a peephole
 		}
 
 		// Activations
-		INDT_3<<  "ft[i][j] =";
-		print_activation( dst, activations[f_act], "ft[i][j]");
-		INDT_3<<  "it[i][j] =";
-		print_activation( dst, activations[f_act], "it[i][j]");
-		INDT_3<<  "ct[i][j] =";
-		print_activation( dst, activations[g_act], "ct[i][j]");
+		INDT_3<<  "ft[b][h] =";
+		print_activation( dst, activations[f_act], "ft[b][h]");
+		INDT_3<<  "it[b][h] =";
+		print_activation( dst, activations[f_act], "it[b][h]");
+		INDT_3<<  "ct[b][h] =";
+		print_activation( dst, activations[g_act], "ct[b][h]");
 		INDT_2<< "}" << std::endl;
 
 		// Cell state, Output gate
-		INDT_2<<  "for( int i=0; i<bs; i++)" << std::endl;
-		INDT_2<<  "for( int j=0; j<hs; j++) {" << std::endl;
+		INDT_2<<  "for( int b=0; b<bs; b++)" << std::endl;
+		INDT_2<<  "for( int h=0; h<hs; h++) {" << std::endl;
 		INDT_3<<  "/* Cell state */" << std::endl;
-		INDT_3<<  "Y_c["<<dir<<"][i][j] = Y_c["<<dir<<"][i][j]*ft[i][j] + it[i][j]*ct[i][j];" << std::endl;
+		INDT_3<<  Yc_dbh << " = " << Yc_dbh << "*ft[b][h] + it[b][h]*ct[b][h];" << std::endl;
 		INDT_3<<  "/* Output gate */" << std::endl;
-		INDT_3<<  "ot[i][j]=0;" << std::endl;
+		INDT_3<<  "ot[b][h]=0;" << std::endl;
 		// X*W
-		INDT_3<<  "for( int k=0; k<ds; k++)" << std::endl;
-		INDT_4<<  "ot[i][j] += X[s][i]["<<di<<"]*W["<<dir<<"][oidx+j][k];" << std::endl;
+		INDT_3<<  "for( int i=0; i<ds; i++)" << std::endl;
+		INDT_4<<  "ot[b][h] += " << X_sbi << "*W["<<dir<<"][oidx+h][i];" << std::endl;
 		// Ht-1*R
 		INDT_3<<  "for( int k=0; k<hs; k++)" << std::endl;
-		INDT_4<<  "ot[i][j] += Y_h["<<dir<<"][i][k]*R["<<dir<<"][oidx+j][k];" << std::endl;
+		INDT_4<<  "ot[b][h] += " << Yh_dbh << "*R["<<dir<<"][oidx+h][k];" << std::endl;
 		if( B ) {// Bias
-		INDT_3<<  "ot[i][j] += B["<<dir<<"][oidx+j];" << std::endl;
-		INDT_3<<  "ot[i][j] += B["<<dir<<"][Rb+oidx+j];" << std::endl;
+		INDT_3<<  "ot[b][h] += B["<<dir<<"][oidx+h];" << std::endl;
+		INDT_3<<  "ot[b][h] += B["<<dir<<"][Rb+oidx+h];" << std::endl;
 		}
 		if( P ) // Peephole
-		INDT_3<<  "ot[i][j] += P["<<dir<<"][oidx+j]*Y_c["<<dir<<"][i][j];" << std::endl;
-		INDT_3<<  "ot[i][j] =";
-		print_activation( dst, activations[f_act], "ot[i][j]");
+		INDT_3<<  "ot[b][h] += P["<<dir<<"][oidx+h]*" << Yc_dbh << ";" << std::endl;
+		INDT_3<<  "ot[b][h] =";
+		print_activation( dst, activations[f_act], "ot[b][h]");
 		INDT_2<<  "}" << std::endl;
 
 		// Hidden state
 		INDT_2<<  "/* Hidden state */" << std::endl;
-		INDT_2<<  "for( int i=0; i<bs; i++)" << std::endl;
-		INDT_2<<  "for( int j=0; j<hs; j++) {" << std::endl;
-			INDT_3<<  "Y_h["<<dir<<"][i][j] = ot[i][j] * ";
-				std::string activated="Y_c[" + std::to_string(dir) + "][i][j]";
-				print_activation( dst, activations[h_act], activated );
+		INDT_2<<  "for( int b=0; b<bs; b++)" << std::endl;
+		INDT_2<<  "for( int h=0; h<hs; h++) {" << std::endl;
+			INDT_3<<  "Y_h["<<dir<<"][b][h] = ot[b][h] * ";
+				print_activation( dst, activations[h_act], Yc_dbh );
 			if( Y->is_used() ) {
-				INDT_3<<  "Y[s]["<<dir<<"][i][j] = Y_h["<<dir<<"][i][j];" << std::endl;
+				INDT_3<< Y_snbh << "= Y_h["<<dir<<"][b][h];" << std::endl;
 			}
 		INDT_2<<  "}" << std::endl << std::endl;
 	}
@@ -305,15 +340,15 @@ class LSTM : public Node {
 				dst << a << " ";
 			dst << std::endl;
 		INDT_1<< " * clip: " << (clip > 0 ? std::to_string(clip) : "off") << std::endl;
+		INDT_1<< " * layout: " << layout << std::endl;
 		INDT_1<< " * (rest TBD):" << std::endl;
 		INDT_1<< " */" << std::endl;
 
 		const std::string data_type = X->data_type_str();
-
-		int hs = R->data_dim[2]; //hidden size
-		int ds = X->data_dim[2]; //input (data) size
-		int bs = X->data_dim[1]; // batch size
-
+		// shorthands for code brevity
+		int hs = hidden_size;
+		int ds = input_size; 
+		int bs = batch_size;
 
 		INDT_1<<  "int hs = " << hs << ";" << std::endl;
 		INDT_1<<  "int ds = " << ds << ";" << std::endl;
@@ -326,7 +361,7 @@ class LSTM : public Node {
 		// index into B, to get Rb. Wb is B at offset 0
 		INDT_1<<  "int Rb = 4*hs;" << std::endl;
 		// TODO: variable lenght sequences not yet implemented
-		INDT_1<<  "int sequence_lenght = " <<  X->data_dim[0] << ";" << std::endl;
+		INDT_1<<  "int sequence_lenght = " << seq_length << ";" << std::endl;
 
 		// TODO: these temporary variables are BIG. Make them global to minimize
 		// stack usage? Probably needs to be an onnx2c flag for user to select
@@ -353,6 +388,23 @@ class LSTM : public Node {
 
 		INDT_1<<  "} /* sequences */" << std::endl;
 
+	}
+
+
+	// Helper function for resolveOutput()
+	void calculate_data_dimensions()
+	{
+		if( layout == 0 ) {
+			seq_length = X->data_dim[0];
+			batch_size = X->data_dim[1];
+			num_directions = W->data_dim[0];
+		}
+		else { // layout==1
+			seq_length = X->data_dim[1];
+			batch_size = X->data_dim[0];
+			num_directions = W->data_dim[0];
+		}
+		input_size = X->data_dim[2];
 	}
 
 	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
@@ -412,9 +464,7 @@ class LSTM : public Node {
 			P = inputs[7];
 
 
-		int seq_length = X->data_dim[0];
-		int batch_size = X->data_dim[1];
-		int num_directions = W->data_dim[0];
+		calculate_data_dimensions();
 
 		if( sequence_lens ) {
 			if( static_cast<int>(sequence_lens->rank()) != 1 )
@@ -432,17 +482,26 @@ class LSTM : public Node {
 
 		Y = new Tensor;
 		Y->data_type = X->data_type;
-		std::vector<int> y_size({ seq_length, num_directions, batch_size, hidden_size });
+		std::vector<int> y_size;
+		if( layout == 0 )
+			y_size = std::vector<int>({ seq_length, num_directions, batch_size, hidden_size });
+		else
+			y_size = std::vector<int>({ batch_size, seq_length, num_directions, hidden_size });
 		Y->data_dim = y_size;
 
 		// Y_h and Y_c are special: optional as outputs to the rest of the network,
 		// but mandatory as outputs to this node itself. Also, they alias
 		// on top of initial_[h,c], which is implemented copying initializers
 		// for Y_[h,c].
+		std::vector<int> ych_size;
+		if( layout == 0 )
+			ych_size = std::vector<int>({ num_directions, batch_size, hidden_size });
+		else
+			ych_size = std::vector<int>({ batch_size, num_directions, hidden_size });
+
 		Y_h = new Tensor;
 		Y_h->data_type = X->data_type;
-		std::vector<int> yh_size({ num_directions, batch_size, hidden_size });
-		Y_h->data_dim = yh_size;
+		Y_h->data_dim = ych_size;
 
 		Y_h->isRecursive=true;
 		if( initial_h ) {
@@ -458,8 +517,7 @@ class LSTM : public Node {
 
 		Y_c = new Tensor;
 		Y_c->data_type = X->data_type;
-		std::vector<int> yc_size({ num_directions, batch_size, hidden_size });
-		Y_c->data_dim = yc_size;
+		Y_c->data_dim = ych_size;
 
 		Y_c->isRecursive=true;
 		if( initial_c ) {
