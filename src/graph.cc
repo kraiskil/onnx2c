@@ -342,7 +342,7 @@ void Graph::addTensor(Tensor *t)
 	 * How and which parts of the existing tensor
 	 * to update is the fragile part :)
 	 */
-	Tensor *prev = NULL;
+	Tensor *prev = NULL;  // pointer to the previously existing tensor. This gets updated
 	for( auto o : tensors)
 		if( t->name == o->name ) {
 			prev = o;
@@ -377,17 +377,8 @@ void Graph::addTensor(Tensor *t)
 			// This is because recursion means recursion to same node, not a general loop in the network
 			if( prev->isIO == false )
 				ERROR("Update logic failure (i.e. this is an assert fail)");
-			/*
-			if( t->isAliasOf ) {
-				prev->generate = false;
-				prev->initialize = false;
-				prev->isAliasOf = t->isAliasOf;
-			}
-			else {
-			*/
-				prev->generate = t->generate;
-				prev->initialize = t->initialize;
-			//}
+			prev->generate = t->generate;
+			prev->initialize = t->initialize;
 			prev->isRecursive = true;
 		}
 		// Recursive nodes might need to initialize internal tensors
