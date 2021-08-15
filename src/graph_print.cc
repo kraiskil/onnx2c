@@ -1,6 +1,11 @@
+/* This file is part of onnx2c
+ */
+
 #include "error.h"
 #include "graph.h"
+#include "options.h"
 #include "util.h"
+
 #include <iostream>
 
 using namespace toC;
@@ -52,7 +57,7 @@ void Graph::print_global_tensors(std::ostream &dst)
 		dst << "static ";
 		t->print_tensor(dst);
 		if( t->initialize ) {
-			if( target_avr && t->isConst )
+			if( options.target_avr && t->isConst )
 				dst << " PROGMEM";
 			dst << " = "<<std::endl;
 			t->print_tensor_initializer(dst);
@@ -89,7 +94,7 @@ void Graph::print_includes(std::ostream &dst)
 	dst << "#define MIN(X,Y) ( X < Y ? X : Y)" << std::endl;
 	dst << "#define CLIP(X,L) ( MAX(MIN(X,L), -L) )" << std::endl;
 
-	if( target_avr ) {
+	if( options.target_avr ) {
 		dst << "#include <avr/pgmspace.h>" << std::endl;
 		dst << "#define RD_PROGMEM(x) pgm_read_byte(&(x));" << std::endl;
 	}

@@ -14,7 +14,6 @@ class Graph {
 public:
 	Graph(
 		onnx::ModelProto &onnx_model,
-		bool verbose_mode = false,
 		std::vector<Tensor*> inputs={}
 	);
 

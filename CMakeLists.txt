@@ -25,6 +25,7 @@ add_library(onnx2c_lib STATIC
 	src/graph.cc
 	src/graph_print.cc
 	src/node.cc
+	src/options.cc
 	src/tensor.cc
 	src/util.cc
 	${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc
@@ -35,8 +36,10 @@ target_compile_options(onnx2c_lib
 	PRIVATE
 		-Isrc
 		-I${CMAKE_CURRENT_SOURCE_DIR}/aixlog/include
+		-I${CMAKE_CURRENT_SOURCE_DIR}/args
 		-Wall
 	)
+
 add_executable( onnx2c
 	src/main.cc
 	)

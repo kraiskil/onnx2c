@@ -4,3 +4,6 @@
 [submodule "aixlog"]
 	path = aixlog
 	url = https://github.com/badaix/aixlog.git
+[submodule "args"]
+	path = args
+	url = https://github.com/Taywee/args.git

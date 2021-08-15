@@ -82,7 +82,7 @@ class Arithmetic : public Node {
 		}
 
 
-		if( quantize ) {
+		if( options.quantize ) {
 			INDT_2 << "int32_t tmp = " << Aidx << operand << Bidx << ";" << std::endl;
 			// TODO: division amount here depends on operand
 			INDT_2 << "tmp = tmp/2;" << std::endl;

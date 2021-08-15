@@ -131,7 +131,7 @@ class Gemm : public Node {
 		INDT_2 << "for( uint32_t c=0; c<N; c++ ) {" << std::endl;
 
 		/* Calculate the matrix muliplication dot inner dot product */
-		if( quantize ) {
+		if( options.quantize ) {
 			INDT_3 << "int32_t ABrc = 0;" << std::endl;
 		}
 		else {
@@ -144,7 +144,7 @@ class Gemm : public Node {
 
 
 		/* Add scale & bias, store result in output */
-		if( quantize )
+		if( options.quantize )
 			INDT_3 << "int32_t tmp = ABrc * alpha;" << std::endl;
 		else
 			INDT_3 << type <<" tmp = ABrc * alpha;" << std::endl;
@@ -154,7 +154,7 @@ class Gemm : public Node {
 			INDT_3 << "tmp += C * beta;" << std::endl;
 		}
 
-		if( quantize ) {
+		if( options.quantize ) {
 			INDT_3 << "tmp = tmp/(K*16);" << std::endl;
 			INDT_3 << "tmp = tmp > 127?127:tmp;" << std::endl;
 			INDT_3 << "tmp = tmp < -127?-127:tmp;" << std::endl;

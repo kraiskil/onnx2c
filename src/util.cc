@@ -1,6 +1,10 @@
+/* This file is part of onnx2c
+ */
+
 #include "error.h"
-#include "util.h"
+#include "options.h"
 #include "tensor.h"
+#include "util.h"
 
 // command line option
 extern bool target_avr;
@@ -99,7 +103,7 @@ toC::Tensor* parse_attribute_tensor(const onnx::AttributeProto &a)
 
 std::string constant_acces_code(const std::string plain)
 {
-	if( !target_avr )
+	if( !options.target_avr )
 		return plain;
 
 	std::string rv = "RD_PROGMEM(" + plain + ")";

@@ -85,19 +85,19 @@ class MatMulInteger : public Node {
 		INDT_2 << "for( uint32_t c=0; c<" << cols << "; c++ ) {" << std::endl;
 
 
-		if( quantize )
+		if( options.quantize )
 			INDT_3 << "int32_t sum = 0;" << std::endl;
 		else
 			INDT_3 << "Y[r*"<<cols<<" + c] = 0;" << std::endl;
 		INDT_3 << "for( uint32_t i=0; i<" << inner << "; i++ )" << std::endl;
-		if( quantize )
+		if( options.quantize )
 			INDT_4 << "sum";
 		else
 			INDT_4 << "Y[r*"<<cols<<"+c]";
 		dst <<         "+= (A[r*"<<inner<< "+i] - " << a_zero << ")";
 		dst <<           " * (B[i*"<<cols<<"+c] - " << b_zero << ");" << std::endl;
 
-		if( quantize ) {
+		if( options.quantize ) {
 			INDT_3 << "int32_t tmp = sum/64;" << std::endl;
 			INDT_3 << "tmp = tmp > 127?127:tmp;" << std::endl;
 			INDT_3 << "tmp = tmp < -127?-127:tmp;" << std::endl;
@@ -132,7 +132,7 @@ class MatMulInteger : public Node {
 		rv->data_dim.push_back(rows);
 		rv->data_dim.push_back(cols);
 		// ONNX specs say int32. local quantization is non conformant
-		if( quantize )
+		if( options.quantize )
 			rv->data_type = onnx::TensorProto_DataType_INT8;
 		else
 			rv->data_type = onnx::TensorProto_DataType_INT32;

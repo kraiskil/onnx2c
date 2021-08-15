@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 	for( auto i : outputs) tensors_to_parser.push_back(i);
 
 	onnx_model.ParseFromIstream(&model_ifs);
-	Graph toCgraph(onnx_model, false/*verbose*/, tensors_to_parser);
+	Graph toCgraph(onnx_model, tensors_to_parser);
 	std::cout.precision(20);
 	toCgraph.print_source(std::cout);
 

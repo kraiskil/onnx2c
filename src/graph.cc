@@ -2,9 +2,11 @@
 #include "error.h"
 #include "graph.h"
 #include "onnx.pb.h"
+#include "options.h"
 
 #include "aixlog.hpp"
 #include <iostream>
+
 
 using namespace toC;
 
@@ -13,15 +15,21 @@ int Graph::anonymous_nodes=0;
 
 Graph::Graph(
 	onnx::ModelProto &onnx_model,
-	bool verbose,
 	std::vector<Tensor*> ext_inputs
 	)
-	:model(onnx_model), verbose_mode(verbose)
+	:model(onnx_model)
 {
 
-	AixLog::Severity s = AixLog::Severity::fatal; // there is no "off"
-	if( verbose )
-		s = AixLog::Severity::trace;
+	AixLog::Severity s;
+	switch(options.logging_level)
+	{
+	case 4: s = AixLog::Severity::trace;   break;
+	case 3: s = AixLog::Severity::info;    break;
+	case 2: s = AixLog::Severity::warning; break;
+	default:
+	case 1: s = AixLog::Severity::error;   break;
+	case 0: s = AixLog::Severity::fatal;   break;// there is no "off"
+	}
 	AixLog::Log::init<AixLog::SinkCerr>(s);
 
 
@@ -72,7 +80,7 @@ void Graph::addInitializedTensor(onnx::TensorProto &tensor)
 
 	addTensor(t);
 
-	if( quantize ) {
+	if( options.quantize ) {
 		t = t->make_quantized_copy();
 		if( t )
 			addTensor(t);
@@ -104,7 +112,7 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 	t->data_type = static_cast<onnx::TensorProto_DataType>(datatype);
 
 	// TODO: this is a bit coarse
-	if( quantize )
+	if( options.quantize )
 		t->data_type = onnx::TensorProto_DataType_INT8;
 
 	for( onnx::TensorShapeProto_Dimension d : tsp.dim() ) {
@@ -183,7 +191,7 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 	// For the rest, rely on optional quantization in the
 	// onnx2c implementation.
 	std::string new_node = node.op_type();
-	if( quantize ) {
+	if( options.quantize ) {
 		replaceWithQuantized(inputs);
 		if( new_node == "Conv" )
 			new_node = "ConvInteger";

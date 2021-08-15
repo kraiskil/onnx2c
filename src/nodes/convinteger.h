@@ -45,7 +45,7 @@ class ConvInteger : public SpatialFilter {
 
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const
 	{
-		if( quantize )
+		if( options.quantize )
 			INDT_3 << "int32_t cell = 0;" << std::endl;
 		else
 			INDT_3 << y->cname() << "[b][m][o0][o1] = 0;" << std::endl;
@@ -60,7 +60,7 @@ class ConvInteger : public SpatialFilter {
 
 		INDT_4 << w->data_type_str() << " w = " << constant_acces_code( w->cname() + "[m][c][k0][k1]") << ";" << std::endl;
 		std::string dest;
-		if( quantize )
+		if( options.quantize )
 			dest = "cell";
 		else
 			dest = y->cname() + "[b][m][o0][o1]";
@@ -69,7 +69,7 @@ class ConvInteger : public SpatialFilter {
 	}
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const
 	{
-		if( quantize ) {
+		if( options.quantize ) {
 			// TODO: this assumes 2D filter
 			int divisor = kernel_shape[0]*kernel_shape[1]*16;
 			INDT_3 << "int32_t tmp = cell/" << divisor << ";" << std::endl;
@@ -117,7 +117,7 @@ class ConvInteger : public SpatialFilter {
 		Tensor *rv = new Tensor;
 		rv->data_dim = resolve_output_size();
 		// ONNX specs say int32. local quantization is non conformant
-		if( quantize )
+		if( options.quantize )
 			rv->data_type = onnx::TensorProto_DataType_INT8;
 		else
 			rv->data_type = onnx::TensorProto_DataType_INT32;
