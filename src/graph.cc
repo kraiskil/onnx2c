@@ -299,7 +299,6 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/range.h"
 #include "nodes/relu.h"
 #include "nodes/reshape.h"
-#include "nodes/sigmoid.h"
 #include "nodes/squeeze.h"
 #include "nodes/softmax.h"
 #include "nodes/transpose.h"
@@ -308,34 +307,63 @@ int64_t Graph::onnx_ir_version(void)
 Node* Graph::createNode(std::string opName)
 {
 	if( opName == "Abs" )return new Elementwise("Abs");
+	if( opName == "Acos" )return new Elementwise("Acos");
+	if( opName == "Acosh" )return new Elementwise("Acosh");
 	if( opName == "Add" )return new Arithmetic("Add");
+	if( opName == "Asin" )return new Elementwise("Asin");
+	if( opName == "Asinh" )return new Elementwise("Asinh");
+	if( opName == "Atan" )return new Elementwise("Atan");
+	if( opName == "Atanh" )return new Elementwise("Atanh");
 	if( opName == "AveragePool" )return new AveragePool;
 	if( opName == "BatchNormalization" )return new BatchNormalization;
 	if( opName == "Ceil" )return new Elementwise("Ceil");
+	if( opName == "Celu" )return new Elementwise("Celu");
 	if( opName == "Concat" )return new Concat;
 	if( opName == "Constant" )return new Constant;
 	if( opName == "Conv" )return new Conv;
+	if( opName == "Cos" )return new Elementwise("Cos");
+	if( opName == "Cosh" )return new Elementwise("Cosh");
 	if( opName == "ConvInteger" )return new ConvInteger;
 	if( opName == "Div" )return new Arithmetic("Div");
 	if( opName == "Dropout" )return new Dropout;
 	if( opName == "DynamicQuantizeLinear" )return new DynamicQuantizeLinear;
 	if( opName == "Flatten" )return new Flatten;
 	if( opName == "Floor" )return new Elementwise("Floor");
+	if( opName == "Elu" )return new Elementwise("Elu");
+	if( opName == "Erf" )return new Elementwise("Erf");
+	if( opName == "Exp" )return new Elementwise("Exp");
 	if( opName == "GlobalAveragePool" )return new GlobalAveragePool;
 	if( opName == "Gemm" )return new Gemm;
+	if( opName == "HardSigmoid" )return new Elementwise("HardSigmoid");
+	if( opName == "HardSwish" )return new Elementwise("HardSwish");
+	if( opName == "Log" )return new Elementwise("Log");
 	if( opName == "LSTM" )return new LSTM;
 	if( opName == "MatMul" )return new MatMul;
 	if( opName == "MatMulInteger" )return new MatMulInteger;
 	if( opName == "MaxPool" )return new MaxPool;
 	if( opName == "Mul" )return new Arithmetic("Mul");
+	if( opName == "Neg" )return new Elementwise("Neg");
+	if( opName == "Not" )return new Elementwise("Not");
 	if( opName == "Range" )return new Range;
+	if( opName == "Reciprocal" )return new Elementwise("Reciprocal");
 	if( opName == "Relu" )return new Relu;
 	if( opName == "Reshape" )return new Reshape;
-	if( opName == "Sigmoid" )return new Sigmoid;
-	if( opName == "Squeeze" )return new Squeeze;
+	if( opName == "Round" )return new Elementwise("Round");
+	if( opName == "Selu" )return new Elementwise("Selu");
+	if( opName == "Sigmoid" )return new Elementwise("Sigmoid");
+	if( opName == "Sign" )return new Elementwise("Sign");
+	if( opName == "Sin" )return new Elementwise("Sin");
+	if( opName == "Sinh" )return new Elementwise("Sinh");
+	if( opName == "Softplus" )return new Elementwise("Softplus");
+	if( opName == "Softsign" )return new Elementwise("Softsign");
 	if( opName == "Softmax" )return new Softmax;
+	if( opName == "Squeeze" )return new Squeeze;
+	if( opName == "Sqrt" )return new Elementwise("Sqrt");
 	if( opName == "Sub" )return new Arithmetic("Sub");
+	if( opName == "Tan" )return new Elementwise("Tan");
+	if( opName == "Tanh" )return new Elementwise("Tanh");
 	if( opName == "Transpose" )return new Transpose;
+	if( opName == "ThresholdedRelu" )return new Elementwise("ThresholdedRelu");
 	if( opName == "Unsqueeze" )return new Unsqueeze;
 
 	ERROR("Unimplemented: node operation " << opName);

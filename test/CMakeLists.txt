@@ -104,8 +104,26 @@ endfunction()
 
 ONNX_backend_node_test(abs)
 
+ONNX_backend_node_test(acos)
+ONNX_backend_node_test(acos_example)
+
+ONNX_backend_node_test(acosh)
+ONNX_backend_node_test(acosh_example)
+
 ONNX_backend_node_test(add)
 ONNX_backend_node_test(add_bcast)
+
+ONNX_backend_node_test(asin)
+ONNX_backend_node_test(asin_example)
+
+ONNX_backend_node_test(asinh)
+ONNX_backend_node_test(asinh_example)
+
+ONNX_backend_node_test(atan)
+ONNX_backend_node_test(atan_example)
+
+ONNX_backend_node_test(atanh)
+ONNX_backend_node_test(atanh_example)
 
 ONNX_backend_node_test(averagepool_1d_default)
 ONNX_backend_node_test(averagepool_2d_precomputed_pads)
@@ -127,6 +145,10 @@ ONNX_backend_node_test(batchnorm_example)
 ONNX_backend_node_test(ceil)
 ONNX_backend_node_test(ceil_example)
 
+ONNX_backend_node_test(celu)
+# This does not test Celu
+ONNX_backend_node_test(celu_expanded)
+
 ONNX_backend_node_test(concat_1d_axis_0)
 ONNX_backend_node_test(concat_1d_axis_negative_1)
 ONNX_backend_node_test(concat_2d_axis_0)
@@ -142,6 +164,12 @@ ONNX_backend_node_test(concat_3d_axis_negative_3)
 ONNX_type_test(operator_concat2 ${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-operator/test_operator_concat2 ONNX_backend_pytorch_conv 0.00001 0)
 
 ONNX_backend_node_test(constant)
+
+ONNX_backend_node_test(cos)
+ONNX_backend_node_test(cos_example)
+
+ONNX_backend_node_test(cosh)
+ONNX_backend_node_test(cosh_example)
 
 ONNX_backend_node_test(conv_with_strides_no_padding)
 ONNX_backend_node_test(conv_with_strides_padding)
@@ -168,6 +196,15 @@ ONNX_backend_node_test(dynamicquantizelinear_min_adjusted)
 #ONNX_backend_node_test(dynamicquantizelinear_max_adjusted_expanded)
 #ONNX_backend_node_test(dynamicquantizelinear_min_adjusted_expanded)
 #ONNX_backend_node_test(dynamicquantizelinear_expanded)
+
+ONNX_backend_node_test(elu)
+ONNX_backend_node_test(elu_default)
+ONNX_backend_node_test(elu_example)
+
+ONNX_backend_node_test(erf)
+
+ONNX_backend_node_test(exp)
+ONNX_backend_node_test(exp_example)
 
 ONNX_backend_node_test(flatten_axis0)
 ONNX_backend_node_test(flatten_axis1)
@@ -196,6 +233,16 @@ ONNX_backend_node_test(gemm_default_vector_bias)
 
 ONNX_backend_node_test(globalaveragepool)
 ONNX_backend_node_test(globalaveragepool_precomputed)
+
+ONNX_backend_node_test(hardsigmoid)
+ONNX_backend_node_test(hardsigmoid_default)
+ONNX_backend_node_test(hardsigmoid_example)
+
+ONNX_backend_node_test(hardswish)
+ONNX_backend_node_test(hardswish_expanded) #doesn't test hardswish
+
+ONNX_backend_node_test(log)
+ONNX_backend_node_test(log_example)
 
 ONNX_backend_node_test(lstm_batchwise)
 ONNX_backend_node_test(lstm_defaults)
@@ -234,11 +281,21 @@ ONNX_backend_node_test(mul)
 ONNX_backend_node_test(mul_bcast)
 ONNX_backend_node_test(mul_example)
 
+ONNX_backend_node_test(neg)
+ONNX_backend_node_test(neg_example)
+
+ONNX_backend_node_test(not_2d)
+ONNX_backend_node_test(not_3d)
+ONNX_backend_node_test(not_4d)
+
 ONNX_backend_node_test(range_float_type_positive_delta)
 ONNX_backend_node_test(range_int32_type_negative_delta)
 # Not unit tests - needs Cast node
 #ONNX_backend_node_test(range_float_type_positive_delta_expanded)
 #ONNX_backend_node_test(range_int32_type_negative_delta_expanded)
+
+ONNX_backend_node_test(reciprocal)
+ONNX_backend_node_test(reciprocal_example)
 
 ONNX_backend_node_test(relu)
 
@@ -252,11 +309,24 @@ ONNX_backend_node_test(reshape_one_dim)
 ONNX_backend_node_test(reshape_reordered_all_dims)
 ONNX_backend_node_test(reshape_zero_and_negative_dim)
 
+# Does not pass: ONNX rounding mode is towards even integer, which does not
+# exist (I think) in C
+#ONNX_backend_node_test(round)
+
+ONNX_backend_node_test(selu)
+ONNX_backend_node_test(selu_default)
+ONNX_backend_node_test(selu_example)
+
 ONNX_backend_node_test(sigmoid)
 ONNX_backend_node_test(sigmoid_example)
 
-ONNX_backend_node_test(squeeze)
-ONNX_backend_node_test(squeeze_negative_axes)
+ONNX_backend_node_test(sign)
+
+ONNX_backend_node_test(sin)
+ONNX_backend_node_test(sin_example)
+
+ONNX_backend_node_test(sinh)
+ONNX_backend_node_test(sinh_example)
 
 ONNX_backend_node_test(softmax_axis_0)
 ONNX_backend_node_test(softmax_axis_1)
@@ -266,10 +336,28 @@ ONNX_backend_node_test(softmax_example)
 ONNX_backend_node_test(softmax_large_number)
 ONNX_backend_node_test(softmax_negative_axis)
 
+ONNX_backend_node_test(softplus)
+ONNX_backend_node_test(softplus_example)
+
+ONNX_backend_node_test(softsign)
+ONNX_backend_node_test(softsign_example)
+
+ONNX_backend_node_test(sqrt)
+ONNX_backend_node_test(sqrt_example)
+
+ONNX_backend_node_test(squeeze)
+ONNX_backend_node_test(squeeze_negative_axes)
+
 ONNX_backend_node_test(sub)
 ONNX_backend_node_test(sub_bcast)
 ONNX_backend_node_test(sub_example)
 ONNX_backend_node_test(sub_uint8)
+
+ONNX_backend_node_test(tan)
+ONNX_backend_node_test(tan_example)
+
+ONNX_backend_node_test(tanh)
+ONNX_backend_node_test(tanh_example)
 
 ONNX_backend_node_test(transpose_default)
 ONNX_backend_node_test(transpose_all_permutations_0)
@@ -278,6 +366,10 @@ ONNX_backend_node_test(transpose_all_permutations_2)
 ONNX_backend_node_test(transpose_all_permutations_3)
 ONNX_backend_node_test(transpose_all_permutations_4)
 ONNX_backend_node_test(transpose_all_permutations_5)
+
+ONNX_backend_node_test(thresholdedrelu)
+ONNX_backend_node_test(thresholdedrelu_default)
+ONNX_backend_node_test(thresholdedrelu_example)
 
 ONNX_backend_node_test(unsqueeze_axis_0)
 ONNX_backend_node_test(unsqueeze_axis_2)
