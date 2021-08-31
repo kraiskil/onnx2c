@@ -10,7 +10,7 @@ namespace toC {
 class Elementwise : public Node {
 	public:
 	Elementwise(std::string op) {
-		op_name = operand;
+		op_name = op;
 		X=Y=NULL;
 		alpha=beta=gamma=0;
 
@@ -127,9 +127,7 @@ class Elementwise : public Node {
 		}
 		else
 			ERROR("Elementwise operand not implemented: " + op);
-
 	}
-	std::string operand;
 
 	const Tensor *X;
 	const Tensor *Y;
