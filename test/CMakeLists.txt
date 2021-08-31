@@ -113,6 +113,15 @@ ONNX_backend_node_test(acosh_example)
 ONNX_backend_node_test(add)
 ONNX_backend_node_test(add_bcast)
 
+ONNX_backend_node_test(and2d)
+ONNX_backend_node_test(and4d)
+ONNX_backend_node_test(and_bcast3v2d)
+ONNX_backend_node_test(and_bcast4v3d)
+ONNX_backend_node_test(and3d)
+ONNX_backend_node_test(and_bcast3v1d)
+ONNX_backend_node_test(and_bcast4v2d)
+ONNX_backend_node_test(and_bcast4v4d)
+
 ONNX_backend_node_test(asin)
 ONNX_backend_node_test(asin_example)
 
@@ -141,6 +150,15 @@ ONNX_backend_node_test(averagepool_2d_same_lower)
 
 ONNX_backend_node_test(batchnorm_epsilon)
 ONNX_backend_node_test(batchnorm_example)
+
+ONNX_backend_node_test(bitshift_left_uint16)
+ONNX_backend_node_test(bitshift_left_uint64)
+ONNX_backend_node_test(bitshift_right_uint16)
+ONNX_backend_node_test(bitshift_right_uint64)
+ONNX_backend_node_test(bitshift_left_uint32)
+ONNX_backend_node_test(bitshift_left_uint8)
+ONNX_backend_node_test(bitshift_right_uint32)
+ONNX_backend_node_test(bitshift_right_uint8)
 
 ONNX_backend_node_test(ceil)
 ONNX_backend_node_test(ceil_example)
@@ -201,6 +219,9 @@ ONNX_backend_node_test(elu)
 ONNX_backend_node_test(elu_default)
 ONNX_backend_node_test(elu_example)
 
+ONNX_backend_node_test(equal)
+ONNX_backend_node_test(equal_bcast)
+
 ONNX_backend_node_test(erf)
 
 ONNX_backend_node_test(exp)
@@ -234,12 +255,26 @@ ONNX_backend_node_test(gemm_default_vector_bias)
 ONNX_backend_node_test(globalaveragepool)
 ONNX_backend_node_test(globalaveragepool_precomputed)
 
+ONNX_backend_node_test(greater)
+ONNX_backend_node_test(greater_equal)
+#ONNX_backend_node_test(greater_equal_bcast_expanded)
+ONNX_backend_node_test(greater_bcast)
+ONNX_backend_node_test(greater_equal_bcast)
+#ONNX_backend_node_test(greater_equal_expanded)
+
 ONNX_backend_node_test(hardsigmoid)
 ONNX_backend_node_test(hardsigmoid_default)
 ONNX_backend_node_test(hardsigmoid_example)
 
 ONNX_backend_node_test(hardswish)
 ONNX_backend_node_test(hardswish_expanded) #doesn't test hardswish
+
+ONNX_backend_node_test(less)
+ONNX_backend_node_test(less_equal)
+#ONNX_backend_node_test(less_equal_bcast_expanded)
+ONNX_backend_node_test(less_bcast)
+ONNX_backend_node_test(less_equal_bcast)
+#ONNX_backend_node_test(less_equal_expanded)
 
 ONNX_backend_node_test(log)
 ONNX_backend_node_test(log_example)
@@ -277,6 +312,23 @@ ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_pads)
 #Has column-major order
 #ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_strides)
 
+# float64 not implemented in onnx2c
+# mixed sign algorithm is not defined in onnx documentation
+#ONNX_backend_node_test(mod_broadcast)
+#ONNX_backend_node_test(mod_mixed_sign_float64)
+#ONNX_backend_node_test(mod_mixed_sign_int8)
+#ONNX_backend_node_test(mod_uint8)
+ONNX_backend_node_test(mod_int64_fmod)
+#ONNX_backend_node_test(mod_mixed_sign_int16)
+#ONNX_backend_node_test(mod_uint16)
+#ONNX_backend_node_test(mod_mixed_sign_float16)
+#ONNX_backend_node_test(mod_mixed_sign_int32)
+#ONNX_backend_node_test(mod_uint32)
+ONNX_backend_node_test(mod_mixed_sign_float32)
+#ONNX_backend_node_test(mod_mixed_sign_int64)
+#ONNX_backend_node_test(mod_uint64)
+
+
 ONNX_backend_node_test(mul)
 ONNX_backend_node_test(mul_bcast)
 ONNX_backend_node_test(mul_example)
@@ -287,6 +339,33 @@ ONNX_backend_node_test(neg_example)
 ONNX_backend_node_test(not_2d)
 ONNX_backend_node_test(not_3d)
 ONNX_backend_node_test(not_4d)
+
+ONNX_backend_node_test(pow)
+ONNX_backend_node_test(pow_types_float)
+ONNX_backend_node_test(pow_types_float32_uint64)
+ONNX_backend_node_test(pow_types_int64_float32)
+ONNX_backend_node_test(pow_bcast_array)
+ONNX_backend_node_test(pow_types_float32_int32)
+ONNX_backend_node_test(pow_types_int)
+ONNX_backend_node_test(pow_types_int64_int64)
+ONNX_backend_node_test(pow_bcast_scalar)
+ONNX_backend_node_test(pow_types_float32_int64)
+ONNX_backend_node_test(pow_types_int32_float32)
+ONNX_backend_node_test(pow_example)
+ONNX_backend_node_test(pow_types_float32_uint32)
+ONNX_backend_node_test(pow_types_int32_int32)
+
+ONNX_backend_node_test(prelu_broadcast)
+ONNX_backend_node_test(prelu_example)
+
+ONNX_backend_node_test(or2d)
+ONNX_backend_node_test(or4d)
+ONNX_backend_node_test(or_bcast3v2d)
+ONNX_backend_node_test(or_bcast4v3d)
+ONNX_backend_node_test(or3d)
+ONNX_backend_node_test(or_bcast3v1d)
+ONNX_backend_node_test(or_bcast4v2d)
+ONNX_backend_node_test(or_bcast4v4d)
 
 ONNX_backend_node_test(range_float_type_positive_delta)
 ONNX_backend_node_test(range_int32_type_negative_delta)
@@ -379,6 +458,17 @@ ONNX_backend_node_test(unsqueeze_axis_1)
 ONNX_backend_node_test(unsqueeze_axis_3)
 ONNX_backend_node_test(unsqueeze_three_axes)
 ONNX_backend_node_test(unsqueeze_unsorted_axes)
+
+ONNX_backend_node_test(xor2d)
+ONNX_backend_node_test(xor4d)
+ONNX_backend_node_test(xor_bcast3v2d)
+ONNX_backend_node_test(xor_bcast4v3d)
+ONNX_backend_node_test(xor3d)
+ONNX_backend_node_test(xor_bcast3v1d)
+ONNX_backend_node_test(xor_bcast4v2d)
+ONNX_backend_node_test(xor_bcast4v4d)
+
+
 
 add_subdirectory(old_onnx_backend)
 

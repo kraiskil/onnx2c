@@ -279,7 +279,6 @@ int64_t Graph::onnx_ir_version(void)
 	return version;
 }
 
-#include "nodes/arithmetic.h"
 #include "nodes/averagepool.h"
 #include "nodes/batchnormalization.h"
 #include "nodes/concat.h"
@@ -289,6 +288,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/dropout.h"
 #include "nodes/dynamicquantizelinear.h"
 #include "nodes/elementwise.h"
+#include "nodes/elementwise_2.h"
 #include "nodes/flatten.h"
 #include "nodes/gemm.h"
 #include "nodes/globalaveragepool.h"
@@ -309,13 +309,15 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Abs" )return new Elementwise("Abs");
 	if( opName == "Acos" )return new Elementwise("Acos");
 	if( opName == "Acosh" )return new Elementwise("Acosh");
-	if( opName == "Add" )return new Arithmetic("Add");
+	if( opName == "Add" )return new Elementwise_2("Add");
+	if( opName == "And" )return new Elementwise_2("And");
 	if( opName == "Asin" )return new Elementwise("Asin");
 	if( opName == "Asinh" )return new Elementwise("Asinh");
 	if( opName == "Atan" )return new Elementwise("Atan");
 	if( opName == "Atanh" )return new Elementwise("Atanh");
 	if( opName == "AveragePool" )return new AveragePool;
 	if( opName == "BatchNormalization" )return new BatchNormalization;
+	if( opName == "BitShift" )return new Elementwise_2("BitShift");
 	if( opName == "Ceil" )return new Elementwise("Ceil");
 	if( opName == "Celu" )return new Elementwise("Celu");
 	if( opName == "Concat" )return new Concat;
@@ -324,26 +326,35 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Cos" )return new Elementwise("Cos");
 	if( opName == "Cosh" )return new Elementwise("Cosh");
 	if( opName == "ConvInteger" )return new ConvInteger;
-	if( opName == "Div" )return new Arithmetic("Div");
+	if( opName == "Div" )return new Elementwise_2("Div");
 	if( opName == "Dropout" )return new Dropout;
 	if( opName == "DynamicQuantizeLinear" )return new DynamicQuantizeLinear;
 	if( opName == "Flatten" )return new Flatten;
 	if( opName == "Floor" )return new Elementwise("Floor");
 	if( opName == "Elu" )return new Elementwise("Elu");
+	if( opName == "Equal")return new Elementwise_2("Equal");
 	if( opName == "Erf" )return new Elementwise("Erf");
 	if( opName == "Exp" )return new Elementwise("Exp");
-	if( opName == "GlobalAveragePool" )return new GlobalAveragePool;
 	if( opName == "Gemm" )return new Gemm;
+	if( opName == "GlobalAveragePool" )return new GlobalAveragePool;
+	if( opName == "Greater")return new Elementwise_2("Greater");
+	if( opName == "GreaterOrEqual")return new Elementwise_2("GreaterOrEqual");
 	if( opName == "HardSigmoid" )return new Elementwise("HardSigmoid");
 	if( opName == "HardSwish" )return new Elementwise("HardSwish");
+	if( opName == "Less")return new Elementwise_2("Less");
+	if( opName == "LessOrEqual")return new Elementwise_2("LessOrEqual");
 	if( opName == "Log" )return new Elementwise("Log");
 	if( opName == "LSTM" )return new LSTM;
 	if( opName == "MatMul" )return new MatMul;
 	if( opName == "MatMulInteger" )return new MatMulInteger;
 	if( opName == "MaxPool" )return new MaxPool;
-	if( opName == "Mul" )return new Arithmetic("Mul");
+	if( opName == "Mod" )return new Elementwise_2("Mod");
+	if( opName == "Mul" )return new Elementwise_2("Mul");
 	if( opName == "Neg" )return new Elementwise("Neg");
 	if( opName == "Not" )return new Elementwise("Not");
+	if( opName == "Or" )return new Elementwise_2("Or");
+	if( opName == "Pow" )return new Elementwise_2("Pow");
+	if( opName == "PRelu" )return new Elementwise_2("PRelu");
 	if( opName == "Range" )return new Range;
 	if( opName == "Reciprocal" )return new Elementwise("Reciprocal");
 	if( opName == "Relu" )return new Relu;
@@ -359,12 +370,13 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Softmax" )return new Softmax;
 	if( opName == "Squeeze" )return new Squeeze;
 	if( opName == "Sqrt" )return new Elementwise("Sqrt");
-	if( opName == "Sub" )return new Arithmetic("Sub");
+	if( opName == "Sub" )return new Elementwise_2("Sub");
 	if( opName == "Tan" )return new Elementwise("Tan");
 	if( opName == "Tanh" )return new Elementwise("Tanh");
 	if( opName == "Transpose" )return new Transpose;
 	if( opName == "ThresholdedRelu" )return new Elementwise("ThresholdedRelu");
 	if( opName == "Unsqueeze" )return new Unsqueeze;
+	if( opName == "Xor" )return new Elementwise_2("Xor");
 
 	ERROR("Unimplemented: node operation " << opName);
 	return NULL;
