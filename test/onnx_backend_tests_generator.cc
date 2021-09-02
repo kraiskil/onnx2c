@@ -210,9 +210,14 @@ int main(int argc, char *argv[])
 			std::cout << "\t\t\t" << "if(isnan(result[i]) || isnan(reference[i]))" << std::endl;
 			std::cout << "\t\t\t\t" << "return 1;" << std::endl;
 		}
-		else if(   type == "uint8_t"
+		else if(   type == "int8_t"
+		        || type == "uint8_t"
+		        || type == "int16_t"
+		        || type == "uint16_t"
 		        || type == "int32_t"
+		        || type == "uint32_t"
 		        || type == "int64_t"
+		        || type == "uint64_t"
 			|| type == "bool" ) {
 			std::cout << "\t\t\t" << "if( result[i] != reference[i] )" <<std::endl;
 			std::cout << "\t\t\t\t" << "return 1;" << std::endl;
