@@ -27,3 +27,4 @@ std::string constant_acces_code(const std::string plain);
 #define INDT_2 dst<<"\t\t"
 #define INDT_3 dst<<"\t\t\t"
 #define INDT_4 dst<<"\t\t\t\t"
+#define INDT_5 dst<<"\t\t\t\t\t"

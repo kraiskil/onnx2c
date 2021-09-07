@@ -289,6 +289,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/dynamicquantizelinear.h"
 #include "nodes/elementwise.h"
 #include "nodes/elementwise_2.h"
+#include "nodes/elementwise_variadic.h"
 #include "nodes/flatten.h"
 #include "nodes/gemm.h"
 #include "nodes/globalaveragepool.h"
@@ -347,7 +348,10 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "LSTM" )return new LSTM;
 	if( opName == "MatMul" )return new MatMul;
 	if( opName == "MatMulInteger" )return new MatMulInteger;
+	if( opName == "Max" )return new Elementwise_variadic("Max");
 	if( opName == "MaxPool" )return new MaxPool;
+	if( opName == "Mean" )return new Elementwise_variadic("Mean");
+	if( opName == "Min" )return new Elementwise_variadic("Min");
 	if( opName == "Mod" )return new Elementwise_2("Mod");
 	if( opName == "Mul" )return new Elementwise_2("Mul");
 	if( opName == "Neg" )return new Elementwise("Neg");
@@ -371,6 +375,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Squeeze" )return new Squeeze;
 	if( opName == "Sqrt" )return new Elementwise("Sqrt");
 	if( opName == "Sub" )return new Elementwise_2("Sub");
+	if( opName == "Sum" )return new Elementwise_variadic("Sum");
 	if( opName == "Tan" )return new Elementwise("Tan");
 	if( opName == "Tanh" )return new Elementwise("Tanh");
 	if( opName == "Transpose" )return new Transpose;

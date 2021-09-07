@@ -290,6 +290,20 @@ ONNX_backend_node_test(matmul_2d)
 
 ONNX_backend_node_test(matmulinteger)
 
+ONNX_backend_node_test(max_example)
+#ONNX_backend_node_test(max_float64)
+ONNX_backend_node_test(max_int64)
+ONNX_backend_node_test(max_two_inputs)
+ONNX_backend_node_test(max_uint64)
+#ONNX_backend_node_test(max_float16)
+ONNX_backend_node_test(max_int16)
+ONNX_backend_node_test(max_int8)
+ONNX_backend_node_test(max_uint16)
+ONNX_backend_node_test(max_uint8)
+ONNX_backend_node_test(max_float32)
+ONNX_backend_node_test(max_int32)
+ONNX_backend_node_test(max_one_input)
+ONNX_backend_node_test(max_uint32)
 
 ONNX_backend_node_test(maxpool_1d_default)
 ONNX_backend_node_test(maxpool_2d_precomputed_pads)
@@ -311,6 +325,25 @@ ONNX_backend_node_test(maxpool_2d_same_upper)
 ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_pads)
 #Has column-major order
 #ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_strides)
+
+ONNX_backend_node_test(mean_example)
+ONNX_backend_node_test(mean_one_input)
+ONNX_backend_node_test(mean_two_inputs)
+
+ONNX_backend_node_test(min_example)
+#ONNX_backend_node_test(min_float64)
+ONNX_backend_node_test(min_int64)
+ONNX_backend_node_test(min_two_inputs)
+ONNX_backend_node_test(min_uint64)
+#ONNX_backend_node_test(min_float16)
+ONNX_backend_node_test(min_int16)
+ONNX_backend_node_test(min_int8)
+ONNX_backend_node_test(min_uint16)
+ONNX_backend_node_test(min_uint8)
+ONNX_backend_node_test(min_float32)
+ONNX_backend_node_test(min_int32)
+ONNX_backend_node_test(min_one_input)
+ONNX_backend_node_test(min_uint32)
 
 # float64 not implemented in onnx2c
 # mixed sign algorithm is not defined in onnx documentation
@@ -431,6 +464,10 @@ ONNX_backend_node_test(sub)
 ONNX_backend_node_test(sub_bcast)
 ONNX_backend_node_test(sub_example)
 ONNX_backend_node_test(sub_uint8)
+
+ONNX_backend_node_test(sum_example)
+ONNX_backend_node_test(sum_one_input)
+ONNX_backend_node_test(sum_two_inputs)
 
 ONNX_backend_node_test(tan)
 ONNX_backend_node_test(tan_example)
