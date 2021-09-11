@@ -269,6 +269,10 @@ ONNX_backend_node_test(hardsigmoid_example)
 ONNX_backend_node_test(hardswish)
 ONNX_backend_node_test(hardswish_expanded) #doesn't test hardswish
 
+ONNX_backend_node_test(leakyrelu)
+ONNX_backend_node_test(leakyrelu_default)
+ONNX_backend_node_test(leakyrelu_example)
+
 ONNX_backend_node_test(less)
 ONNX_backend_node_test(less_equal)
 #ONNX_backend_node_test(less_equal_bcast_expanded)

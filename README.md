@@ -13,7 +13,7 @@ Currently onnx2c is a hobby project for me to learn ONNX,
 edge computing and ML in general. Because of this, stuff of
 little or no interest in onnx2c are:
 
- - ONNX specification coverage. For now, 75 out of 166 ONNX Operands are at least partially implemented.
+ - ONNX specification coverage. For now, 76 out of 166 ONNX Operands are at least partially implemented.
  - accelerators
  - backpropagation (i.e. training)
 

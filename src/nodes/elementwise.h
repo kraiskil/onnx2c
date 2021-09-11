@@ -73,6 +73,12 @@ class Elementwise : public Node {
 				std::string b = std::to_string(beta);
 				return x+"*fmax(0, fmin(1, "+a+"*"+x+"+"+b+"));";};
 		}
+		else if( op == "LeakyRelu" ) {
+			alpha=0.01f;
+			operation = [this](const std::string& x){
+				std::string a = std::to_string(alpha);
+				return x+">0 ? "+x+" : " +x+ "*" +a+ ";"; };
+		}
 		else if( op == "Log" )
 			operation = [](const std::string& x){ return  "logf("+x+");"; };
 		else if( op == "Neg" )

@@ -342,6 +342,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "GreaterOrEqual")return new Elementwise_2("GreaterOrEqual");
 	if( opName == "HardSigmoid" )return new Elementwise("HardSigmoid");
 	if( opName == "HardSwish" )return new Elementwise("HardSwish");
+	if( opName == "LeakyRelu" )return new Elementwise("LeakyRelu");
 	if( opName == "Less")return new Elementwise_2("Less");
 	if( opName == "LessOrEqual")return new Elementwise_2("LessOrEqual");
 	if( opName == "Log" )return new Elementwise("Log");
