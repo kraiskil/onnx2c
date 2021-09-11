@@ -444,6 +444,9 @@ ONNX_backend_node_test(sin_example)
 ONNX_backend_node_test(sinh)
 ONNX_backend_node_test(sinh_example)
 
+ONNX_backend_node_test(shape)
+ONNX_backend_node_test(shape_example)
+
 ONNX_backend_node_test(softmax_axis_0)
 ONNX_backend_node_test(softmax_axis_1)
 ONNX_backend_node_test(softmax_axis_2)
