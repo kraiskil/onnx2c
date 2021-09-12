@@ -94,6 +94,9 @@ class Tensor {
 	 * This will return valid data only after all nodes have been resolved! (I.e. use it during printout phase)
 	 */
 	bool is_used(void) const;
+
+	/* Get the data element at index i. Flattening multidimensional arrays down to the index is left for the caller. */
+	int64_t get_data_element(uint64_t i) const;
 };
 
 }

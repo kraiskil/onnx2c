@@ -301,6 +301,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/relu.h"
 #include "nodes/reshape.h"
 #include "nodes/shape.h"
+#include "nodes/slice.h"
 #include "nodes/squeeze.h"
 #include "nodes/softmax.h"
 #include "nodes/transpose.h"
@@ -372,6 +373,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Sign" )return new Elementwise("Sign");
 	if( opName == "Sin" )return new Elementwise("Sin");
 	if( opName == "Sinh" )return new Elementwise("Sinh");
+	if( opName == "Slice" )return new Slice;
 	if( opName == "Softplus" )return new Elementwise("Softplus");
 	if( opName == "Softsign" )return new Elementwise("Softsign");
 	if( opName == "Softmax" )return new Softmax;

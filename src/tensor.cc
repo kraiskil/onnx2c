@@ -464,3 +464,19 @@ bool Tensor::is_used(void) const
 	return name != "";
 }
 
+
+int64_t Tensor::get_data_element(uint64_t i) const
+{
+
+	switch( data_type )
+	{
+		case onnx::TensorProto_DataType_INT32:
+			return ((int32_t*)data_buffer)[i];
+		case onnx::TensorProto_DataType_INT64:
+			return ((int64_t*)data_buffer)[i];
+		default:
+			ERROR("Unhandled data type");
+	}
+
+	return INT64_MIN;
+}
