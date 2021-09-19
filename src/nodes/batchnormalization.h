@@ -84,6 +84,12 @@ class BatchNormalization : public Node {
 				parseAttribute_epsilon(a);
 			else if( a.name() == "momentum" )
 				parseAttribute_momentum(a);
+			else if( a.name() == "spatial" ) {
+				// NB: spatial was removed in onnx opset v. 9.
+				int spatial = parse_attribute_int(a);
+				if( spatial != 1 )
+					ERROR("non-default value for 'spatial' attribute not implemented");
+			}
 			else
 				ERROR("Unknown attribute " << a.name());
 		}
