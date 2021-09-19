@@ -54,6 +54,22 @@ With ProtoBuf 3.12 (e.g. Ubuntu 20.10 onwards) this modification is not needed.
 Versions between 3.6 and 3.12 are uninvestigated.
 
 
+#### Unit tests
+
+The onnx2c build runs onnx backend tests as unit/acceptance tests. After building run `make test`.
+
+There is a possibility to run selected ONNX model zoo tests as additional unit tests. Before running
+`cmake` run in the source directory:
+
+```
+cd tests/onnx_model_zoo
+./donwload.sh
+```
+
+Included are implementations of e.g. Squeezenet and Alexnet. Some of these take minutes to compile, so
+they are mostly interesting for onnx2c development.
+
+
 Usage
 -----
 

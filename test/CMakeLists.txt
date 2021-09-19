@@ -102,25 +102,6 @@ function( ONNX_backend_node_local_test node_name)
 	)
 endfunction()
 
-function( add_perftest node_name dir accuracy input_set )
-	ONNX_type_test_build(${node_name} ${dir} ${accuracy} ${input_set})
-	set_property(
-		TARGET ${node_name}_${input_set}_test
-		PROPERTY EXCLUDE_FROM_ALL TRUE
-	)
-	set( PERFTESTS "${PERFTESTS};${node_name}_${input_set}_test" PARENT_SCOPE)
-
-	# run the perftest
-	add_custom_target(
-		${node_name}_${input_set}_test_run
-		COMMAND time --format=%U ./${node_name}_${input_set}_test
-		COMMENT "Running ${node_name} ${input_set}"
-		DEPENDS perftest_build
-	)
-	set( PERFRUNS ${PERFRUNS};${node_name}_${input_set}_test_run PARENT_SCOPE)
-
-endfunction()
-
 
 
 ONNX_backend_node_test(abs)
@@ -583,8 +564,7 @@ add_subdirectory(tfl_helloworld)
 add_subdirectory(mnist)
 add_subdirectory(velardo)
 add_subdirectory(simple_networks)
-add_subdirectory(squeezenet-1.0)
-add_subdirectory(squeezenet-1.1)
+add_subdirectory(onnx_model_zoo)
 
 # local op tests 
 ONNX_backend_node_local_test(matmul_precision)
