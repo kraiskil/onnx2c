@@ -293,6 +293,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/flatten.h"
 #include "nodes/gemm.h"
 #include "nodes/globalaveragepool.h"
+#include "nodes/lrn.h"
 #include "nodes/lstm.h"
 #include "nodes/matmul.h"
 #include "nodes/matmulinteger.h"
@@ -348,6 +349,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Less")return new Elementwise_2("Less");
 	if( opName == "LessOrEqual")return new Elementwise_2("LessOrEqual");
 	if( opName == "Log" )return new Elementwise("Log");
+	if( opName == "LRN" )return new LRN;
 	if( opName == "LSTM" )return new LSTM;
 	if( opName == "MatMul" )return new MatMul;
 	if( opName == "MatMulInteger" )return new MatMulInteger;

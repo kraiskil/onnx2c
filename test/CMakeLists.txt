@@ -70,6 +70,17 @@ function( ONNX_backend_node_test node_name)
 	)
 endfunction()
 
+function( ONNX_backend_node_test_with_accuracy node_name accuracy)
+	ONNX_type_test(
+		${node_name}
+		${ONNX_NODE_TEST_DATA_DIR}/test_${node_name}
+		ONNX_backend_${node_name}
+		${accuracy}
+		0
+	)
+endfunction()
+
+
 set(ONNX_LOCAL_NODE_TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/local_ops/)
 function( ONNX_backend_node_local_test node_name)
 	ONNX_type_test(
@@ -282,6 +293,9 @@ ONNX_backend_node_test(less_equal_bcast)
 
 ONNX_backend_node_test(log)
 ONNX_backend_node_test(log_example)
+
+ONNX_backend_node_test_with_accuracy(lrn 0.005)
+ONNX_backend_node_test_with_accuracy(lrn_default 0.005)
 
 ONNX_backend_node_test(lstm_batchwise)
 ONNX_backend_node_test(lstm_defaults)
