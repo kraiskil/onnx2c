@@ -17,6 +17,7 @@ class SpatialFilter : public Node {
 	SpatialFilter() {
 		auto_pad = "NOTSET";
 		x=w=y=NULL;
+		group=1;
 	}
 	// inputs
 	const Tensor *x;
@@ -173,6 +174,9 @@ class SpatialFilter : public Node {
 		unsigned n_data_dims = x->data_dim.size() -2;
 		unsigned batch_size = x->data_dim[0];
 		unsigned channels = x->data_dim[1];
+		unsigned maps=0;
+		if( w )
+			maps = w->data_dim[0];
 
 		/* Accumulate the size of the dimensions so that the Indices value
 		 * can be calculated directly out of the indivicual indices.
@@ -205,8 +209,14 @@ class SpatialFilter : public Node {
 			INDT_2 << "int32_t batch_min = INT32_MAX;" << std::endl;
 			INDT_2 << "int32_t batch_max = INT32_MIN;" << std::endl;
 		}
-		if( w )
+		if( w && group==1)
 			INDT_1 << "for( uint32_t m=0; m<" << w->data_dim[0] << "; m++) {" << std::endl;
+		else if( w && group > 1 ) {
+			INDT_1 << "uint32_t go = " << maps/group     << "; // output group size, i.e. maps/group" << std::endl;
+			INDT_1 << "uint32_t gi = " << channels/group << "; // inptput group size, i.e. channels/group" << std::endl;
+			INDT_1 << "for( uint32_t g=0; g<" << group << "; g++) {" << std::endl;
+			INDT_1 << "for( uint32_t m=go*g; m<go*(g+1); m++) {" << std::endl;
+		}
 		else
 			INDT_1 << "for( uint32_t c=0; c<" << x->data_dim[1] << "; c++) {" << std::endl;
 
@@ -223,8 +233,10 @@ class SpatialFilter : public Node {
 
 		print_output_cell_init(dst, y_idx);
 
-		if( w )
+		if( w && group == 1 )
 			INDT_3 <<   "for( int32_t c=0; c<" << channels << "; c++ ) {" << std::endl;
+		else if( w && group > 1 )
+			INDT_3 <<   "for( int32_t c=gi*g; c<gi*(g+1); c++ ) {" << std::endl;
 
 		// loop over channels and kernel
 		for( unsigned i = 0; i<n_data_dims; i++) {
@@ -259,6 +271,8 @@ class SpatialFilter : public Node {
 
 		// close loops over batches and output channels
 		INDT_1 << "} /* m or c, depending on this node's operator */" << std::endl;
+		if( w && group > 1 )
+			INDT_1 << "} /* g */" << std::endl;
 		INDT_1 << "} /* b */" << std::endl;
 	}
 };

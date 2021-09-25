@@ -69,6 +69,16 @@ function( ONNX_backend_node_test node_name)
 		0
 	)
 endfunction()
+function( ONNX_backend_pytorch_converted_test node_name)
+	ONNX_type_test(
+		${node_name}
+		${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-converted/test_${node_name}
+		ONNX_backend_${node_name}
+		0.00002
+		0
+	)
+endfunction()
+
 
 function( ONNX_backend_node_test_with_accuracy node_name accuracy)
 	ONNX_type_test(
@@ -204,6 +214,35 @@ ONNX_backend_node_test(conv_with_strides_no_padding)
 ONNX_backend_node_test(conv_with_strides_padding)
 ONNX_backend_node_test(conv_with_strides_and_asymmetric_padding)
 ONNX_type_test(operator_conv ${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-operator/test_operator_conv ONNX_backend_pytorch_conv 0.00001 0)
+
+ONNX_backend_pytorch_converted_test(Conv1d)
+ONNX_backend_pytorch_converted_test(Conv1d_groups)
+ONNX_backend_pytorch_converted_test(Conv1d_pad1size1)
+ONNX_backend_pytorch_converted_test(Conv1d_pad2size1)
+#ONNX_backend_pytorch_converted_test(Conv1d_dilated)
+ONNX_backend_pytorch_converted_test(Conv1d_pad1)
+ONNX_backend_pytorch_converted_test(Conv1d_pad2)
+ONNX_backend_pytorch_converted_test(Conv1d_stride)
+
+ONNX_backend_pytorch_converted_test(Conv2d)
+ONNX_backend_pytorch_converted_test(Conv2d_depthwise)
+ONNX_backend_pytorch_converted_test(Conv2d_depthwise_padded)
+ONNX_backend_pytorch_converted_test(Conv2d_depthwise_strided)
+ONNX_backend_pytorch_converted_test(Conv2d_depthwise_with_multiplier)
+#ONNX_backend_pytorch_converted_test(Conv2d_dilated)
+ONNX_backend_pytorch_converted_test(Conv2d_groups)
+ONNX_backend_pytorch_converted_test(Conv2d_groups_thnn)
+ONNX_backend_pytorch_converted_test(Conv2d_no_bias)
+ONNX_backend_pytorch_converted_test(Conv2d_padding)
+ONNX_backend_pytorch_converted_test(Conv2d_strided)
+
+ONNX_backend_pytorch_converted_test(Conv3d)
+#ONNX_backend_pytorch_converted_test(Conv3d_dilated_strided)
+ONNX_backend_pytorch_converted_test(Conv3d_no_bias)
+ONNX_backend_pytorch_converted_test(Conv3d_stride_padding)
+#ONNX_backend_pytorch_converted_test(Conv3d_dilated)
+ONNX_backend_pytorch_converted_test(Conv3d_groups)
+ONNX_backend_pytorch_converted_test(Conv3d_stride)
 
 ONNX_backend_node_test(convinteger_with_padding)
 

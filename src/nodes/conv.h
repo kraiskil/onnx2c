@@ -36,7 +36,10 @@ class Conv : public SpatialFilter {
 
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const
 	{
-		INDT_3 << y->cname() << "[b][m][o0][o1] = ";
+		std::string outidx="";
+		for(unsigned i=0; i<x->rank()-2; i++)
+			outidx += "[o" + std::to_string(i) + "]";
+		INDT_3 << y->cname() << "[b][m]" << outidx << " = ";
 		if( b == NULL )
 			dst << "0;" << std::endl;
 		else
@@ -44,8 +47,19 @@ class Conv : public SpatialFilter {
 	};
 	virtual void print_output_cell_calc(std::ostream &dst, const std::string &x_idx, const std::string &w_idx, const std::string &y_idx) const
 	{
-		INDT_4 << y->cname() << "[b][m][o0][o1] += "<< x->cname() << "[b][c][i0+k0][i1+k1] *";
-		   dst <<             w->cname() << "[m][c][k0][k1];" << std::endl;
+		std::string outidx="";
+		std::string iididx="";
+		std::string kidx="";
+		for(unsigned i=0; i<x->rank()-2; i++){
+			outidx += "[o" + std::to_string(i) + "]";
+			iididx+= "[ii" + std::to_string(i) + "]";
+			kidx+= "[k" + std::to_string(i) + "]";
+		}
+		INDT_4 << y->cname() << "[b][m]"<<outidx<<" += "<< x->cname() << "[b][c]"<<iididx<<" *";
+		if( group == 1 )
+		   dst <<             w->cname() << "[m][c/"<<group<<"]"<<kidx<<";" << std::endl;
+		else
+		   dst <<             w->cname() << "[m][c-(gi*g)]"<<kidx<<";" << std::endl;
 	}
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const
 	{
@@ -72,17 +86,10 @@ class Conv : public SpatialFilter {
 		if( b && (typeConstraint_highPrecisionNumeric(b) == false) )
 			ERROR("Incorrect input for node");
 
-		if( x->data_dim.size() != 4 )
-			ERROR("Unimplemented: Conv for non 2D images");
-
-
 		resolve_strides();
 		resolve_dilations();
 		resolve_pads();
 		resolve_kernel_shape();
-
-		if( group != 1 )
-			ERROR("Unimplemented: Conv: setting group to anything but 1");
 
 		for( int d : dilations )
 			if( d != 1 )
