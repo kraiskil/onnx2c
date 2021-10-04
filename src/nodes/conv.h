@@ -57,7 +57,7 @@ class Conv : public SpatialFilter {
 		}
 		INDT_4 << y->cname() << "[b][m]"<<outidx<<" += "<< x->cname() << "[b][c]"<<iididx<<" *";
 		if( group == 1 )
-		   dst <<             w->cname() << "[m][c/"<<group<<"]"<<kidx<<";" << std::endl;
+		   dst <<             w->cname() << "[m][c]"<<kidx<<";" << std::endl;
 		else
 		   dst <<             w->cname() << "[m][c-(gi*g)]"<<kidx<<";" << std::endl;
 	}
@@ -90,10 +90,6 @@ class Conv : public SpatialFilter {
 		resolve_dilations();
 		resolve_pads();
 		resolve_kernel_shape();
-
-		for( int d : dilations )
-			if( d != 1 )
-				ERROR("Unimplemented: Conv: dilations other than 1");
 
 		Tensor *rv = new Tensor;
 		rv->data_dim = resolve_output_size();

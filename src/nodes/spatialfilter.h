@@ -107,6 +107,13 @@ class SpatialFilter : public Node {
 		for( unsigned xdim=2; xdim < x->data_dim.size(); xdim++) {
 			int outdim;
 			unsigned dim = xdim-2;
+			// Not sure if the naming is correct. Here
+			// kernel: the (number of) weights of the filter
+			// filter: the spatial placement of the kernel weights
+			// NB: 'dilation==1' is what is used for "no spacing in the filter"
+			int filter_size=kernel_shape[dim];
+			filter_size += (kernel_shape[dim]-1)*(dilations[dim]-1);
+
 			// From ONNX Operators.md:
 			// SAME_UPPER or SAME_LOWER mean pad the input so that the output spatial size match the input.
 			// "match" here means "is equal".
@@ -118,7 +125,7 @@ class SpatialFilter : public Node {
 				// [ 0 1 2 3 4 5 6 7 8 9  ]
 				//                |kern=3|
 				// last output=7
-				int last_out = input_size - kernel_shape[dim];
+				int last_out = input_size - filter_size;
 				outdim = last_out / strides[dim] + 1;
 			}
 
@@ -178,26 +185,16 @@ class SpatialFilter : public Node {
 		if( w )
 			maps = w->data_dim[0];
 
-		/* Accumulate the size of the dimensions so that the Indices value
-		 * can be calculated directly out of the indivicual indices.
-		 * See ONNX specification on what the Indices output is */
-		std::vector<int> size_of_dim(x->data_dim.size());
-		size_of_dim[x->data_dim.size()-1]=1;
-		for( int i=x->data_dim.size()-2; i>= 0; i--)
-			size_of_dim[i] = size_of_dim[i+1] * x->data_dim[i];
-
 		/* Create various indexing strings. This makes generating the loops much cleaner,
 		 * and makes possible the code sharing in child classes. */
 		std::string x_idx = "[b][c]";
 		std::string in_kern_idxs = "[b][c]";
 		std::string y_idx = "[b][c]";
-		std::string indices_value = "(b*" + std::to_string(size_of_dim[0]) + ")+(c*" + std::to_string(size_of_dim[1]) + ")";
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string i_str = std::to_string(i);
 			x_idx += "[i" + i_str + "]";
 			y_idx += "[o" + i_str + "]";
 			in_kern_idxs += "[ii" + i_str + "]";
-			indices_value += "+(ii" + i_str + "*" + std::to_string(size_of_dim[i+2]) + ")";
 		}
 
 		/* Create the loops over batches and channels.
@@ -249,7 +246,7 @@ class SpatialFilter : public Node {
 		// check for out-of-input reading (i.e. read a pad)
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string i_str = std::to_string(i);
-			INDT_4 <<  "int ii" << i_str << " = i" << i_str << "+k" << i_str <<" + " << dilations[i] <<"-1;"<<std::endl;
+			INDT_4 <<  "int ii" << i_str << " = i" << i_str << "+k" << i_str <<" * " << dilations[i] <<";" << std::endl;
 			INDT_4 <<  "if( ii" << i_str << "<0) continue;" << std::endl;
 			INDT_4 <<  "if( ii" << i_str << ">=" << x->data_dim[2+i] << ") continue;" << std::endl;
 		}
