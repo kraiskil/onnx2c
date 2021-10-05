@@ -271,6 +271,19 @@ ONNX_backend_node_test(flatten_negative_axis4)
 ONNX_backend_node_test(floor)
 ONNX_backend_node_test(floor_example)
 
+ONNX_backend_node_test(gather_0)
+ONNX_backend_node_test(gather_1)
+ONNX_backend_node_test(gather_negative_indices)
+ONNX_backend_node_test(gather_2d_indices)
+
+#ONNX_backend_node_test(gather_elements_1)
+#ONNX_backend_node_test(gather_elements_0)
+#ONNX_backend_node_test(gather_elements_negative_indices)
+
+#ONNX_backend_node_test(gathernd_example_float32)
+#ONNX_backend_node_test(gathernd_example_int32)
+#ONNX_backend_node_test(gathernd_example_int32_batch_dim1)
+
 ONNX_backend_node_test(gemm_all_attributes)
 ONNX_backend_node_test(gemm_default_no_bias)
 ONNX_backend_node_test(gemm_default_zero_bias)

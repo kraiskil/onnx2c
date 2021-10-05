@@ -291,6 +291,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/elementwise_2.h"
 #include "nodes/elementwise_variadic.h"
 #include "nodes/flatten.h"
+#include "nodes/gather.h"
 #include "nodes/gemm.h"
 #include "nodes/globalaveragepool.h"
 #include "nodes/lrn.h"
@@ -339,6 +340,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Equal")return new Elementwise_2("Equal");
 	if( opName == "Erf" )return new Elementwise("Erf");
 	if( opName == "Exp" )return new Elementwise("Exp");
+	if( opName == "Gather" )return new Gather;
 	if( opName == "Gemm" )return new Gemm;
 	if( opName == "GlobalAveragePool" )return new GlobalAveragePool;
 	if( opName == "Greater")return new Elementwise_2("Greater");
