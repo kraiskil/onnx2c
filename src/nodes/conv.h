@@ -34,7 +34,7 @@ class Conv : public SpatialFilter {
 	}
 
 
-	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const
+	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
 	{
 		std::string outidx="";
 		for(unsigned i=0; i<x->rank()-2; i++)
@@ -45,7 +45,11 @@ class Conv : public SpatialFilter {
 		else
 			dst << b->cname() << "[m];" << std::endl;
 	};
-	virtual void print_output_cell_calc(std::ostream &dst, const std::string &x_idx, const std::string &w_idx, const std::string &y_idx) const
+	virtual void print_output_cell_calc(
+		std::ostream &dst,
+		const std::string &x_idx,
+		const std::string &w_idx,
+		const std::string &y_idx) const override
 	{
 		std::string outidx="";
 		std::string iididx="";
@@ -61,7 +65,7 @@ class Conv : public SpatialFilter {
 		else
 		   dst <<             w->cname() << "[m][c-(gi*g)]"<<kidx<<";" << std::endl;
 	}
-	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const
+	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const override
 	{
 	}
 	virtual void print(std::ostream &dst) const override

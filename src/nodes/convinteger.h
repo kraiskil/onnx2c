@@ -43,14 +43,19 @@ class ConvInteger : public SpatialFilter {
 		y->print_tensor(dst, !decorate);
 	}
 
-	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const
+	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
 	{
 		if( options.quantize )
 			INDT_3 << "int32_t cell = 0;" << std::endl;
 		else
 			INDT_3 << y->cname() << "[b][m][o0][o1] = 0;" << std::endl;
 	}
-	virtual void print_output_cell_calc(std::ostream &dst, const std::string &x_idx, const std::string &w_idx, const std::string &y_idx) const
+
+	virtual void print_output_cell_calc(
+		std::ostream &dst,
+		const std::string &x_idx,
+		const std::string &w_idx,
+		const std::string &y_idx) const override
 	{
 		std::string x_zero;
 		if( x_zero_point )
@@ -67,7 +72,8 @@ class ConvInteger : public SpatialFilter {
 
 		INDT_4 << dest << "+= ("<< x->cname() << "[b][c][i0+k0][i1+k1] - " << x_zero << ") * w;" << std::endl;
 	}
-	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const
+
+	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const override
 	{
 		if( options.quantize ) {
 			// TODO: this assumes 2D filter

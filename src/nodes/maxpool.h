@@ -41,7 +41,7 @@ class MaxPool : public Pooling {
 		}
 	}
 
-	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const
+	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
 	{
 		std::string type = x->data_type_str();
 		std::string type_min_value;
@@ -62,7 +62,11 @@ class MaxPool : public Pooling {
 
 
 	}
-	virtual void print_output_cell_calc(std::ostream &dst, const std::string &x_idx, const std::string &w_idx, const std::string &y_idx) const
+	virtual void print_output_cell_calc(
+		std::ostream &dst,
+		const std::string &x_idx,
+		const std::string &w_idx,
+		const std::string &y_idx) const override
 	{
 		unsigned n_data_dims = x->data_dim.size()-2;
 		// Calculate how much one index means in terms of the Indices output.
@@ -84,7 +88,7 @@ class MaxPool : public Pooling {
 
 	}
 
-	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const
+	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const override
 	{
 		// Store the calculated values into output tensors
 		INDT_3  << y->cname() << y_idx << "= curmax;" << std::endl;

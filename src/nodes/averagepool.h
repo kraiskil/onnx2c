@@ -32,18 +32,22 @@ class AveragePool : public Pooling {
 
 
 
-	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const
+	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
 	{
 		INDT_3  << y->data_type_str() << " curavg = 0.0;" << std::endl;
 		INDT_3  << "int numavg = 0;" << std::endl;
 	}
-	virtual void print_output_cell_calc(std::ostream &dst, const std::string &x_idx, const std::string &w_idx, const std::string &y_idx) const
+	virtual void print_output_cell_calc(
+		std::ostream &dst,
+		const std::string &x_idx,
+		const std::string &w_idx,
+		const std::string &y_idx) const override
 	{
 		// Sum up the cells
 		INDT_4 << "numavg += 1;" <<std::endl;
 		INDT_4 << "curavg += " << x->cname() << x_idx << ";" <<std::endl;
 	}
-	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const
+	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const override
 	{
 		// Calculate the averageing part
 		if( count_include_pad ) {

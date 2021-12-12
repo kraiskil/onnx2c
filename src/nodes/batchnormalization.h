@@ -62,14 +62,14 @@ class BatchNormalization : public Node {
 	}
 
 
-	virtual void parseAttribute_epsilon( const onnx::AttributeProto &a ) {
+	void parseAttribute_epsilon( const onnx::AttributeProto &a ) {
 		if( a.type() != onnx::AttributeProto_AttributeType_FLOAT )
 			ERROR("Bad attribute " << a.name());
 		if( a.has_f() == false )
 			ERROR("Bad attribute " << a.name());
 		epsilon = a.f();
 	}
-	virtual void parseAttribute_momentum( const onnx::AttributeProto &a ) {
+	void parseAttribute_momentum( const onnx::AttributeProto &a ) {
 		if( a.type() != onnx::AttributeProto_AttributeType_FLOAT )
 			ERROR("Bad attribute " << a.name());
 		if( a.has_f() == false )

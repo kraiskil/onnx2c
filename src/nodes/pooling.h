@@ -37,7 +37,7 @@ class Pooling : public SpatialFilter {
 				storage_order = parse_attribute_int(a);
 		}
 	}
-	virtual std::vector<int> resolve_output_size(void)
+	virtual std::vector<int> resolve_output_size(void) override
 	{
 		std::vector<int> rv;
 		rv.push_back(x->data_dim[0]);//batch
