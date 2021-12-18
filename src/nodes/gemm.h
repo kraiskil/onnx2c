@@ -71,7 +71,6 @@ class Gemm : public Node {
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
-		int A0 = A->data_dim[0];
 		int A1 = A->data_dim[1];
 		int C0,C1; C0=C1=0;
 		if( C ) {
@@ -92,8 +91,6 @@ class Gemm : public Node {
 		dst << "\t   beta    = " << beta << std::endl;
 		dst << "\t   transA  = " << transA << std::endl;
 		dst << "\t   transB  = " << transB << std::endl;
-		dst << "\t   A       = ("<< A0 << "x"<< A1 << ")"<< std::endl;
-		dst << "\t   datatype= "<< type << std::endl;
 		dst << "\t */" << std::endl;
 
 		// Helper variables to make the code (both this and generated) cleaner
@@ -108,19 +105,52 @@ class Gemm : public Node {
 
 		std::string A_el = transA ? "A[i][r]" : "A[r][i]";
 		std::string B_idx = transB ? "[c][i]" : "[i][c]";
+
+		// Cast optional C matrix to generated variable
+		// "C[M][N]"
 		std::string C_idx;
 		if( C  ) {
 			C_idx = "";
-			if( C0 == 1 )
+			int dim;
+			switch (C->rank())
+			{
+				case 0:
+					ERROR("Unimplemented: scalar C in Gemm");
+					break;
+				case 1:
+					dim = C->data_dim[0];
+					if( dim == M ){
+						C0=M;
+						C1=1;
+					}
+					else if ( dim == N ) {
+						C0=1;
+						C1=N;
+					}
+					else if ( dim == 1 ) {
+						C0=1;
+						C1=1;
+					}
+					else {
+						ERROR("C dimension mismatch in Gemm");
+					}
+					break;
+				case 2:
+					C0=C->data_dim[0];
+					C1=C->data_dim[1];
+					break;
+				default:
+					ERROR("C has too many dimensions in Gemm");
+			}
+			if( C0 <= 1 )
 				C_idx += "[0]";
 			else
 				C_idx += "[r]";
-			if( C->rank() > 1 ) {
-				if( C1 == 1 )
-					C_idx += "[0]";
-				else
-					C_idx += "[c]";
-			}
+			if( C1 <= 1 )
+				C_idx += "[0]";
+			else
+				C_idx += "[c]";
+			INDT_1 << type << " (*C)["<<C1<<"]  = (" << type << "(*)["<<C1<<"])" << C->cname() << ";" << std::endl;
 		}
 
 
@@ -150,8 +180,7 @@ class Gemm : public Node {
 			INDT_3 << type <<" tmp = ABrc * alpha;" << std::endl;
 
 		if( C ) {
-			INDT_3 << C->data_type_str() << " C = " << constant_acces_code( C->cname() + C_idx ) << ";" << std::endl;
-			INDT_3 << "tmp += C * beta;" << std::endl;
+			INDT_3 << "tmp += C" << C_idx << " * beta;" << std::endl;
 		}
 
 		if( options.quantize ) {
@@ -161,7 +190,6 @@ class Gemm : public Node {
 		}
 
 		INDT_3 << "Y[r][c] = tmp;" << std::endl;
-
 
 		INDT_1 << "}" << std::endl;
 	}
