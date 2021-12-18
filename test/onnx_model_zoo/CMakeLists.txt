@@ -10,15 +10,12 @@ ONNX_type_test( tiny_yolov2 ${CMAKE_CURRENT_SOURCE_DIR}/tiny_yolov2  modelzoo_ti
 endif()
 
 if( EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/bvlc_alexnet)
-#NB: alexnet is *deep* and ends with a sigmoid over 1000 classes. There will be numeric inaccuracies.
-# The comparison here is more a "was the correct class identified with expected confidence" more than
-# any numeric comparison of class propabilities
-ONNX_type_test( alexnet     ${CMAKE_CURRENT_SOURCE_DIR}/bvlc_alexnet modelzoo_alexnet_0   0.1    0)
-ONNX_type_test( alexnet     ${CMAKE_CURRENT_SOURCE_DIR}/bvlc_alexnet modelzoo_alexnet_1   0.1    1)
-ONNX_type_test( alexnet     ${CMAKE_CURRENT_SOURCE_DIR}/bvlc_alexnet modelzoo_alexnet_2   0.1    2)
-ONNX_type_test( alexnet     ${CMAKE_CURRENT_SOURCE_DIR}/bvlc_alexnet modelzoo_alexnet_3   0.1    3)
-ONNX_type_test( alexnet     ${CMAKE_CURRENT_SOURCE_DIR}/bvlc_alexnet modelzoo_alexnet_4   0.1    4)
-ONNX_type_test( alexnet     ${CMAKE_CURRENT_SOURCE_DIR}/bvlc_alexnet modelzoo_alexnet_5   0.1    5)
+ONNX_type_test( alexnet     ${CMAKE_CURRENT_SOURCE_DIR}/bvlc_alexnet modelzoo_alexnet_0   0.00001    0)
+ONNX_type_test( alexnet     ${CMAKE_CURRENT_SOURCE_DIR}/bvlc_alexnet modelzoo_alexnet_1   0.00001    1)
+ONNX_type_test( alexnet     ${CMAKE_CURRENT_SOURCE_DIR}/bvlc_alexnet modelzoo_alexnet_2   0.00001    2)
+ONNX_type_test( alexnet     ${CMAKE_CURRENT_SOURCE_DIR}/bvlc_alexnet modelzoo_alexnet_3   0.00001    3)
+ONNX_type_test( alexnet     ${CMAKE_CURRENT_SOURCE_DIR}/bvlc_alexnet modelzoo_alexnet_4   0.00001    4)
+ONNX_type_test( alexnet     ${CMAKE_CURRENT_SOURCE_DIR}/bvlc_alexnet modelzoo_alexnet_5   0.00001    5)
 endif()
 
 if( EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/squeezenet)
