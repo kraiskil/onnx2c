@@ -1,6 +1,14 @@
 /* This file is part of onnx2c.
  *
  * Slice node - return a specified part of the input 'data' tensor.
+ *
+ * ONNX operator set version 10 changed Slice to take 'axes', 'starts'
+ * and 'ends' as tensors instead of attributes. This implementation
+ * works with both.
+ *
+ * Slicing a dimension to size zero is not supported.
+ * See https://github.com/onnx/onnx/issues/3724 on a good description
+ * of related problems.
  */
 namespace toC {
 
@@ -20,32 +28,38 @@ class Slice : public Node {
 	const Tensor *axes;
 	const Tensor *steps;
 
-	// contents of the input tensors (or default values), padded
-	// to output dimensions
+	// contents of the input tensors, attributes or default values; padded
+	// to output dimensions in resolveOutput().
 	std::vector<int>sta;
 	std::vector<int>en;
 	std::vector<int>ax;
 	std::vector<int>stp;
 
-	int index_of_content(const Tensor *t, int c)
-	{
-		for( int i=0; i<t->data_num_elem(); i++)
-		{
-			if( t->get_data_element(i) == c )
-				return i;
+	virtual void parseAttributes( onnx::NodeProto &node ) override {
+		for( const auto& a : node.attribute() ) {
+			LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
+			if( a.name() == "axes" )
+				ax = parse_attribute_ints(a);
+			else if( a.name() == "starts" )
+				sta = parse_attribute_ints(a);
+			else if( a.name() == "ends" )
+				en = parse_attribute_ints(a);
+			else
+				ERROR("Unknonw attribute to slice");
 		}
-		return -1;
 	}
 
 	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
 		data = inputs[0];
-		starts = inputs[1];
-		ends = inputs[2];
+		if (inputs.size() > 1)
+			starts = inputs[1];
+		if (inputs.size() > 2)
+			ends = inputs[2];
 
-		if( starts->isConst == false )
+		if( starts && starts->isConst == false )
 			ERROR("Non-const inputs to Slice not handled");
-		if( ends->isConst == false )
+		if( ends && ends->isConst == false )
 			ERROR("Non-const inputs to Slice not handled");
 
 		if (inputs.size() > 3)
@@ -57,31 +71,43 @@ class Slice : public Node {
 		Tensor *t = new Tensor;
 
 
+		// Create local working copies of the similarly
+		// named class variables.
+		// At the end of this function, these working copies
+		// are copied back to the "originals".
 		int ddim = data->data_dim.size();
-		sta.resize(ddim);
-		en.resize(ddim);
-		ax.resize(ddim);
-		stp.resize(ddim);
+		std::vector<int> sta_(ddim);
+		std::vector<int> en_(ddim);
+		std::vector<int> ax_(ddim);
+		std::vector<int> stp_(ddim);
+
+		// ax = [0,1,2,...], if not given.
+		if( onnx_ir_version <= 9 && ax.size()==0 )
+			for( unsigned d=0; d<data->rank(); d++)
+				ax.push_back(d);
 
 		// Set defaults. Override later if required
 		for( unsigned d=0; d<data->rank(); d++) {
-			sta[d] = 0;
-			en[d]  = data->data_dim[d];
-			ax[d]  = d;
-			stp[d] = 1;
+			sta_[d] = 0;
+			en_[d]  = data->data_dim[d];
+			ax_[d]  = d;
+			stp_[d] = 1;
 		}
 
 		// if axes are not provided as input, the rest of the limits must be provided in full
 		// or we can't know which axes a limit applies to
-		int expected_size;
+		int expected_size; // of starts, ends & steps
 		if( !axes )
 			expected_size=ddim;
 		else
-			expected_size=axes->data_num_elem();
+			if (onnx_ir_version > 9 )
+				expected_size=axes->data_num_elem();
+			else
+				expected_size = ax.size();
 
-		if( starts->data_num_elem() != expected_size )
+		if( starts && starts->data_num_elem() != expected_size )
 			ERROR("Input 'starts' does not have correct amount of elements");
-		if( ends->data_num_elem() != expected_size )
+		if( ends && ends->data_num_elem() != expected_size )
 			ERROR("Input 'ends' does not have correct amount of elements");
 		if( steps && steps->data_num_elem() != expected_size )
 			ERROR("Input 'steps' does not have correct amount of elements");
@@ -93,27 +119,37 @@ class Slice : public Node {
 				int d = axes->get_data_element(i);
 				if( d < 0 )
 					d = ddim + d;
-				sta[d] = starts->get_data_element(i);
-				en[d]  = ends->get_data_element(i);
+				sta_[d] = starts->get_data_element(i);
+				en_[d]  = ends->get_data_element(i);
 				if( steps )
-					stp[d] = steps->get_data_element(i);
+					stp_[d] = steps->get_data_element(i);
+			}
+		}
+		else if( onnx_ir_version > 9 ){
+			for( unsigned d=0; d<data->rank(); d++ ) {
+				sta_[d] = starts->get_data_element(d);
+				en_[d]  = ends->get_data_element(d);
+				if( steps )
+					stp_[d] = steps->get_data_element(d);
 			}
 		}
 		else {
-			for( unsigned d=0; d<data->rank(); d++ ) {
-				sta[d] = starts->get_data_element(d);
-				en[d]  = ends->get_data_element(d);
+			for( unsigned i=0; i<ax.size(); i++ ) {
+				int d = ax[i];
+				if( d < 0 )
+					d = ddim + d;
+				sta_[d] = sta[i];
+				en_[d]  = en[i];
 				if( steps )
-					stp[d] = steps->get_data_element(d);
+					stp_[d] = 1;
 			}
 		}
 
-
 		// Prune up corner cases: out of range indexing etc. and calculate output
 		for( unsigned d=0; d<data->rank(); d++) {
-			int s=sta[d];
-			int e=en[d];
-			int st=stp[d];
+			int s=sta_[d];
+			int e=en_[d];
+			int st=stp_[d];
 			int in_size = data->data_dim[d];
 
 			if( s < 0 )
@@ -125,8 +161,8 @@ class Slice : public Node {
 			if( e>=in_size )
 				e=in_size;
 
-			sta[d]=s;
-			en[d]=e;
+			sta_[d]=s;
+			en_[d]=e;
 
 			// calculate the output dimension
 			// ok, there probably exist a closed form for this algorithm.
@@ -151,6 +187,11 @@ class Slice : public Node {
 				ERROR("Unimplemented: tensor sliced to have dimension of size 0");
 		}
 
+		ax=ax_;
+		sta=sta_;
+		en=en_;
+		stp=stp_;
+
 		t->data_type = data->data_type;
 		output = t;
 		outputs.push_back(t);
@@ -160,10 +201,14 @@ class Slice : public Node {
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
 		data->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		starts->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		ends->print_tensor_as_const(dst, !decorate);
+		if (starts) {
+			dst << ", ";
+			starts->print_tensor_as_const(dst, !decorate);
+		}
+		if (ends) {
+			dst << ", ";
+			ends->print_tensor_as_const(dst, !decorate);
+		}
 
 		if (axes) {
 			dst << ", ";
@@ -176,7 +221,6 @@ class Slice : public Node {
 
 		dst << ", ";
 		output->print_tensor(dst, !decorate);
-
 	}
 
 
