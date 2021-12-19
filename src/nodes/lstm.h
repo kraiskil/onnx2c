@@ -203,6 +203,7 @@ class LSTM : public Node {
 		std::string di;
 		std::string X_sbi;  // input data, indexed with s(equence), b(atch), i(input)
 		std::string Yh_dbh; // Y_h, indexed with direction, batch, hidden
+		std::string Yh_dbk; // Same, but use k for indexing hidden size (used in inner matmul loops)
 		std::string Yc_dbh; // Y_h, indexed with direction, batch, hidden
 		std::string Y_snbh; // Y, indexed with sequence, numdir, batch, hidden
 		if( forward ) {
@@ -223,14 +224,18 @@ class LSTM : public Node {
 		if( layout == 0 ) {
 			X_sbi = "X[s][b]["+di+"]";
 			Y_snbh = "Y[s][" + std::to_string(dir) + "][b][h]";
+			Yh_dbh = "Y_h[" + std::to_string(dir) + "][b][h]";
+			Yh_dbk = "Y_h[" + std::to_string(dir) + "][b][k]";
+			Yc_dbh = "Y_c[" + std::to_string(dir) + "][b][h]";
 		}
 		else { //layout==1
 			X_sbi = "X[b][s]["+di+"]";
 			Y_snbh = "Y[b][s][" + std::to_string(dir) + "][h]";
+			Yh_dbh = "Y_h[b][" + std::to_string(dir) + "][h]";
+			Yh_dbk = "Y_h[b][" + std::to_string(dir) + "][k]";
+			Yc_dbh = "Y_c[b][" + std::to_string(dir) + "][h]";
 		}
 
-		Yh_dbh = "Y_h[" + std::to_string(dir) + "][b][k]";
-		Yc_dbh = "Y_c[" + std::to_string(dir) + "][b][h]";
 
 
 		/* With all the helper strings above, print out the kernel.
@@ -255,9 +260,9 @@ class LSTM : public Node {
 
 		// Ht-1*R
 		INDT_3<<  "for( int k=0; k<hs; k++) {" << std::endl;
-		INDT_4<<  "ft[b][h] += " << Yh_dbh << "*R["<<dir<<"][fidx+h][k];" << std::endl;
-		INDT_4<<  "ct[b][h] += " << Yh_dbh << "*R["<<dir<<"][cidx+h][k];" << std::endl;
-		INDT_4<<  "it[b][h] += " << Yh_dbh << "*R["<<dir<<"][iidx+h][k];" << std::endl;
+		INDT_4<<  "ft[b][h] += " << Yh_dbk << "*R["<<dir<<"][fidx+h][k];" << std::endl;
+		INDT_4<<  "ct[b][h] += " << Yh_dbk << "*R["<<dir<<"][cidx+h][k];" << std::endl;
+		INDT_4<<  "it[b][h] += " << Yh_dbk << "*R["<<dir<<"][iidx+h][k];" << std::endl;
 		INDT_3<<  "}" << std::endl;
 
 		if( B ) { // Bias
@@ -295,7 +300,7 @@ class LSTM : public Node {
 		INDT_4<<  "ot[b][h] += " << X_sbi << "*W["<<dir<<"][oidx+h][i];" << std::endl;
 		// Ht-1*R
 		INDT_3<<  "for( int k=0; k<hs; k++)" << std::endl;
-		INDT_4<<  "ot[b][h] += " << Yh_dbh << "*R["<<dir<<"][oidx+h][k];" << std::endl;
+		INDT_4<<  "ot[b][h] += " << Yh_dbk << "*R["<<dir<<"][oidx+h][k];" << std::endl;
 		if( B ) {// Bias
 		INDT_3<<  "ot[b][h] += B["<<dir<<"][oidx+h];" << std::endl;
 		INDT_3<<  "ot[b][h] += B["<<dir<<"][Rb+oidx+h];" << std::endl;
@@ -310,10 +315,10 @@ class LSTM : public Node {
 		INDT_2<<  "/* Hidden state */" << std::endl;
 		INDT_2<<  "for( int b=0; b<bs; b++)" << std::endl;
 		INDT_2<<  "for( int h=0; h<hs; h++) {" << std::endl;
-			INDT_3<<  "Y_h["<<dir<<"][b][h] = ot[b][h] * ";
+			INDT_3<< Yh_dbh << " = ot[b][h] * ";
 				print_activation( dst, activations[h_act], Yc_dbh );
 			if( Y->is_used() ) {
-				INDT_3<< Y_snbh << "= Y_h["<<dir<<"][b][h];" << std::endl;
+				INDT_3<< Y_snbh << "= " << Yh_dbh <<";" << std::endl;
 			}
 		INDT_2<<  "}" << std::endl << std::endl;
 	}
