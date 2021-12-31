@@ -32,7 +32,14 @@ Graph::Graph(
 	}
 	AixLog::Log::init<AixLog::SinkCerr>(s);
 
+	processGraph(onnx_model, ext_inputs);
+}
 
+void Graph::processGraph(
+	onnx::ModelProto &onnx_model,
+	std::vector<Tensor*> ext_inputs
+	)
+{
 	onnx::GraphProto onnx_graph = onnx_model.graph();
 	Node::onnx_ir_version = onnx_ir_version();
 	// 0. add provided external initializers (from test bench
@@ -55,18 +62,44 @@ Graph::Graph(
 		addTensor( n );
 	}
 
-	// Resolve all nodes.
-	// TODO: this now walks through all nodes in the order
-	// they are defined in the onnx file. This works only
-	// because all input graphs encountered thus far have
-	// been resolvable in that order.
-	// But there is no guarantee (that I found) in onnx
-	// that says nodes could not be given in other orders too.
-	// Fix this when (if) someone can produce such a file
-	for( auto n : onnx_graph.node() )
-		tryResolveNode( n );
+	resolveGraphNodes(onnx_graph);
 }
 
+void Graph::resolveGraphNodes(onnx::GraphProto &onnx_graph)
+{
+	/* A vast majority of ONNX graphs in the wild list their
+	 * nodes in an order where they can be resolved in the
+	 * order they are listed in the onnx file.
+	 * This "brute force" search for resolvable nodes should
+	 * not affect speed at all in the normal case
+	 * "Optimize for speed" here that case. If the input graph
+	 * is big enough that this algorithm becomes a bottleneck,
+	 * then onnx2c probably isn't your best option anyway.
+	 */
+
+	unsigned num_unresolved_prev_round;
+	unsigned num_unresolved = onnx_graph.node_size();
+
+	do {
+		num_unresolved_prev_round = num_unresolved;
+		num_unresolved = 0;
+
+		for( onnx::NodeProto n : onnx_graph.node() ) {
+			bool res = tryResolveNode( n );
+			if( res == false )
+				num_unresolved++;
+		}
+
+		// all done
+		if( num_unresolved == 0 )
+			break;
+
+	// repeat as long as at least one new node got resolved
+	} while ( num_unresolved < num_unresolved_prev_round );
+
+	if( num_unresolved != 0 )
+		ERROR("Input ONNX graph is not resolvable.");
+}
 
 /* Add already resolved onnx::TensorProto. E.g. TensorProtos that
  * are resolved already in the ONNX model (inputs and initialized ones)
@@ -170,20 +203,26 @@ bool Graph::getNodeInputTensors(const onnx::NodeProto &node, std::vector<const T
 	return true;
 }
 
-void Graph::tryResolveNode(onnx::NodeProto &node)
+
+/* Make an onnx2c node object out of the onnx::NodeProto object.
+ * @return true node is (or was earlier) added to Graph::nodes datastructure.
+ *          Return false if Graph::tensors does not yet have all the input tensor for this node.
+ */
+bool Graph::tryResolveNode(onnx::NodeProto &node)
 {
 	std::vector<const Tensor*> inputs;
 	std::vector<Tensor*> outputs;
 	LOG(DEBUG) << "Resolving node " << node.name() <<std::endl;
 
-	// Early exit on error cases - cannot resolve this node (now)
 	for( auto o : nodes )
 		if( node.name() == o->onnx_name ) {
 			LOG(TRACE) << "Node " << node.name() << " already resolved"<<std::endl;
-			return;
+			return true;
 		}
+
+	// Early exit on error cases - cannot resolve this node (now)
 	if( getNodeInputTensors(node, inputs) == false )
-		return;
+		return false;
 
 
 	// ONNX has a few nodes that have quantized alternatives.
@@ -258,6 +297,8 @@ void Graph::tryResolveNode(onnx::NodeProto &node)
 	LOG(DEBUG) << "    outputs: " << n->onnx_name << std::endl;
 	for( auto o : outputs)
 		LOG(DEBUG) << "         " << o->name << std::endl;
+
+	return true;
 }
 
 

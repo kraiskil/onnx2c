@@ -28,13 +28,20 @@ public:
 	void print_includes(std::ostream &dst);
 	void print_interface_function(std::ostream &dst);
 
+	/* Create the onnx2c graph elements from the ONNX graph */
+	void processGraph(
+		onnx::ModelProto &onnx_model,
+		std::vector<Tensor*> inputs={}
+	);
+	void resolveGraphNodes(onnx::GraphProto &onnx_graph);
+
 	void addInitializedTensor(onnx::TensorProto &tensor);
 	Tensor* getIoTensor(onnx::ValueInfoProto &vi);
 
 	void replaceWithQuantized(std::vector<const Tensor*> &inputs);
 	bool getNodeInputTensors(const onnx::NodeProto &node, std::vector<const Tensor*> &inputs);
 
-	void tryResolveNode(onnx::NodeProto &node);
+	bool tryResolveNode(onnx::NodeProto &node);
 	bool hasUnresolvedNodes(void);
 	Node* createNode(std::string opName);
 
