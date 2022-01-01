@@ -13,7 +13,7 @@ class Unsqueeze : public Node {
 		data=axes_tensor=expanded=NULL;
 	}
 
-	std::vector<int> axes_attr;
+	std::vector<int64_t> axes_attr;
 
 	// input and output
 	const Tensor *data;

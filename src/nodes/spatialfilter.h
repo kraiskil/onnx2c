@@ -26,12 +26,12 @@ class SpatialFilter : public Node {
 	const Tensor *y;
 
 	// Attributes
-	std::vector<int> kernel_shape;
+	std::vector<int64_t> kernel_shape;
 	std::string auto_pad;
-	std::vector<int> dilations;
+	std::vector<int64_t> dilations;
 	int group;
-	std::vector<int> pads;
-	std::vector<int> strides;
+	std::vector<int64_t> pads;
+	std::vector<int64_t> strides;
 
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {

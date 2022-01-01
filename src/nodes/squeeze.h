@@ -18,7 +18,7 @@ class Squeeze : public Node {
 	// outputs
 	const Tensor *squeezed;
 
-	std::vector<int> axes;
+	std::vector<int64_t> axes;
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
@@ -75,7 +75,7 @@ class Squeeze : public Node {
 			ERROR("No axes to squeeze away?");
 
 		// negative axes means counted from "end"
-		for( int &a : axes )
+		for( auto &a : axes )
 			if( a<0 )
 				a = data->data_dim.size() + a;
 

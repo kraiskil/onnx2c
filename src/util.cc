@@ -33,12 +33,12 @@ int parse_attribute_int(const onnx::AttributeProto &a)
 	return a.i();
 }
 
-std::vector<int> parse_attribute_ints(const onnx::AttributeProto &a)
+std::vector<int64_t> parse_attribute_ints(const onnx::AttributeProto &a)
 {
 	if( a.ints_size() == 0 )
 		ERROR("Not a ints attribute");
 
-	std::vector<int> rv;
+	std::vector<int64_t> rv;
 
 	for( int i : a.ints() )
 		rv.push_back(i);

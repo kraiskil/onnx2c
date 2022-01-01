@@ -30,10 +30,10 @@ class Slice : public Node {
 
 	// contents of the input tensors, attributes or default values; padded
 	// to output dimensions in resolveOutput().
-	std::vector<int>sta;
-	std::vector<int>en;
-	std::vector<int>ax;
-	std::vector<int>stp;
+	std::vector<int64_t>sta;
+	std::vector<int64_t>en;
+	std::vector<int64_t>ax;
+	std::vector<int64_t>stp;
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 		for( const auto& a : node.attribute() ) {
@@ -76,10 +76,10 @@ class Slice : public Node {
 		// At the end of this function, these working copies
 		// are copied back to the "originals".
 		int ddim = data->data_dim.size();
-		std::vector<int> sta_(ddim);
-		std::vector<int> en_(ddim);
-		std::vector<int> ax_(ddim);
-		std::vector<int> stp_(ddim);
+		std::vector<int64_t> sta_(ddim);
+		std::vector<int64_t> en_(ddim);
+		std::vector<int64_t> ax_(ddim);
+		std::vector<int64_t> stp_(ddim);
 
 		// ax = [0,1,2,...], if not given.
 		if( onnx_ir_version <= 9 && ax.size()==0 )
@@ -147,10 +147,10 @@ class Slice : public Node {
 
 		// Prune up corner cases: out of range indexing etc. and calculate output
 		for( unsigned d=0; d<data->rank(); d++) {
-			int s=sta_[d];
-			int e=en_[d];
-			int st=stp_[d];
-			int in_size = data->data_dim[d];
+			int64_t s=sta_[d];
+			int64_t e=en_[d];
+			int64_t st=stp_[d];
+			int64_t in_size = data->data_dim[d];
 
 			if( s < 0 )
 				s = in_size + s;

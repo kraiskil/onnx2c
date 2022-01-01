@@ -1,0 +1,24 @@
+	sclblonnx:•
+=
+data
+starts
+ends
+axes
+stepsYsclbl-onnx-node1"Slice
+Gstartsstarts-constant"Constant*"
+value*:Bstarts-values 
+Iendsends-constant"Constant*(
+value*:	ÿÿÿÿÿÿÿÿBends-values 
+Aaxesaxes-constant"Constant* 
+value*:Baxes-values 
+Dstepssteps-constant"Constant*!
+value*:Bsteps-values 
+sclblgraphZ
+data
+
+
+b
+Y
+
+
+B

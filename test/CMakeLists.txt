@@ -545,6 +545,7 @@ ONNX_backend_node_test(slice_default_axes)
 ONNX_backend_node_test(slice_end_out_of_bounds)
 ONNX_backend_node_test(slice_negative_axes)
 #ONNX_backend_node_test(slice_start_out_of_bounds)
+local_node_test(slice_end_INT64_MAX)
 
 ONNX_backend_node_test(softmax_axis_0)
 ONNX_backend_node_test(softmax_axis_1)
