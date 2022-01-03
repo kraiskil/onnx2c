@@ -23,6 +23,13 @@ toC::Tensor* parse_attribute_tensor(const onnx::AttributeProto &a);
  */
 std::string constant_acces_code(const std::string plain);
 
+/*
+ * Cast a function parameter name to a more readable "shortname".
+ * I.e. returns a string like:
+ * float (*X)[1][2] = (float (*)[1][2])tensor_123;
+ */
+std::string cast_to_ndim_arrayptr(const toC::Tensor *t, const std::string shortname);
+
 #define INDT_1 dst<<"\t"
 #define INDT_2 dst<<"\t\t"
 #define INDT_3 dst<<"\t\t\t"

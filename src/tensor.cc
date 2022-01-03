@@ -467,7 +467,6 @@ bool Tensor::is_used(void) const
 
 int64_t Tensor::get_data_element(uint64_t i) const
 {
-
 	switch( data_type )
 	{
 		case onnx::TensorProto_DataType_INT32:
@@ -480,3 +479,16 @@ int64_t Tensor::get_data_element(uint64_t i) const
 
 	return INT64_MIN;
 }
+float Tensor::get_data_element_float(uint64_t i) const
+{
+	switch( data_type )
+	{
+		case onnx::TensorProto_DataType_FLOAT:
+			return ((float*)data_buffer)[i];
+		default:
+			ERROR("Unhandled data type");
+	}
+
+	return 0;
+}
+

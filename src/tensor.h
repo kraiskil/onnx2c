@@ -97,6 +97,7 @@ class Tensor {
 
 	/* Get the data element at index i. Flattening multidimensional arrays down to the index is left for the caller. */
 	int64_t get_data_element(uint64_t i) const;
+	float get_data_element_float(uint64_t i) const;
 };
 
 }

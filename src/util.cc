@@ -109,3 +109,35 @@ std::string constant_acces_code(const std::string plain)
 	std::string rv = "RD_PROGMEM(" + plain + ")";
 	return rv;
 }
+
+std::string cast_to_ndim_arrayptr(const toC::Tensor *t, std::string shortname)
+{
+	std::string idxstr="";
+	for( unsigned d=1; d<t->rank(); d++){
+		idxstr += "[";
+		idxstr += std::to_string(t->data_dim[d]);
+		idxstr += "]";
+	}
+
+	std::string rv="";
+
+	// float (*X)[1][2]
+	rv += t->data_type_str();
+	rv += "(*";
+	rv += shortname;
+	rv += ")";
+	rv += idxstr;
+
+	// float (*X)[1][2] = (float (*)[1][2])tensor_nodename_42;
+	rv += " = (";
+	rv += t->data_type_str();
+	rv += "(*)";
+	rv += idxstr;
+	rv += ")";
+	rv += t->cname();
+	rv += ";";
+
+	return rv;
+}
+
+

@@ -344,6 +344,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/range.h"
 #include "nodes/relu.h"
 #include "nodes/reshape.h"
+#include "nodes/resize.h"
 #include "nodes/shape.h"
 #include "nodes/slice.h"
 #include "nodes/squeeze.h"
@@ -413,6 +414,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Reciprocal" )return new Elementwise("Reciprocal");
 	if( opName == "Relu" )return new Relu;
 	if( opName == "Reshape" )return new Reshape;
+	if( opName == "Resize" )return new Resize;
 	if( opName == "Round" )return new Elementwise("Round");
 	if( opName == "Selu" )return new Elementwise("Selu");
 	if( opName == "Shape" )return new Shape;
