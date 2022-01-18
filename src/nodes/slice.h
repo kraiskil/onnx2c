@@ -52,20 +52,30 @@ class Slice : public Node {
 	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
 		data = inputs[0];
-		if (inputs.size() > 1)
+		register_input(data, "data");
+
+		if (inputs.size() > 1) {
 			starts = inputs[1];
-		if (inputs.size() > 2)
+			register_input(starts, "starts");
+		}
+		if (inputs.size() > 2) {
 			ends = inputs[2];
+			register_input(ends, "ends");
+		}
 
 		if( starts && starts->isConst == false )
 			ERROR("Non-const inputs to Slice not handled");
 		if( ends && ends->isConst == false )
 			ERROR("Non-const inputs to Slice not handled");
 
-		if (inputs.size() > 3)
+		if (inputs.size() > 3) {
 			axes = inputs[3];
-		if (inputs.size() > 4)
+			register_input(axes, "axes");
+		}
+		if (inputs.size() > 4) {
 			steps = inputs[4];
+			register_input(steps, "steps");
+		}
 
 		// the output tensor
 		Tensor *t = new Tensor;
@@ -195,34 +205,8 @@ class Slice : public Node {
 		t->data_type = data->data_type;
 		output = t;
 		outputs.push_back(t);
+		register_output(t, "output");
 	}
-
-
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		data->print_tensor_as_const(dst, !decorate);
-		if (starts) {
-			dst << ", ";
-			starts->print_tensor_as_const(dst, !decorate);
-		}
-		if (ends) {
-			dst << ", ";
-			ends->print_tensor_as_const(dst, !decorate);
-		}
-
-		if (axes) {
-			dst << ", ";
-			axes->print_tensor_as_const(dst, !decorate);
-		}
-		if (steps) {
-			dst << ", ";
-			steps->print_tensor_as_const(dst, !decorate);
-		}
-
-		dst << ", ";
-		output->print_tensor(dst, !decorate);
-	}
-
 
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
@@ -259,7 +243,7 @@ class Slice : public Node {
 		}
 
 		// Copy over data from input to output
-		INDT_2 << output->cname() << out_idx << " = " << data->cname() << in_idx << ";" << std::endl;
+		INDT_2 << "output" << out_idx << " = data" << in_idx << ";" << std::endl;
 
 		// close loops over output dimensions
 		for( unsigned r=0; r<output->rank(); r++) {

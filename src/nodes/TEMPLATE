@@ -1,14 +1,14 @@
 /* This file is part of onnx2c.
  *
  * TEMPLATE node.
- * When implementing a new node, use this template 
+ * When implementing a new node, use this template
  * as a starting point.
  * Replace all occurances of TEMPLATE in this file.
  * Some representative dummy implementation provided.
- * 
+ *
  * The functions here are callbacks from the onnx2c
  * framework. See node.h for more documentation.
- */ 
+ */
 namespace toC {
 
 class TEMPLATE : public Node {
@@ -44,9 +44,15 @@ class TEMPLATE : public Node {
 	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
 		input_1  = inputs[0];
+		// Remember the parameters to the generated function,
+		// along with a descriptive name that is used locally in the generated source.
+		// The most "descriptive name" usually is the one this tensor has in the ONNX documentation.
+		register_input(A, "A");
 
-		if (inputs.size() == 2)
+		if (inputs.size() == 2) {
 			input_2_optional = inputs[0];
+			register_input(input_2_optional, "descriptive_name");
+		}
 		// else leave input_2_optional as null so other functions here know to ignore it
 
 
@@ -59,29 +65,9 @@ class TEMPLATE : public Node {
 		 * the return value vector! */
 		output_1 = t;
 		outputs.push_back(t);
+		register_output(t, "Y");
 
 		/* TODO: optional outputs? */
-	}
-
-
-	/* Print the function parameters - use the order they are introduced in the
-	 * ONNX documentation */
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		input_1->print_tensor_as_const(dst, !decorate);
-
-		if (input_2_optional) {
-			dst << ", ";
-			input_2_optional->print_tensor_as_const(dst, !decorate);
-		}
-
-		dst << ", ";
-		output_1->print_tensor(dst, !decorate);
-
-		if (output_2_optional) {
-			dst << ", ";
-			output_2_optional->print_tensor(dst, !decorate);
-		}
 	}
 
 

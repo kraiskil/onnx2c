@@ -72,7 +72,7 @@ void Graph::print_functions(std::ostream &dst)
 	for( auto n : nodes ) {
 		dst << "static inline void ";
 		dst << n->c_name() << "( ";
-		n->print_parameters(dst, true);
+		n->print_function_parameters_shapes(dst);
 		dst << " )";
 		dst <<  std::endl << "{" << std::endl;
 
@@ -142,7 +142,7 @@ void Graph::print_interface_function(std::ostream &dst)
 	for( auto n : nodes )
 	{
 		dst << "\t" << n->c_name() << "( ";
-		n->print_parameters(dst, false);
+		n->print_function_parameters_callsite(dst);
 		dst << ");" << std::endl;
 	}
 

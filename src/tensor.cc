@@ -339,6 +339,26 @@ void Tensor::print_tensor(std::ostream &dst, bool is_callsite, std::string alter
 			dst << "[" << i << "]";
 }
 
+std::string Tensor::print_tensor(std::string alternate_name, bool is_callsite, bool as_const) const
+{
+	std::string rv = "";
+	if( is_callsite == false ) {
+		if( isConst || as_const )
+			rv += "const ";
+		rv += data_type_str() + " ";
+	}
+	if( alternate_name == "" )
+		rv += cname();
+	else
+		rv += alternate_name;
+
+	if( is_callsite == false )
+		for( unsigned i : data_dim )
+			rv += "[" + std::to_string(i) + "]";
+
+	return rv;
+}
+
 int Tensor::data_num_elem(void) const
 {
 	int dim=1;

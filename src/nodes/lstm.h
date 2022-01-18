@@ -70,49 +70,6 @@ class LSTM : public Node {
 	int input_size;
 
 
-
-
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		X->print_tensor_as_const(dst, !decorate, !decorate?"":"X");
-		dst << ", ";
-		W->print_tensor_as_const(dst, !decorate, !decorate?"":"W");
-		dst << ", ";
-		R->print_tensor_as_const(dst, !decorate, !decorate?"":"R");
-		if( B ) {
-			dst << ", ";
-			B->print_tensor_as_const(dst, !decorate, !decorate?"":"B");
-		}
-		if( sequence_lens ) {
-			dst << ", ";
-			sequence_lens->print_tensor_as_const(dst, !decorate, !decorate?"":"sequence_lens");
-		}
-		if( initial_h ) {
-			dst << ", ";
-			initial_h->print_tensor_as_const(dst, !decorate, !decorate?"":"initial_h");
-		}
-		if( initial_c ) {
-			dst << ", ";
-			initial_c->print_tensor_as_const(dst, !decorate, !decorate?"":"initial_c");
-		}
-		if( P ) {
-			dst << ", ";
-			P->print_tensor_as_const(dst, !decorate, !decorate?"":"P");
-		}
-		if( Y->is_used() ) {
-			dst << ", ";
-			Y->print_tensor(dst, !decorate, !decorate?"":"Y");
-		}
-		if( Y_h->is_used() ) {
-			dst << ", ";
-			Y_h->print_tensor(dst, !decorate, !decorate?"":"Y_h");
-		}
-		if( Y_c->is_used() ) {
-			dst << ", ";
-			Y_c->print_tensor(dst, !decorate, !decorate?"":"Y_c");
-		}
-	}
-
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 		for( const auto& a : node.attribute() ) {
 			LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
@@ -466,21 +423,35 @@ class LSTM : public Node {
 			ERROR("Must provide hidden_size attribute!");
 
 		X = inputs[0];
+		register_input(X, "X");
 		W = inputs[1];
+		register_input(W, "W");
 		R = inputs[2];
+		register_input(R, "R");
+
 		//optional inputs. Trailing unprovided inputs can just be left out
 		//but non-trailing, unprovided inputs MUST have an empty string as name
 		// (guess that means tensors MAY NOT have an empty string as name?)
-		if( inputs.size() > 3 && inputs[3]->name != "" )
+		if( inputs.size() > 3 && inputs[3]->name != "" ) {
 			B = inputs[3];
-		if( inputs.size() > 4 && inputs[4]->name != "" )
+			register_input(B, "B");
+		}
+		if( inputs.size() > 4 && inputs[4]->name != "" ) {
 			sequence_lens = inputs[4];
-		if( inputs.size() > 5 && inputs[5]->name != "" )
+			register_input(sequence_lens, "sequence_lens");
+		}
+		if( inputs.size() > 5 && inputs[5]->name != "" ) {
 			initial_h = inputs[5];
-		if( inputs.size() > 6 && inputs[6]->name != "" )
+			register_input(initial_h, "initial_h");
+		}
+		if( inputs.size() > 6 && inputs[6]->name != "" ) {
 			initial_c = inputs[6];
-		if( inputs.size() > 7 && inputs[7]->name != "" )
+			register_input(initial_c, "initial_c");
+		}
+		if( inputs.size() > 7 && inputs[7]->name != "" ) {
 			P = inputs[7];
+			register_input(P, "P");
+		}
 
 
 		calculate_data_dimensions();
@@ -535,8 +506,11 @@ class LSTM : public Node {
 		Y_c->initialize = true;
 
 		outputs.push_back(Y);
+		register_output(Y, "Y");
 		outputs.push_back(Y_h);
+		register_output(Y_h, "Y_h");
 		outputs.push_back(Y_c);
+		register_output(Y_c, "Y_c");
 	}
 };
 }

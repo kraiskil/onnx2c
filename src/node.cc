@@ -117,3 +117,66 @@ void Node::multidirectional_broadcast_size(
 		}
 }
 
+
+
+// NB: old node implementations that dont use input_params and output_params
+// have overridden this function.
+void Node::print_parameters(std::ostream &dst, bool not_callsite ) const
+{
+	std::vector<std::string> params;
+
+	if( not_callsite )
+	{
+		for( auto i : input_params ) {
+			const Tensor *t = std::get<0>(i);
+			std::string name = std::get<1>(i);
+			params.push_back( t->print_tensor_as_const(name) );
+		}
+		for( auto o : output_params ) {
+			const Tensor *t = std::get<0>(o);
+			// A node does not know at its resolve time if an optional
+			// output is used, so it registers all. Once all nodes
+			// are resolved, the tensor knows if some one uses it.
+			if( t->is_used() == false )
+				continue;
+			std::string name = std::get<1>(o);
+			params.push_back( t->print_tensor(name) );
+		}
+	}
+	else
+	{
+		for( auto i : input_params ) {
+			const Tensor *t = std::get<0>(i);
+			params.push_back( t->print_tensor_callsite() );
+		}
+		for( auto o : output_params ) {
+			const Tensor *t = std::get<0>(o);
+			if( t->is_used() == false )
+				continue;
+			params.push_back( t->print_tensor_callsite() );
+		}
+	}
+
+	auto i = params.begin();
+	dst << *i ;
+	for( i++; i != params.end(); i++)
+		dst << ", " << *i;
+}
+
+void Node::print_function_parameters_shapes(std::ostream &destination) const
+{
+	print_parameters(destination, true);
+}
+void Node::print_function_parameters_callsite(std::ostream &destination) const
+{
+	print_parameters(destination, false);
+}
+
+void Node::register_input(const Tensor *t, std::string name)
+{
+	input_params.push_back(function_parameter(t, name));
+}
+void Node::register_output(const Tensor *t, std::string name)
+{
+	output_params.push_back(function_parameter(t, name));
+}

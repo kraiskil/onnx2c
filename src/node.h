@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <tuple>
 #include "error.h"
 #include "onnx.pb.h"
 #include "util.h"
@@ -7,7 +8,7 @@
 namespace toC {
 
 class Tensor;
-
+typedef std::tuple<const Tensor *, std::string> function_parameter;
 /* The ONNX node, or computation kernel. *
  * Node is a virtual parent class for each of the
  * ONNX node "types" or "operands" (e.g. Add, Relu, ...)
@@ -22,6 +23,11 @@ class Node {
 	std::string op_name;   //ONNX name of node type
 	static int64_t onnx_ir_version;
 
+private:
+	std::vector<function_parameter> input_params;
+	std::vector<function_parameter> output_params;
+
+public:
 	/* Create the C source name. Replace all non a-z,A-Z,0-9 or _
 	 * characters. Also prefix name since ONNX allows tensors and nodes
 	 * to have the same name */
@@ -39,8 +45,19 @@ class Node {
 	 *   "tensior_X, tensor_Y"
 	 * or decorated
 	 *   "float tensor_X[1][2][3], float tensor_Y[2][3][4]"
+	 *
+	 * "old" vs "new":
+	 * Currently print_parameters() is splatted all over the node implementing
+	 * subclasses. It used to be a pure virtual function for bad design reasons.
+	 * The new way, which is being implemented piecemeal is to have the
+	 * node::resolve() function create mappings for all of its function parameters
+	 * so that each tensor has a "local name" corresponding to the tensor name in
+	 * the ONNX Operands specificaion.
+	 * In short, don't override print_parameters() for new node subclasses!
 	 */
-	virtual void print_parameters(std::ostream &destination, bool decorate ) const = 0;
+	virtual void print_parameters(std::ostream &destination, bool decorate ) const;
+	void print_function_parameters_shapes(std::ostream &destination) const;
+	void print_function_parameters_callsite(std::ostream &destination) const;
 
 	/* Figure out in what format the output is in.
 	 * Return values are pointers to Tensor values, allocated with new. Ownership given to caller.
@@ -86,5 +103,13 @@ class Node {
 		const std::vector<int> A,
 		const std::vector<int> B,
 		std::vector<int> &result) const;
+
+protected:
+	/* Record a tensor as the generated function's parameter.
+	 * - name: the name to be used locally for the tensor in the C-function
+	 */
+	void register_input(const Tensor *, std::string name);
+	void register_output(const Tensor *, std::string name);
+
 };
 }

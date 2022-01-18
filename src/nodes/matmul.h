@@ -13,15 +13,6 @@ class MatMul : public Node {
 	// outputs
 	const Tensor *Y;
 
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		A->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		B->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		Y->print_tensor(dst, !decorate);
-	}
-
 
 	virtual void print(std::ostream &dst) const override
 	{
@@ -42,27 +33,21 @@ class MatMul : public Node {
 		if( inner != inner2 )
 			ERROR("MatMul input's inner dimensions don't match");
 
-
-	
-		dst << "\t/*MatMul*/" << std::endl;
-		
-		dst << "\t" << type << " *A = (" << type << "*)" << A->cname() << ";" << std::endl;
-		dst << "\t" << type << " *B = (" << type << "*)" << B->cname() << ";" << std::endl;
-		dst << "\t" << type << " *Y = (" << type << "*)" << Y->cname() << ";" << std::endl;
-
-		dst << "\t" << "for( uint32_t r=0; r<" << rows << "; r++ )" << std::endl;
-		dst << "\t\t" << "for( uint32_t c=0; c<" << cols << "; c++ ) {" << std::endl;
-		dst << "\t\t\tY[r*"<<cols<<" + c] = 0;" << std::endl;
-		dst << "\t\t\t" << "for( uint32_t i=0; i<" << inner << "; i++ )" << std::endl;
-		dst << "\t\t\t\tY[r*"<<cols<<"+c] += A[r*"<<inner<< "+i] * B[i*"<<cols<<"+c];" << std::endl;
-		dst << "\t\t}" << std::endl;
-		dst << std::endl;
+		INDT_1 << "/* MatMul */" << std::endl;
+		INDT_1 << "for( uint32_t r=0; r<" << rows << "; r++ )" << std::endl;
+		INDT_2 <<   "for( uint32_t c=0; c<" << cols << "; c++ ) {" << std::endl;
+		INDT_3 <<     "Y[r][c] = 0;" << std::endl;
+		INDT_3 <<     "for( uint32_t i=0; i<" << inner << "; i++ )" << std::endl;
+		INDT_4 <<        "Y[r][c] += A[r][i] * B[i][c];" << std::endl;
+		INDT_2 <<   "}" << std::endl;
 
 	} 
 	virtual void resolveOutput( const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
 	{
 		A = inputs[0];
 		B = inputs[1];
+		register_input(A, "A");
+		register_input(B, "B");
 		if(  typeConstraint_highPrecisionNumeric(A) == false )
 			ERROR("Incorrect input for MatMul"); 
 		if(  typeConstraint_highPrecisionNumeric(B) == false )
@@ -78,6 +63,7 @@ class MatMul : public Node {
 		rv->data_type = A->data_type;
 		Y=rv;
 		outputs.push_back(rv);
+		register_output(rv, "Y");
 	}
 
 	void result_dim( const std::vector< const Tensor*> &inputs, int32_t &rows, int32_t &cols) const
