@@ -52,6 +52,13 @@ void Graph::print_global_tensors(std::ostream &dst)
 	{
 		if( t->generate == false )
 			continue;
+		if( t->data_dim.size() == 0 )
+			ERROR("Tensor of no dimensions?");
+		// This case has been seen in the wild. Not sure why it happens
+		if( t->data_dim.size() == 1 && t->data_dim[0]==0 ){
+			LOG(WARNING) << "Tensor " << t->name << " has size of 0. Skipping it" << std::endl;
+			continue;
+		}
 
 		dst << "/* " << t->name << "*/" << std::endl;
 		dst << "static ";
