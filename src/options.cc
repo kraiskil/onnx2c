@@ -11,10 +11,10 @@ struct onnx2c_opts options;
 
 void parse_cmdline_options(int argc, const char *argv[])
 {
-	args::ArgumentParser parser("This is a test program.", "This goes after the options.");
+	args::ArgumentParser parser("Generate C code from an ONNX graph file.");
 	args::Flag quantize(parser, "quantize", "Quantize network (EXPERIMENTAL!)", {'q', "quantize"});
 	args::Flag avr(parser, "avr", "Target AVR-GCC", {'a', "avr"});
-	args::ValueFlag<int> loglevel(parser, "log level", "Logging verbosity. 0(none)-4(all)", {'l',"logging"});
+	args::ValueFlag<int> loglevel(parser, "level", "Logging verbosity. 0(none)-4(all)", {'l',"log"});
 	args::Positional<std::string> input(parser, "input", "ONNX file to process");
 	try
 	{
@@ -38,4 +38,5 @@ void parse_cmdline_options(int argc, const char *argv[])
 	if (avr) { options.target_avr = true; }
 	if (input) { options.input_file = args::get(input); }
 	if (loglevel) {options.logging_level = args::get(loglevel); }
+	else options.logging_level = 2;
 }
