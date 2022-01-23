@@ -654,5 +654,3 @@ add_subdirectory(onnx_model_zoo)
 local_node_test(matmul_precision)
 local_node_test(nodes_out_of_order)
 
-
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/perftest.cmake)

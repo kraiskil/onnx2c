@@ -29,6 +29,7 @@ add_library(onnx2c_lib STATIC
 	src/tensor.cc
 	src/util.cc
 	${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc
+	src/nodes/lstm.cc
 )
 target_compile_options(onnx2c_lib
 	PUBLIC
