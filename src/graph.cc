@@ -343,6 +343,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/matmul.h"
 #include "nodes/matmulinteger.h"
 #include "nodes/maxpool.h"
+#include "nodes/pad.h"
 #include "nodes/range.h"
 #include "nodes/relu.h"
 #include "nodes/reshape.h"
@@ -412,6 +413,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Neg" )return new Elementwise("Neg");
 	if( opName == "Not" )return new Elementwise("Not");
 	if( opName == "Or" )return new Elementwise_2("Or");
+	if( opName == "Pad" )return new Pad;
 	if( opName == "Pow" )return new Elementwise_2("Pow");
 	if( opName == "PRelu" )return new Elementwise_2("PRelu");
 	if( opName == "Range" )return new Range;

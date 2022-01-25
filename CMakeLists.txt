@@ -32,6 +32,7 @@ add_library(onnx2c_lib STATIC
 	src/nodes/cast.cc
 	src/nodes/instancenorm.cc
 	src/nodes/lstm.cc
+	src/nodes/pad.cc
 )
 target_compile_options(onnx2c_lib
 	PUBLIC
