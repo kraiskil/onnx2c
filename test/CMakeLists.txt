@@ -345,6 +345,9 @@ ONNX_backend_node_test(hardsigmoid_example)
 ONNX_backend_node_test(hardswish)
 ONNX_backend_node_test(hardswish_expanded) #doesn't test hardswish
 
+ONNX_backend_node_test(instancenorm_epsilon)
+ONNX_backend_node_test(instancenorm_example)
+
 ONNX_backend_node_test(leakyrelu)
 ONNX_backend_node_test(leakyrelu_default)
 ONNX_backend_node_test(leakyrelu_example)

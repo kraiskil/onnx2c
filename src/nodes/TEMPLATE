@@ -52,7 +52,7 @@ void TEMPLATE::parseAttributes( onnx::NodeProto &node )
 		else if( a.name() == "floatarray_attribute_name" )
 			a_floatarray_attribute = parse_attribute_floats(a);
 		else
-			LOG(FATAL) << "Ignoring attribute " << a.name() << " for node TEMPLATE/" << name << std::endl;
+			LOG(ERROR) << "Ignoring attribute " << a.name() << " for node TEMPLATE/" << onnx_name << std::endl;
 	}
 }
 

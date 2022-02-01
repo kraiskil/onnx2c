@@ -336,6 +336,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/gather.h"
 #include "nodes/gemm.h"
 #include "nodes/globalaveragepool.h"
+#include "nodes/instancenorm.h"
 #include "nodes/lrn.h"
 #include "nodes/lstm.h"
 #include "nodes/matmul.h"
@@ -391,6 +392,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "GreaterOrEqual")return new Elementwise_2("GreaterOrEqual");
 	if( opName == "HardSigmoid" )return new Elementwise("HardSigmoid");
 	if( opName == "HardSwish" )return new Elementwise("HardSwish");
+	if( opName == "InstanceNormalization" )return new InstanceNormalization;
 	if( opName == "LeakyRelu" )return new Elementwise("LeakyRelu");
 	if( opName == "Less")return new Elementwise_2("Less");
 	if( opName == "LessOrEqual")return new Elementwise_2("LessOrEqual");
