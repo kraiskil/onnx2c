@@ -29,6 +29,8 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 	{
 		case onnx::TensorProto_DataType_FLOAT:
 			data_num_elements = tensor.float_data_size(); break;
+		case onnx::TensorProto_DataType_DOUBLE:
+			data_num_elements = tensor.double_data_size(); break;
 
 		// NB: all datatypes of 32bit or less are contained in int32_data field
 		case onnx::TensorProto_DataType_BOOL:
@@ -147,6 +149,8 @@ int Tensor::data_elem_size(void)const
 	{
 	case onnx::TensorProto_DataType_FLOAT:
 			return sizeof(float); break;
+		case onnx::TensorProto_DataType_DOUBLE:
+			return sizeof(double); break;
 		case onnx::TensorProto_DataType_INT8:
 			return sizeof(int8_t); break;
 		case onnx::TensorProto_DataType_UINT8:
@@ -177,6 +181,8 @@ std::string Tensor::data_type_str(void) const
 	{
 		case onnx::TensorProto_DataType_FLOAT:
 			return "float"; break;
+		case onnx::TensorProto_DataType_DOUBLE:
+			return "double"; break;
 		case onnx::TensorProto_DataType_INT8:
 			return "int8_t"; break;
 		case onnx::TensorProto_DataType_UINT8:
@@ -209,6 +215,12 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 		case onnx::TensorProto_DataType_FLOAT:
 		{
 			float *f = static_cast<float*>(data_buffer);
+			dst << std::showpoint << f[element]<< "f";
+			break;
+		}
+		case onnx::TensorProto_DataType_DOUBLE:
+		{
+			double *f = static_cast<double*>(data_buffer);
 			dst << std::showpoint << f[element]<< "f";
 			break;
 		}

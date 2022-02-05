@@ -162,6 +162,17 @@ ONNX_backend_node_test(bitshift_left_uint8)
 ONNX_backend_node_test(bitshift_right_uint32)
 ONNX_backend_node_test(bitshift_right_uint8)
 
+#ONNX_backend_node_test(cast_BFLOAT16_to_FLOAT)
+#ONNX_backend_node_test(cast_FLOAT16_to_DOUBLE)
+ONNX_backend_node_test(cast_FLOAT_to_DOUBLE)
+#ONNX_backend_node_test(cast_STRING_to_FLOAT)
+ONNX_backend_node_test(cast_DOUBLE_to_FLOAT)
+#ONNX_backend_node_test(cast_FLOAT16_to_FLOAT)
+#ONNX_backend_node_test(cast_FLOAT_to_FLOAT16)
+#ONNX_backend_node_test(cast_DOUBLE_to_FLOAT16)
+#ONNX_backend_node_test(cast_FLOAT_to_BFLOAT16)
+#ONNX_backend_node_test(cast_FLOAT_to_STRING)
+
 ONNX_backend_node_test(ceil)
 ONNX_backend_node_test(ceil_example)
 

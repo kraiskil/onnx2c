@@ -322,6 +322,7 @@ int64_t Graph::onnx_ir_version(void)
 
 #include "nodes/averagepool.h"
 #include "nodes/batchnormalization.h"
+#include "nodes/cast.h"
 #include "nodes/clip.h"
 #include "nodes/concat.h"
 #include "nodes/constant.h"
@@ -367,6 +368,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "AveragePool" )return new AveragePool;
 	if( opName == "BatchNormalization" )return new BatchNormalization;
 	if( opName == "BitShift" )return new Elementwise_2("BitShift");
+	if( opName == "Cast" )return new Cast;
 	if( opName == "Ceil" )return new Elementwise("Ceil");
 	if( opName == "Celu" )return new Elementwise("Celu");
 	if( opName == "Clip" )return new Clip;
