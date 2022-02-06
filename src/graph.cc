@@ -354,6 +354,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/softmax.h"
 #include "nodes/transpose.h"
 #include "nodes/unsqueeze.h"
+#include "nodes/upsample.h"
 
 Node* Graph::createNode(std::string opName)
 {
@@ -441,6 +442,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Transpose" )return new Transpose;
 	if( opName == "ThresholdedRelu" )return new Elementwise("ThresholdedRelu");
 	if( opName == "Unsqueeze" )return new Unsqueeze;
+	if( opName == "Upsample" )return new Upsample;
 	if( opName == "Xor" )return new Elementwise_2("Xor");
 
 	ERROR("Unimplemented: node operation " << opName);

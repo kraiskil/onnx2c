@@ -652,6 +652,8 @@ ONNX_backend_node_test(unsqueeze_axis_3)
 ONNX_backend_node_test(unsqueeze_three_axes)
 ONNX_backend_node_test(unsqueeze_unsorted_axes)
 
+ONNX_backend_node_test(upsample_nearest)
+
 ONNX_backend_node_test(xor2d)
 ONNX_backend_node_test(xor4d)
 ONNX_backend_node_test(xor_bcast3v2d)

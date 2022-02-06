@@ -4,6 +4,7 @@
  * Implements down or upscaling an "image" by picking nearest pixel,
  * linear or cubic (not implemented here :) interpolation.
  */
+#pragma once
 namespace toC {
 
 class Resize : public Node {
