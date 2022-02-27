@@ -281,6 +281,9 @@ ONNX_backend_node_test(erf)
 ONNX_backend_node_test(exp)
 ONNX_backend_node_test(exp_example)
 
+ONNX_backend_node_test(expand_dim_changed)
+ONNX_backend_node_test(expand_dim_unchanged)
+
 ONNX_backend_node_test(flatten_axis0)
 ONNX_backend_node_test(flatten_axis1)
 ONNX_backend_node_test(flatten_axis2)

@@ -30,6 +30,7 @@ add_library(onnx2c_lib STATIC
 	src/util.cc
 	${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc
 	src/nodes/cast.cc
+	src/nodes/expand.cc
 	src/nodes/instancenorm.cc
 	src/nodes/lstm.cc
 	src/nodes/pad.cc
