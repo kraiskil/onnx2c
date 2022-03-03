@@ -588,6 +588,7 @@ ONNX_backend_node_test(sinh_example)
 
 ONNX_backend_node_test(shape)
 ONNX_backend_node_test(shape_example)
+local_node_test(shape_const_out)
 
 ONNX_backend_node_test(slice)
 ONNX_backend_node_test(slice_default_steps)
