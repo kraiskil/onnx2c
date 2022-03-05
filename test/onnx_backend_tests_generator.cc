@@ -20,11 +20,6 @@
 
 using namespace toC;
 
-// TODO: these are command line options to the main onnx2c binary
-//       we should not need to duplicate them here.
-bool quantize=false;
-bool target_avr=false;
-
 bool load_input_data(const std::string &filename, onnx::TensorProto &result)
 {
 
@@ -95,9 +90,8 @@ int main(int argc, char *argv[])
 		if( t == NULL )
 			break;
 		t->isIO = true;
-		// These input vectors could be const in the generated test
-		// cases, but that would break the logic: IO can't be const
-		//t->isConst=false;
+		t->initialize = true;
+		t->isConst=true;
 		if( t->name == "" )
 			t->name = std::string("input_") + std::to_string(input_number);
 	
@@ -139,26 +133,43 @@ int main(int argc, char *argv[])
 		exit(1); //TODO: check out error numbers for a more accurate one
 	}
 
-	// Why do we send input and reference tensors to the Graph?
+	// We pass in the testsuite's tensors to the Graph, so it
+	// can mark IO tensors as 'initialized'.
+	// This helps with unittests where the node expects input to be
+	// a compile time constant (e.g. Unsqueeze)
 	std::vector <Tensor *> tensors_to_parser;
 	for( auto i : inputs) tensors_to_parser.push_back(i);
-	for( auto i : outputs) tensors_to_parser.push_back(i);
 
 	onnx_model.ParseFromIstream(&model_ifs);
 	Graph toCgraph(onnx_model, tensors_to_parser);
 	std::cout.precision(20);
 	toCgraph.print_source(std::cout);
 
+
+	std::cout << std::endl << std::endl;
+	std::cout << "/////////////////////////////////////"<<std::endl;
+	std::cout << "// End of compiled graph."<<std::endl;
+	std::cout << "// All stuff below is test suite code"<<std::endl;
+	std::cout << "/////////////////////////////////////"<<std::endl;
+	std::cout << std::endl << std::endl;
+
+	for( auto i : inputs) {
+		std::cout << "static ";
+		i->print_tensor(std::cout, false, i->cname());
+		std::cout << " = ";
+		i->print_tensor_initializer(std::cout);
+		std::cout << ";" << std::endl;
+	}
+	for( auto o : outputs) {
+		std::cout << "static ";
+		o->print_tensor(std::cout, false, o->cname());
+		std::cout << ";" << std::endl;
+	}
 	// print the reference tensors
 	for( auto o : references ) {
 		std::string refname = "reference_" + o->cname();
 		std::cout << "static ";
-#if 0
-		if( o->isAliasOf )
-			o->isAliasOf->print_tensor(std::cout, false, refname);
-		else
-#endif
-			o->print_tensor(std::cout, false, refname);
+		o->print_tensor(std::cout, false, refname);
 		std::cout << " = ";
 		o->print_tensor_initializer(std::cout);
 		std::cout << ";" << std::endl;

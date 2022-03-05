@@ -52,6 +52,8 @@ void Graph::print_global_tensors(std::ostream &dst)
 	{
 		if( t->generate == false )
 			continue;
+		if( t->isIO == true )
+			continue;
 		if( t->data_dim.size() == 0 )
 			ERROR("Tensor of no dimensions?");
 		// This case has been seen in the wild. Not sure why it happens
@@ -127,12 +129,13 @@ void Graph::print_interface_function(std::ostream &dst)
 			t->print_tensor_as_const(dst);
 		}
 	}
+
 	for ( auto i : model.graph().output() ) {
 		/* TODO: when there are more than one output, see above for how
 		 * inputs are handled */
 		Tensor *t = findTensor(i.name());
 
-		if( t && t->isIO ) {
+		if( t ) {
 			if(!isfirst)
 				dst << ", ";
 			else

@@ -43,26 +43,36 @@ void Graph::processGraph(
 	onnx::GraphProto onnx_graph = onnx_model.graph();
 	Node::onnx_ir_version = onnx_ir_version();
 	// 0. add provided external initializers (from test bench
-	for( auto t : ext_inputs )
+	LOG(DEBUG) << "Adding external (testsuite) tensors." <<std::endl;
+	for( auto t : ext_inputs ) {
+		LOG(DEBUG) << "  - " << t->name <<std::endl;
 		tensors.push_back(t);
+	}
 
 	// 1. add initializers as resolved tensors
 	// in case of quantization, make quantized copies here
+	LOG(DEBUG) << "Adding initialized constant tensors from .onnx file." <<std::endl;
 	for( auto i : onnx_graph.initializer() )
 		addInitializedTensor( i );
 
 	// 2. add graph inputs as resolved tensors
 	// in case of quantization, convert all IO to INT8
+	LOG(DEBUG) << "Marking graph input tensors as IO." <<std::endl;
 	for ( auto i : onnx_graph.input() ) {
 		Tensor *n = getIoTensor( i );
 		addTensor( n );
 	}
-	for ( auto i : onnx_graph.output() ) {
-		Tensor *n = getIoTensor( i );
-		addTensor( n );
-	}
 
+	// 3. Do the nodes
+	LOG(DEBUG) << "Resolving nodes." <<std::endl;
 	resolveGraphNodes(onnx_graph);
+
+	// 4. Add the IO tag to those tensors the user wants back.
+	LOG(DEBUG) << "Marking graph output tensors as IO." <<std::endl;
+	for ( auto o : onnx_graph.output() ) {
+		Tensor *n = getIoTensor( o );
+		addTensor(n);
+	}
 }
 
 void Graph::resolveGraphNodes(onnx::GraphProto &onnx_graph)
@@ -460,7 +470,12 @@ void Graph::addTensor(Tensor *t)
 	 *
 	 * How and which parts of the existing tensor
 	 * to update is the fragile part :)
+	 *
+	 * This updating is needed to mark graph input tensors.
+	 * So most of the below is pretty unnecessary?
+	 * TODO: clean up
 	 */
+
 	Tensor *prev = NULL;  // pointer to the previously existing tensor. This gets updated
 	for( auto o : tensors)
 		if( t->name == o->name ) {
@@ -507,6 +522,18 @@ void Graph::addTensor(Tensor *t)
 		prev->initialize = t->initialize || prev->initialize;
 		if( prev->initialize )
 			prev->generate=true;
+
+		// huh? what is this use case?
+		if( prev->isIO == false )
+			prev->isConst = t->isConst;
+
+		// The case where a tensor is marked to be IO.
+		// The graph has a lists of input tensors that are input to the first
+		// node, not necessarily an input from the user.
+		// If the user doesn't provide them, they must be initialized in the graph.
+		// E.g. the weights for a Convolution at the start is such an example
+		if( t->isIO && prev->initialize == false)
+			prev->isIO=true;
 
 		LOG(TRACE) << "   now: gen " << prev->generate
 		           << "  init " << prev->initialize
