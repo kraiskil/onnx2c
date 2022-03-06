@@ -40,7 +40,7 @@ std::vector<int64_t> parse_attribute_ints(const onnx::AttributeProto &a)
 
 	std::vector<int64_t> rv;
 
-	for( int i : a.ints() )
+	for( auto i : a.ints() )
 		rv.push_back(i);
 
 	return rv;
