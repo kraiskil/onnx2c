@@ -1,3 +1,8 @@
+/* This file is part of onnx2c.
+ *
+ * Concate ... concatenates a number of input tensors
+ * across a given dimension.
+ */
 
 namespace toC {
 
@@ -85,8 +90,9 @@ namespace toC {
 
 		void resolveOutput(const std::vector<const Tensor *> &inputs, std::vector<Tensor *> &outputs) override {
 			node_inputs = inputs;
-			if (inputs.size() < 2)
-				ERROR("Wrong number of inputs to Concat");
+			if (inputs.size() == 1 ) {
+				LOG(WARNING) << "Concat node " << onnx_name << " has only one input." << std::endl;
+			}
 
 			if (axis < 0)
 				axis = inputs[0]->data_dim.size() + axis;
