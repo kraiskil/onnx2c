@@ -208,6 +208,11 @@ ONNX_type_test(operator_concat2 ${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-operator/t
 
 ONNX_backend_node_test(constant)
 
+ONNX_backend_node_test(constantofshape_float_ones)
+ONNX_backend_node_test(constantofshape_int_zeros)
+#zero dimensions not handled yet
+#ONNX_backend_node_test(constantofshape_int_shape_zero)
+
 ONNX_backend_node_test(cos)
 ONNX_backend_node_test(cos_example)
 

@@ -336,6 +336,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/clip.h"
 #include "nodes/concat.h"
 #include "nodes/constant.h"
+#include "nodes/constantofshape.h"
 #include "nodes/conv.h"
 #include "nodes/convinteger.h"
 #include "nodes/dropout.h"
@@ -387,6 +388,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Clip" )return new Clip;
 	if( opName == "Concat" )return new Concat;
 	if( opName == "Constant" )return new Constant;
+	if( opName == "ConstantOfShape" )return new ConstantOfShape;
 	if( opName == "Conv" )return new Conv;
 	if( opName == "Cos" )return new Elementwise("Cos");
 	if( opName == "Cosh" )return new Elementwise("Cosh");

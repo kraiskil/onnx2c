@@ -141,3 +141,20 @@ std::string cast_to_ndim_arrayptr(const toC::Tensor *t, std::string shortname)
 }
 
 
+bool isFloat(onnx::TensorProto_DataType data_type)
+{
+	return data_type == onnx::TensorProto_DataType_FLOAT
+	     ||data_type == onnx::TensorProto_DataType_DOUBLE;
+}
+bool isInt(onnx::TensorProto_DataType data_type)
+{
+	return data_type == onnx::TensorProto_DataType_UINT8
+	     ||data_type == onnx::TensorProto_DataType_INT8
+	     ||data_type == onnx::TensorProto_DataType_UINT16
+	     ||data_type == onnx::TensorProto_DataType_INT16
+	     ||data_type == onnx::TensorProto_DataType_UINT32
+	     ||data_type == onnx::TensorProto_DataType_INT32
+	     ||data_type == onnx::TensorProto_DataType_UINT64
+	     ||data_type == onnx::TensorProto_DataType_INT64;
+}
+

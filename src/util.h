@@ -36,3 +36,8 @@ std::string cast_to_ndim_arrayptr(const toC::Tensor *t, const std::string shortn
 #define INDT_4 dst<<"\t\t\t\t"
 #define INDT_5 dst<<"\t\t\t\t\t"
 #define INDT(X) {for(unsigned _i=0;_i<(X); _i++) INDT_1;} dst
+
+// is data_type any sort of floating point type (half, float, double)
+bool isFloat(onnx::TensorProto_DataType data_type);
+// is data_type any sort of integer type
+bool isInt(onnx::TensorProto_DataType data_type);
