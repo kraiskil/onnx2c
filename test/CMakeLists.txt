@@ -576,6 +576,14 @@ local_node_test(resize_downsample_sizes_linear_1D_align)
 # exist (I think) in C
 #ONNX_backend_node_test(round)
 
+ONNX_backend_node_test(scatternd)
+ONNX_backend_node_test(scatternd_add)
+ONNX_backend_node_test(scatternd_multiply)
+local_node_test(scatternd_indices_3x2)
+local_node_test(scatternd_indices_1x2x2)
+local_node_test(scatternd_indices_2x2x2)
+local_node_test(scatternd_indices_1x1x2)
+
 ONNX_backend_node_test(selu)
 ONNX_backend_node_test(selu_default)
 ONNX_backend_node_test(selu_example)
