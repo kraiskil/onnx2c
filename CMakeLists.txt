@@ -5,10 +5,12 @@ set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 project(onnx2c
 	VERSION 0.0.1
 	LANGUAGES C CXX
-	) 
+	)
 set (CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+
+add_subdirectory(cmake_timestamp)
 
 find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
@@ -25,7 +27,6 @@ add_library(onnx2c_lib STATIC
 	src/graph.cc
 	src/graph_print.cc
 	src/node.cc
-	src/options.cc
 	src/tensor.cc
 	src/util.cc
 	${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc
@@ -41,22 +42,23 @@ target_compile_options(onnx2c_lib
 	PUBLIC
 		-I${CMAKE_CURRENT_BINARY_DIR}
 	PRIVATE
-		-Isrc
 		-I${CMAKE_CURRENT_SOURCE_DIR}/aixlog/include
-		-I${CMAKE_CURRENT_SOURCE_DIR}/args
+		-Isrc
 		-Wall
 	)
 
 add_executable( onnx2c
 	src/main.cc
+	src/options.cc
 	)
 target_compile_options(onnx2c
 	PRIVATE
 		-Isrc
 		-I${CMAKE_CURRENT_SOURCE_DIR}/aixlog/include
+		-I${CMAKE_CURRENT_SOURCE_DIR}/args
 		-Wall
 	)
-target_link_libraries(onnx2c onnx2c_lib ${Protobuf_LIBRARIES})
+target_link_libraries(onnx2c onnx2c_lib ${Protobuf_LIBRARIES} timestamp)
 
 enable_testing()
 add_subdirectory(test)

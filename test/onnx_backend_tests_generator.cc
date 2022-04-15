@@ -13,12 +13,15 @@
 
 #include "graph.h"
 #include "onnx.pb.h"
+#include "options.h"
 #include "tensor.h"
 
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 using namespace toC;
+
+struct onnx2c_opts options;
 
 bool load_input_data(const std::string &filename, onnx::TensorProto &result)
 {

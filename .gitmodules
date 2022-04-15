@@ -7,3 +7,6 @@
 [submodule "args"]
 	path = args
 	url = https://github.com/Taywee/args.git
+[submodule "cmake_timestamp"]
+	path = cmake_timestamp
+	url = https://github.com/kraiskil/cmake_timestamp.git

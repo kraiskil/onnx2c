@@ -17,7 +17,7 @@ int main(int argc, const char *argv[])
 
 	std::ifstream input(options.input_file);
 	if (!input.good()) {
-		std::cerr << "Error opening input file" << std::endl;
+		std::cerr << "Error opening input file: \"" << options.input_file << "\""  << std::endl;
 		exit(1); //TODO: check out error numbers for a more accurate one
 	}
 	onnx_model.ParseFromIstream(&input);
