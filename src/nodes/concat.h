@@ -104,6 +104,9 @@ namespace toC {
 			size_t i, j;
 			std::vector<int> dims = inputs[0]->data_dim;
 			for (i = 0; i < input_count; i++) {
+				if( inputs[0]->rank() != inputs[i]->rank() ) {
+					ERROR("Concat expects all inputs to have equal number of dimensions");
+				}
 				for (j = 0; j < dims.size(); j++) {
 					if (dims[j] != inputs[i]->data_dim[j] && (int) j != axis)
 						ERROR("Concat's input tensors must have the same shape, except for the "
