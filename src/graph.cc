@@ -161,15 +161,24 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 	for( onnx::TensorShapeProto_Dimension d : tsp.dim() ) {
 
 		// dim_param is a string that defines this dimension's variable name
-		// e.g. "N=1". Used for variable size batches.
-		// When the dimension is fixed, the 'param=value' becomes "1=1".
-		// For now, all batch sizes are set to 1 in onnx2c generated code
-
+		// e.g. "N=1" or "batch_size". Seems to be used for variable size batches.
+		// When the dimension is fixed, the variable does not have a name, and param
+		// is the string representation of value (i.e. "1=1").
+		// Onnx2c doesn't allow variable batch sizes, so if no value is given, use 1.
 		int dim_size;
-		if( isalpha(d.dim_param()[0]) )
-			dim_size=1;
-		else
+		if( isalpha(d.dim_param()[0]) ) {
+			if( d.dim_value() ) {
+				dim_size=d.dim_value();
+			}
+			else {
+				LOG(WARNING) << "Graph input tensor dimension (" << d.dim_param() << ") not specified!" << std::endl;
+				LOG(WARNING) << "Defining this dimension as 1."<< std::endl;
+				dim_size=1;
+			}
+		}
+		else {
 			dim_size=d.dim_value();
+		}
 
 		t->data_dim.push_back(dim_size);
 	}
