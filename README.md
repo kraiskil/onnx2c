@@ -4,16 +4,22 @@ onnx2c
 Onnx2c is a [ONNX](https://onnx.ai) to C compiler. It will read an ONNX file,
 and generate C code to be included in your project.
 
-Onnx2c's target is "edge computing", i.e. microcontrollers:
+Onnx2c's target is "Tiny ML", meaning running the inference on microcontrollers. To make this
+easier, the generated code:
 
-- generated code uses no printf or dynamic memory allocation
-- make the generated code compiler-friendly and let the C compiler optimize the output as well as it can
+- Does not `#include <stdio.h>` (i.e. no `printf()`s)
+- Compile-time allocates buffers. Does not use dynamic memory allocation or (much) stack memory
+- Has no library requirements except standard C maths library. (Floating point hardware recommended!)
+- Should be compiler-friendly allowing the C compiler optimize the output as well as it can
+- Is contained in one single C file for easier project management
 
-Currently onnx2c is a hobby project for me to learn ONNX,
-edge computing and ML in general. Because of this, stuff of
-little or no interest in onnx2c are:
+The idea behind onnx2c is to be an easy-to-use tool with no learning curve. If you can export your trained
+neural network to an ONNX file (e.g. PyTorch and Tensorflow both can) and you have a working microcontroller
+project, then joining the two with onnx2c should be easy.
 
- - ONNX specification coverage. For now, 81 out of 166 ONNX Operands are at least partially implemented.
+To make all of the above easier to achieve, there are some non-goals for onnx2c:
+
+ - ONNX specification coverage. (For now, 89 out of 166 ONNX Operands are at least partially implemented).
  - accelerators
  - backpropagation (i.e. training)
 
@@ -40,8 +46,9 @@ then run a standard CMake build
 mkdir build
 cd build
 cmake ..
-make
+make onnx2c
 ```
+
 
 #### Getting `error: ‘class onnx::ModelProto’ has no member named ‘ParseFromIstream’;` ?
 
@@ -56,15 +63,24 @@ Versions between 3.6 and 3.12 are uninvestigated.
 
 #### Unit tests
 
-The onnx2c build runs onnx backend tests as unit/acceptance tests. After building run `make test`.
+The onnx2c build runs onnx backend tests as unit/acceptance tests.
 
-There is a possibility to run selected ONNX model zoo tests as additional unit tests. Before running
-`cmake` run in the source directory:
 
+To run these, continue the build steps with:
+```
+make
+make test
+```
+
+
+There is a possibility to run selected ONNX model zoo tests as additional unit tests.
+
+Run:
 ```
 cd tests/onnx_model_zoo
 ./donwload.sh
 ```
+and continue with a fresh build (i.e. re-run `cmake`).
 
 Included are implementations of e.g. Squeezenet and Alexnet. Some of these take minutes to compile, so
 they are mostly interesting for onnx2c development.
