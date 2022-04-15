@@ -96,7 +96,7 @@ class Tensor {
 	void print_element(std::ostream &dst, uint64_t i) const;
 
 	/* Format dimensions into a string */
-	std::string str_dimensions(void);
+	std::string str_dimensions(void) const;
 
 	Tensor* make_quantized_copy(void);
 

@@ -231,7 +231,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 {
 	std::vector<const Tensor*> inputs;
 	std::vector<Tensor*> outputs;
-	LOG(DEBUG) << "Resolving node " << node.name() <<std::endl;
+	LOG(DEBUG) << "Resolving ONNX node " << node.name() <<std::endl;
 
 	for( auto o : nodes )
 		if( node.name() == o->onnx_name ) {
@@ -242,7 +242,6 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 	// Early exit on error cases - cannot resolve this node (now)
 	if( getNodeInputTensors(node, inputs) == false )
 		return false;
-
 
 	// ONNX has a few nodes that have quantized alternatives.
 	// Switch to those here.
@@ -257,6 +256,10 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 			new_node = "MatMulInteger";
 	}
 	Node *n = createNode(new_node);
+	LOG(DEBUG) << "    inputs: " << std::endl;
+	for( auto i : inputs)
+		LOG(DEBUG) << "         " << i->name << " - "<< i->data_type_str() << " { " << i->str_dimensions() << "}" << std::endl;
+
 
 	n->onnx_node = &node;
 	n->isResolved = false;
@@ -272,6 +275,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 		n->onnx_name = name;
 		anonymous_nodes++;
 	}
+	LOG(DEBUG) << "    Name in C sources " << n->c_name() << std::endl;
 
 	if( node.attribute_size() != 0 )
 		n->parseAttributes( node );
@@ -280,7 +284,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 	n->resolveOutput(inputs, outputs );
 
 
-	// Loop over node's declared outputs.
+	// Add the output tensors the resolveOutput() generated to resol
 	// This will now contain all of the node's outputs, also such optional ones
 	// that are not used in the model.
 	for( unsigned o=0; o<outputs.size(); o++) {
@@ -306,17 +310,12 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 
 		addTensor(t);
 	}
+	LOG(DEBUG) << "    outputs: " << std::endl;
+	for( auto o : outputs)
+		LOG(DEBUG) << "         " << o->name << " - "<< o->data_type_str() << " { " << o->str_dimensions() << "}" << std::endl;
 
 	n->isResolved = true;
 	nodes.push_back(n);
-	LOG(DEBUG) << "Adding " << n->op_name << " node: " << n->onnx_name << std::endl;
-	LOG(DEBUG) << "    inputs: " << std::endl;
-	for( auto i : inputs)
-		LOG(DEBUG) << "         " << i->name << std::endl;
-	LOG(DEBUG) << "    outputs: " << n->onnx_name << std::endl;
-	for( auto o : outputs)
-		LOG(DEBUG) << "         " << o->name << std::endl;
-
 	return true;
 }
 
@@ -498,7 +497,7 @@ void Graph::addTensor(Tensor *t)
 
 	if( prev == NULL ) {
 		tensors.push_back(t);
-		LOG(DEBUG) << "Adding new tensor: " << t->name << " - "<< t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
+		LOG(DEBUG) << "New tensor: " << t->name << " - "<< t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
 		// TODO return & remove else {}
 	}
 	else {

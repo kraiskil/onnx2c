@@ -201,6 +201,8 @@ std::string Tensor::data_type_str(void) const
 			return "uint64_t"; break;
 		case onnx::TensorProto_DataType_BOOL:
 			return "bool"; break;
+		case onnx::TensorProto_DataType_UNDEFINED:
+			return "UNDEFINED"; break;
 		default:
 			ERROR("unhandled tensor data type in tensor " << name);
 			break;
@@ -385,7 +387,7 @@ unsigned Tensor::rank(void) const
 	return data_dim.size();
 }
 
-std::string Tensor::str_dimensions(void)
+std::string Tensor::str_dimensions(void) const
 {
 	std::string rv = "";
 	for( auto d : data_dim ) {
