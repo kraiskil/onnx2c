@@ -332,7 +332,7 @@ int64_t Graph::onnx_ir_version(void)
 {
 	int opset_import_size = model.opset_import_size();
 	if( opset_import_size != 1 )
-		ERROR("Model has multiple opset versions. This is legal, but really needs better documentation on what to do now.");
+		LOG(INFO) << "Model has multiple opset versions.";
 	auto foo = model.opset_import(0);
 	int64_t version = foo.version();
 	return version;
