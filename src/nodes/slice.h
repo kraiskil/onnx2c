@@ -29,7 +29,7 @@ class Slice : public Node {
 	const Tensor *steps;
 
 	// contents of the input tensors, attributes or default values; padded
-	// to output dimensions in resolveOutput().
+	// to output dimensions in resolve(void).
 	std::vector<int64_t>sta;
 	std::vector<int64_t>en;
 	std::vector<int64_t>ax;
@@ -49,7 +49,7 @@ class Slice : public Node {
 		}
 	}
 
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
+	virtual void resolve(void) override
 	{
 		data = inputs[0];
 		register_input(data, "data");

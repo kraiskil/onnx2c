@@ -316,7 +316,7 @@ void LSTM::print(std::ostream &dst) const
 }
 
 
-// Helper function for resolveOutput()
+// Helper function for resolve(void)
 void LSTM::calculate_data_dimensions()
 {
 	if( layout == 0 ) {
@@ -332,7 +332,7 @@ void LSTM::calculate_data_dimensions()
 	input_size = X->data_dim[2];
 }
 
-void LSTM::resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+void LSTM::resolve(void)
 {
 	if( inputs.size() < 3 || inputs.size() > 8 )
 		ERROR("wrong number of inputs to LSTM");

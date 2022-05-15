@@ -39,7 +39,7 @@ class Reshape : public Node {
 		dst << std::endl;
 	}
 
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
+	virtual void resolve(void) override
 	{
 		data = inputs[0];
 		shape = inputs[1];

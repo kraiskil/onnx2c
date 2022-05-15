@@ -61,7 +61,7 @@ class Resize : public Node {
 
 
 	/* Assign input tensors, resolve output tensor shapes, allocate output tensors */
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
+	virtual void resolve(void) override
 	{
 		X = inputs[0];
 

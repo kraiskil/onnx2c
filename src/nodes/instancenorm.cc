@@ -26,7 +26,7 @@ void InstanceNormalization::parseAttributes( onnx::NodeProto &node )
 }
 
 
-void InstanceNormalization::resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+void InstanceNormalization::resolve(void)
 {
 	input = inputs[0];
 	register_input(input, "input");

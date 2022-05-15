@@ -172,7 +172,7 @@ class BatchNormalization : public Node {
 			v[i] = sqrt(v[i] + epsilon);
 	}
 
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
+	virtual void resolve(void) override
 	{
 		if( inputs.size() != 5 )
 			ERROR("wrong number of inputs to BatchNormalization");

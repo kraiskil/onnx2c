@@ -20,7 +20,7 @@ void ScatterND::parseAttributes( onnx::NodeProto &node )
 }
 
 
-void ScatterND::resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+void ScatterND::resolve(void)
 {
 	if (inputs.size() != 3) {
 		ERROR("Wrong number of inputs to ScatterND");

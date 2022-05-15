@@ -67,7 +67,7 @@ class AveragePool : public Pooling {
 		print_loop_with_padding_checks(dst);
 	}
  
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
+	virtual void resolve(void) override
 	{
 		x = inputs[0];
 

@@ -18,7 +18,7 @@ void Cast::parseAttributes( onnx::NodeProto &node )
 }
 
 
-void Cast::resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+void Cast::resolve(void)
 {
 	// TODO: should we warn user here. What is the use-case of 'Cast' in embedded systems?
 

@@ -17,7 +17,7 @@ void ConstantOfShape::parseAttributes( onnx::NodeProto &node )
 }
 
 
-void ConstantOfShape::resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+void ConstantOfShape::resolve(void)
 {
 	input  = inputs[0];
 	register_input(input, "input");

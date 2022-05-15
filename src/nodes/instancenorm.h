@@ -30,7 +30,7 @@ class InstanceNormalization : public Node {
 	const Tensor *output;
 
 	virtual void print(std::ostream &dst) const override;
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override;
+	virtual void resolve(void) override;
 	virtual void parseAttributes( onnx::NodeProto &node ) override;
 };
 }

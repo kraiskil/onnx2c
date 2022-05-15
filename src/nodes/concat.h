@@ -88,7 +88,7 @@ namespace toC {
 
 		}
 
-		void resolveOutput(const std::vector<const Tensor *> &inputs, std::vector<Tensor *> &outputs) override {
+		void resolve(void) override {
 			node_inputs = inputs;
 			if (inputs.size() == 1 ) {
 				LOG(WARNING) << "Concat node " << onnx_name << " has only one input." << std::endl;

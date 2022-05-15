@@ -24,7 +24,7 @@ void Pad::parseAttributes( onnx::NodeProto &node )
 
 
 /* Assign input tensors, resolve output tensor shapes, allocate output tensors */
-void Pad::resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+void Pad::resolve(void)
 {
 	data = inputs[0];
 	register_input(data, "data");

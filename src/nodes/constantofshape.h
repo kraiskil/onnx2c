@@ -33,7 +33,7 @@ class ConstantOfShape : public Node {
 
 	// Mandatory "API" functions towards the rest of onnx2c
 	virtual void parseAttributes( onnx::NodeProto &node ) override;
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override;
+	virtual void resolve(void) override;
 	virtual void print(std::ostream &dst) const override;
 };
 } // namespace

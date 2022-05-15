@@ -204,7 +204,7 @@ class Softmax : public Node {
 	}
 
 
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
+	virtual void resolve(void) override
 	{
 		if( inputs.size() != 1 )
 			ERROR("wrong number of inputs to Softmax");

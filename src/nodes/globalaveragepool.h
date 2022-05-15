@@ -68,7 +68,7 @@ class GlobalAveragePool : public Node {
 	}
 
 
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
+	virtual void resolve(void) override
 	{
 		X = inputs[0];
 		if(  typeConstraint_plainFloatingPoints(X) == false )

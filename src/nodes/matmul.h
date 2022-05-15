@@ -42,7 +42,7 @@ class MatMul : public Node {
 		INDT_2 <<   "}" << std::endl;
 
 	} 
-	virtual void resolveOutput( const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
+	virtual void resolve(void) override
 	{
 		A = inputs[0];
 		B = inputs[1];

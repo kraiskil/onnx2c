@@ -37,7 +37,7 @@ class TEMPLATE : public Node {
 
 	// Mandatory "API" functions towards the rest of onnx2c
 	virtual void parseAttributes( onnx::NodeProto &node ) override;
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override;
+	virtual void resolve(void) override;
 	virtual void print(std::ostream &dst) const override;
 };
 
@@ -58,7 +58,7 @@ void TEMPLATE::parseAttributes( onnx::NodeProto &node )
 
 
 /* Assign input tensors, resolve output tensor shapes, allocate output tensors */
-void TEMPLATE::resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+void TEMPLATE::resolve(void)
 {
 	input_1  = inputs[0];
 	// Remember the parameters to the generated function,

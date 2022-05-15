@@ -73,7 +73,7 @@ class LSTM : public Node {
 
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override;
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override;
+	virtual void resolve(void) override;
 	virtual void print(std::ostream &dst) const override;
 
 	float get_activation_alpha( const std::string &a);

@@ -22,6 +22,8 @@ class Node {
 	std::string onnx_name; //ONNX name of the individual node
 	std::string op_name;   //ONNX name of node type
 	static int64_t onnx_ir_version;
+	std::vector< const Tensor*> inputs;
+	std::vector<Tensor *> outputs;
 
 private:
 	std::vector<function_parameter> input_params;
@@ -60,9 +62,11 @@ public:
 	void print_function_parameters_callsite(std::ostream &destination) const;
 
 	/* Figure out in what format the output is in.
-	 * Return values are pointers to Tensor values, allocated with new. Ownership given to caller.
-	 * This function may not fail: call only with all inputs given & resolved */
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) = 0;
+	 * This fills the node's list of 'outputs' tensors.
+	 * When calling this, the list of 'inputs' must be filled, or the
+	 * function fails, segfaults or assumes the input graph is invalid.
+	 */
+	virtual void resolve(void) {};
 
 	/* Check if an optional output is used in the network.
 	 * N is Nth output specified in the Operator.md specification for this node.

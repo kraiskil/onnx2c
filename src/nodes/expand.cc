@@ -42,7 +42,7 @@ std::vector<int32_t> Expand::resolve_output_shape(void) const
 }
 
 /* Assign input tensors, resolve output tensor shapes, allocate output tensors */
-void Expand::resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs)
+void Expand::resolve(void)
 {
 	input  = inputs[0];
 	register_input(input, "input");

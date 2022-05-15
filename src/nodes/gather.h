@@ -31,7 +31,7 @@ class Gather : public Node {
 	}
 
 
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
+	virtual void resolve(void) override
 	{
 		data = inputs[0];
 		indices = inputs[1];
@@ -84,7 +84,7 @@ class Gather : public Node {
 
 		// Print out the loops over all output dimensions
 		// and at the same time create the indexing strings into the input and output tensors
-		// The logic should be the same as above in resolveOutput(), only here we loop over the
+		// The logic should be the same as above in resolve(void), only here we loop over the
 		// output dimensions, not input.
 		std::string oidx = output->cname();
 		std::string didx = data->cname();

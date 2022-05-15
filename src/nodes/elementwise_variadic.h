@@ -127,7 +127,7 @@ class Elementwise_variadic : public Node {
 	}
 
 
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
+	virtual void resolve(void) override
 	{
 		// There can be 1-N inputs.
 		int num_inputs = inputs.size();

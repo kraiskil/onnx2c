@@ -92,7 +92,7 @@ class ConvInteger : public SpatialFilter {
 		print_loop_with_padding_checks(dst);
 	}
 
-	virtual void resolveOutput(const std::vector< const Tensor*> &inputs, std::vector<Tensor *> &outputs) override
+	virtual void resolve(void) override
 	{
 		x = inputs[0]; // data
 		w = inputs[1]; // weights

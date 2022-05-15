@@ -230,7 +230,6 @@ bool Graph::getNodeInputTensors(const onnx::NodeProto &node, std::vector<const T
 bool Graph::tryResolveNode(onnx::NodeProto &node)
 {
 	std::vector<const Tensor*> inputs;
-	std::vector<Tensor*> outputs;
 	LOG(DEBUG) << "Resolving ONNX node " << node.name() <<std::endl;
 
 	for( auto o : nodes )
@@ -257,9 +256,10 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 	}
 	Node *n = createNode(new_node);
 	LOG(DEBUG) << "    inputs: " << std::endl;
-	for( auto i : inputs)
+	for( auto i : inputs) {
 		LOG(DEBUG) << "         " << i->name << " - "<< i->data_type_str() << " { " << i->str_dimensions() << "}" << std::endl;
-
+		n->inputs.push_back(i);
+	}
 
 	n->onnx_node = &node;
 	n->isResolved = false;
@@ -280,15 +280,14 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 	if( node.attribute_size() != 0 )
 		n->parseAttributes( node );
 
-	// Bad name - see issue #5. "resolveNode()", maybe?
-	n->resolveOutput(inputs, outputs );
+	// Configure Node internals, and populate its outputs vector.
+	n->resolve();
 
-
-	// Add the output tensors the resolveOutput() generated to resol
+	// Add the output tensors the resolve() generated to the graph's list of tensors.
 	// This will now contain all of the node's outputs, also such optional ones
 	// that are not used in the model.
-	for( unsigned o=0; o<outputs.size(); o++) {
-		Tensor *t = outputs[o];
+	for( unsigned o=0; o<n->outputs.size(); o++) {
+		Tensor *t = n->outputs[o];
 
 		// optional outputs are named "" or just omitted
 		std::string onnx_name;
@@ -311,7 +310,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 		addTensor(t);
 	}
 	LOG(DEBUG) << "    outputs: " << std::endl;
-	for( auto o : outputs)
+	for( auto o : n->outputs)
 		LOG(DEBUG) << "         " << o->name << " - "<< o->data_type_str() << " { " << o->str_dimensions() << "}" << std::endl;
 
 	n->isResolved = true;
