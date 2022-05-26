@@ -295,7 +295,7 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
  * I.e. if calling with dim=0, offs=0 (which are default values),
  * it prints the entire variable initialzation.
  */
-void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs)
+void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs) const
 {
 	if( data_dim[dim] == 0 )
 		return;
@@ -344,6 +344,9 @@ void Tensor::print_tensor(std::ostream &dst, bool is_callsite, std::string alter
 			dst << "const ";
 		dst << data_type_str() << " ";
 	}
+	else if( union_no >= 0 ) {
+		dst << "tu" << union_no << ".";
+	}
 	if( alternate_name == "" )
 		dst << cname();
 	else
@@ -360,6 +363,9 @@ std::string Tensor::print_tensor(std::string alternate_name, bool is_callsite, b
 		if( isConst || as_const )
 			rv += "const ";
 		rv += data_type_str() + " ";
+	}
+	else if( union_no >= 0 ) {
+		rv += "tu" + std::to_string(union_no) + ".";
 	}
 	if( alternate_name == "" )
 		rv += cname();

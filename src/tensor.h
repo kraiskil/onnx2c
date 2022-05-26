@@ -5,7 +5,7 @@
 
 namespace toC {
 
-
+class Node;
 // A entity that implements ONNX graph edges,
 // i.e. the data buffers a ONNX node produces or consumes
 class Tensor {
@@ -25,6 +25,9 @@ class Tensor {
 	std::string name; // NB: ONNX name. Might not be valid for C
 	std::string doc;
 
+	std::vector<Node *> consumers;
+	int32_t union_no;     // negative for no union
+
 	Tensor() :
 		generate(true),
 		initialize(false),
@@ -33,7 +36,8 @@ class Tensor {
 		isRecursive(false),
 		quantizedCopy(NULL),
 		isQuantized(false),
-		data_buffer(NULL)
+		data_buffer(NULL),
+		union_no(-1)
 	{}
 
 	/* Create the C source name. Replace all non a-z,A-Z,0-9 or _
@@ -90,7 +94,7 @@ class Tensor {
 	/* Print a tensor's initialization to output stream.
 	 * i.e. everything after the "=" in "float foo[43] = { 42, 42, ... };"
 	 * Do not override dim and offs - used only by the function when it recurses into itself. */
-	void print_tensor_initializer(std::ostream &destination, int dim=0, int offs=0);
+	void print_tensor_initializer(std::ostream &destination, int dim=0, int offs=0) const;
 
 	/* Print the i:th element in data_buffer */
 	void print_element(std::ostream &dst, uint64_t i) const;
@@ -109,6 +113,13 @@ class Tensor {
 	/* Get the data element at index i. Flattening multidimensional arrays down to the index is left for the caller. */
 	int64_t get_data_element(uint64_t i) const;
 	float get_data_element_float(uint64_t i) const;
+
+
+	void assign_union(uint32_t u) {
+		LOG(DEBUG) << "Assigning tensor " << cname() << " to union " << u <<std::endl;
+		union_no = u;
+	}
+
 };
 
 }

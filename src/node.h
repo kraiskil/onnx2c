@@ -17,7 +17,7 @@ typedef std::tuple<const Tensor *, std::string> function_parameter;
  */
 class Node {
 	public:
-	bool isResolved;
+	bool isResolved;       // has this node been visited in current compilation step.
 	const onnx::NodeProto *onnx_node;
 	std::string onnx_name; //ONNX name of the individual node
 	std::string op_name;   //ONNX name of node type

@@ -45,34 +45,52 @@ void Graph::print_file_frontmatter(std::ostream &dst)
 	dst << "/*" << std::endl << model.doc_string() << std::endl << "*/" << std::endl;
 }
 
+void Graph::print_tensor(const Tensor *t, std::ostream &dst)
+{
+	if( t->generate == false )
+		return;
+	if( t->isIO == true )
+		return;
+	if( t->data_dim.size() == 0 )
+		ERROR("Tensor of no dimensions?");
+	// This case has been seen in the wild. Not sure why it happens
+	if( t->data_dim.size() == 1 && t->data_dim[0]==0 ){
+		LOG(WARNING) << "Tensor " << t->name << " has size of 0. Skipping it" << std::endl;
+		return;
+	}
+
+	if( t->union_no < 0 )
+		dst << "static ";
+
+	t->print_tensor(dst);
+	if( t->initialize ) {
+		if( options.target_avr && t->isConst )
+			dst << " PROGMEM";
+		dst << " = "<<std::endl;
+		t->print_tensor_initializer(dst);
+	}
+	dst << ";" << std::endl;
+}
 
 void Graph::print_global_tensors(std::ostream &dst)
 {
+	// ununionized tensors
 	for( auto t : tensors )
 	{
-		if( t->generate == false )
-			continue;
-		if( t->isIO == true )
-			continue;
-		if( t->data_dim.size() == 0 )
-			ERROR("Tensor of no dimensions?");
-		// This case has been seen in the wild. Not sure why it happens
-		if( t->data_dim.size() == 1 && t->data_dim[0]==0 ){
-			LOG(WARNING) << "Tensor " << t->name << " has size of 0. Skipping it" << std::endl;
-			continue;
-		}
+		if( t->union_no < 0 )
+			print_tensor(t, dst);
+	}
 
-		dst << "/* " << t->name << "*/" << std::endl;
-		dst << "static ";
-		t->print_tensor(dst);
-		if( t->initialize ) {
-			if( options.target_avr && t->isConst )
-				dst << " PROGMEM";
-			dst << " = "<<std::endl;
-			t->print_tensor_initializer(dst);
+	for( unsigned u=0; u<tensor_unions.size(); u++ )
+	{
+		dst << "union tensor_union_" << u << " {" << std::endl;
+		for( auto t : tensors )
+		{
+			if( t->union_no == static_cast<int32_t>(u))
+				print_tensor(t, dst);
 		}
-
-		dst << ";" << std::endl;
+		dst << "};" <<std::endl;
+		dst << "static union tensor_union_" << u << " tu" << u << ";" << std::endl <<std::endl;
 	}
 }
 

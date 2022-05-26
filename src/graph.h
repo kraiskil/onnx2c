@@ -24,6 +24,7 @@ public:
 	/* print individual parts of the file */
 	void print_file_frontmatter(std::ostream &destination);
 	void print_global_tensors(std::ostream &destination);
+	void print_tensor(const Tensor *, std::ostream &dst);
 	void print_functions(std::ostream &destination);
 	void print_includes(std::ostream &dst);
 	void print_interface_function(std::ostream &dst);
@@ -34,6 +35,10 @@ public:
 		std::vector<Tensor*> inputs={}
 	);
 	void resolveGraphNodes(onnx::GraphProto &onnx_graph);
+
+	/* Optimization step: cluster the buffers of intermediate tensors into
+	 * unions. This make the memory buffers time shared. */
+	void unionize_tensors(void);
 
 	void addInitializedTensor(onnx::TensorProto &tensor);
 	Tensor* getIoTensor(onnx::ValueInfoProto &vi);
@@ -66,6 +71,14 @@ private:
 	Tensor *findTensor(const std::string &name) const;
 
 	static int anonymous_nodes;
+
+	// For the unionize optimization.
+	// TODO: this probably should be in a separate class,
+	// design how the data is shared, and possibly write the graph_printer
+	// as an optimization class too.
+	std::vector<Tensor *> tensor_unions;
+	uint32_t add_to_free_union(Tensor *t);
+	void mark_union_unoccupied(uint32_t);
 };
 
 }
