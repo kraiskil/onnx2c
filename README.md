@@ -102,6 +102,7 @@ See the [GCC wiki on floating point maths](https://gcc.gnu.org/wiki/FloatingPoin
 
 Onnx2c has an [experimental quantization option](quantization.md) to convert floating point calculation to integers.
 
+`./onnx2c -h` prints out all available command line options.
 
 Performance
 -----------

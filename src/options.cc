@@ -3,6 +3,7 @@
 
 #include "options.h"
 #include "args.hxx"
+#include "error.h"
 #include "timestamp.h"
 
 #include <iostream>
@@ -23,10 +24,36 @@ void print_version_and_exit(void)
 	exit(0);
 }
 
+void store_define_option(const std::string &opt)
+{
+	auto delim_pos = opt.find(':', 0 );
+	if( delim_pos == std::string::npos )
+		ERROR("bad command line argument for the '-d' option");
+
+	std::string name = opt.substr(0, delim_pos);
+	if( name.size() < 1 )
+		ERROR("bad command line argument for the '-d' option");
+
+	std::string val = opt.substr(delim_pos+1, std::string::npos);
+	if( val.size() < 1 )
+		ERROR("bad command line argument for the '-d' option");
+
+	uint32_t val_num;
+	try {
+		val_num = std::stoul(val);
+	}
+	catch( std::exception& e ) {
+		ERROR("bad command line argument for the '-d' option");
+	}
+
+	options.dim_defines[name] = val_num;
+}
+
 void parse_cmdline_options(int argc, const char *argv[])
 {
 	args::ArgumentParser parser("Generate C code from an ONNX graph file.");
 	args::Flag avr(parser, "avr", "Target AVR-GCC", {'a', "avr"});
+	args::ValueFlagList<std::string> define(parser, "dim:size", "Define graph input dimension. Can be given multiple times", {'d', "define"});
 	args::ValueFlag<int> loglevel(parser, "level", "Logging verbosity. 0(none)-4(all)", {'l',"log"});
 	args::Flag help(parser, "help", "Print this help text.", {'h',"help"});
 	args::Flag quantize(parser, "quantize", "Quantize network (EXPERIMENTAL!)", {'q', "quantize"});
@@ -58,8 +85,14 @@ void parse_cmdline_options(int argc, const char *argv[])
 
 	if (quantize) { options.quantize = true; }
 	if (avr) { options.target_avr = true; }
+	if (define) {
+		for (const auto d: args::get(define)) {
+			store_define_option(d);
+		}
+	}
 	if (input) { options.input_file = args::get(input); }
 	if (loglevel) {options.logging_level = args::get(loglevel); }
 	else options.logging_level = 2;
 	if (options.input_file == "" ) { std::cerr << "No input file given"; hint_at_help_and_exit(); }
 }
+

@@ -3,6 +3,7 @@
  * Onnx2c code gereration options.
  */
 
+#include <map>
 #include <string>
 
 struct onnx2c_opts
@@ -11,6 +12,7 @@ struct onnx2c_opts
 	bool target_avr=false;
 	int logging_level=1;
 	std::string input_file;
+	std::map<std::string, uint32_t> dim_defines;
 };
 
 extern struct onnx2c_opts options;

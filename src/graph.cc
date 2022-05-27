@@ -171,9 +171,17 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 				dim_size=d.dim_value();
 			}
 			else {
-				LOG(WARNING) << "Graph input tensor dimension (" << d.dim_param() << ") not specified!" << std::endl;
-				LOG(WARNING) << "Defining this dimension as 1."<< std::endl;
-				dim_size=1;
+				uint32_t user_value = options.dim_defines[d.dim_param()];
+				if( user_value == 0 ) {
+					LOG(WARNING) << "Graph input tensor dimension (" << d.dim_param() << ") not specified!" << std::endl;
+					LOG(WARNING) << "Specify with command line option '-d "<< d.dim_param() <<":<value>'" << std::endl;
+					LOG(WARNING) << "Defining this dimension as 1 for now."<< std::endl;
+					dim_size=1;
+				}
+				else {
+					LOG(DEBUG) << "Graph input tensor dimension (" << d.dim_param() << ") set on command line to " << user_value << std::endl;
+					dim_size = user_value;
+				}
 			}
 		}
 		else {
