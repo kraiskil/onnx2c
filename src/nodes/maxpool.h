@@ -74,7 +74,7 @@ class MaxPool : public Pooling {
 		std::vector<int>size_of_dim(x->rank());
 		size_of_dim[x->data_dim.size()-1]=1;
 		for( int i=x->data_dim.size()-2; i>= 0; i--)
-			size_of_dim[i] = size_of_dim[i+1] * x->data_dim[i];
+			size_of_dim[i] = size_of_dim[i+1] * x->data_dim[i+1];
 		std::string indices_value = "(b*" + std::to_string(size_of_dim[0]) + ")+(c*" + std::to_string(size_of_dim[1]) + ")";
 		for( unsigned i = 0; i<n_data_dims; i++)
 			indices_value += "+(ii" + std::to_string(i) + "*" + std::to_string(size_of_dim[i+2]) + ")";
