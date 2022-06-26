@@ -441,6 +441,8 @@ ONNX_backend_node_test(maxpool_2d_same_upper)
 ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_pads)
 #Has column-major order
 #ONNX_backend_node_test(maxpool_with_argmax_2d_precomputed_strides)
+local_node_test(maxpool_stride_1)
+local_node_test(maxpool_stride_2)
 
 ONNX_backend_node_test(mean_example)
 ONNX_backend_node_test(mean_one_input)
