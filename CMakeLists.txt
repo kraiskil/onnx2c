@@ -8,7 +8,7 @@ project(onnx2c
 	)
 set (CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wfatal-errors")
 
 add_subdirectory(cmake_timestamp)
 
@@ -32,6 +32,7 @@ add_library(onnx2c_lib STATIC
 	${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc
 	src/nodes/cast.cc
 	src/nodes/constantofshape.cc
+	src/nodes/convtranspose.cc
 	src/nodes/expand.cc
 	src/nodes/instancenorm.cc
 	src/nodes/lstm.cc

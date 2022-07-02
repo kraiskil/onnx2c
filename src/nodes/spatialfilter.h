@@ -9,6 +9,7 @@
  */
 
 #pragma once
+#include "node.h"
 namespace toC {
 
 class SpatialFilter : public Node {

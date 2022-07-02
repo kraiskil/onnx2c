@@ -3,6 +3,7 @@
  * Onnx2c code gereration options.
  */
 
+#pragma once
 #include <map>
 #include <string>
 

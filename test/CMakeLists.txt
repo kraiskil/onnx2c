@@ -255,6 +255,17 @@ ONNX_backend_pytorch_converted_test(Conv3d_stride)
 
 ONNX_backend_node_test(convinteger_with_padding)
 
+ONNX_backend_node_test(convtranspose)
+ONNX_backend_node_test(convtranspose_autopad_same)
+ONNX_backend_node_test(convtranspose_output_shape)
+ONNX_backend_node_test(convtranspose_with_kernel)
+ONNX_backend_node_test(convtranspose_1d)
+ONNX_backend_node_test(convtranspose_dilations)
+ONNX_backend_node_test(convtranspose_pad)
+ONNX_backend_node_test(convtranspose_3d)
+ONNX_backend_node_test(convtranspose_kernel_shape)
+ONNX_backend_node_test(convtranspose_pads)
+
 ONNX_backend_node_test(div)
 ONNX_backend_node_test(div_bcast)
 ONNX_backend_node_test(div_example)

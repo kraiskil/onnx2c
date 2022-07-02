@@ -120,7 +120,9 @@ void Node::multidirectional_broadcast_size(
 
 
 // NB: old node implementations that dont use input_params and output_params
-// have overridden this function.
+// must and have overridden this function.
+// New mode node implementations use the Node::register_input() and
+// Node::register_output() functions
 void Node::print_parameters(std::ostream &dst, bool not_callsite ) const
 {
 	std::vector<std::string> params;

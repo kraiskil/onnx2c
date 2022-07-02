@@ -355,6 +355,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/constantofshape.h"
 #include "nodes/conv.h"
 #include "nodes/convinteger.h"
+#include "nodes/convtranspose.h"
 #include "nodes/dropout.h"
 #include "nodes/dynamicquantizelinear.h"
 #include "nodes/elementwise.h"
@@ -410,6 +411,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "Cos" )return new Elementwise("Cos");
 	if( opName == "Cosh" )return new Elementwise("Cosh");
 	if( opName == "ConvInteger" )return new ConvInteger;
+	if( opName == "ConvTranspose" )return new ConvTranspose;
 	if( opName == "Div" )return new Elementwise_2("Div");
 	if( opName == "Dropout" )return new Dropout;
 	if( opName == "DynamicQuantizeLinear" )return new DynamicQuantizeLinear;
