@@ -86,7 +86,7 @@ void parse_cmdline_options(int argc, const char *argv[])
 	if (quantize) { options.quantize = true; }
 	if (avr) { options.target_avr = true; }
 	if (define) {
-		for (const auto d: args::get(define)) {
+		for (const auto &d: args::get(define)) {
 			store_define_option(d);
 		}
 	}
