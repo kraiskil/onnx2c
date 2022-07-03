@@ -42,25 +42,6 @@ class BatchNormalization : public Node {
 	const Tensor *output;
 	// ... optional outputs not yet implmeneted
 
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		input -> print_tensor_as_const(dst, !decorate);
-		if (scale) {
-			dst << ", ";
-			scale -> print_tensor_as_const(dst, !decorate);
-		}
-		if (bias) {
-			dst << ", ";
-			bias -> print_tensor_as_const(dst, !decorate);
-		}
-		dst << ", ";
-		mean -> print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		var -> print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		output -> print_tensor(dst, !decorate);
-	}
-
 
 	void parseAttribute_epsilon( const onnx::AttributeProto &a ) {
 		if( a.type() != onnx::AttributeProto_AttributeType_FLOAT )
@@ -106,6 +87,9 @@ class BatchNormalization : public Node {
 		dst << "\t * momentum = " << momentum << std::endl;
 		dst << "\t */" << std::endl << std::endl;
 
+		if( sqrt_var_offline  == false)
+			INDT_1 << "float epsilon = " << epsilon << ";" <<std::endl;
+
 		dst<<"\t" << "for( int32_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
 		dst<<"\t" << "for( int32_t c=0; c<" << num_chan << "; c++ ) {" << std::endl;
 
@@ -123,19 +107,17 @@ class BatchNormalization : public Node {
 			dst <<               idx <<"++ ) {" << std::endl;
 		}
 
-		dst << "\t\t" << type << " tmp_X = ";
-		dst <<           "( " << input->cname() << idxs << " - " << mean->cname() << "[c] ) / ";
+		INDT_2 << type << " tmp_X = ( X" << idxs << " - mean[c] ) / ";
 		if( sqrt_var_offline )
-			dst <<           "( " << var->cname() << "[c]"<< " );" << std::endl;
+			dst <<  "( var[c] );" << std::endl;
 		else
-			dst <<           "( sqrt(" << var->cname() << "[c] + " << epsilon << ") );" << std::endl;
+			dst << "( sqrt( var[c] + epsilon));" << std::endl;
 
-		dst << "\t\t" << output->cname() << idxs << " = ";
-		dst <<      "tmp_X ";
+		INDT_2 << "output" << idxs << " = tmp_X ";
 		if( scale )
-			dst << "* " << scale->cname() << "[c]";
+			dst << "* scale[c]";
 		if( bias )
-			dst << " + " << bias->cname() << "[c]";
+			dst << " + bias[c]";
 		dst << ";" << std::endl;
 
 		for( unsigned i = 2; i<input->data_dim.size(); i++)
@@ -178,10 +160,15 @@ class BatchNormalization : public Node {
 			ERROR("wrong number of inputs to BatchNormalization");
 
 		input = inputs[0]; // "X"
+		register_input(input, "X");
 		scale = inputs[1];
+		register_input(scale, "scale");
 		bias = inputs[2]; // "B" in spec
+		register_input(bias, "bias");
 		mean = inputs[3];
+		register_input(mean, "mean");
 		var = inputs[4];
+		register_input(var, "var");
 
 		if( typeConstraint_plainFloatingPoints(input) == false)
 			ERROR("Incorrect input for node");
@@ -210,7 +197,7 @@ class BatchNormalization : public Node {
 		rv->data_dim = input->data_dim;
 		rv->data_type = input->data_type;
 		output = rv;
-		outputs.push_back(rv);
+		register_output(rv, "output");
 	}
 };
 }

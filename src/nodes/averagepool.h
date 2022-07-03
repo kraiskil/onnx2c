@@ -19,19 +19,6 @@ class AveragePool : public Pooling {
 	// optional outputs
 	const Tensor *Indices;
 
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		x->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		y->print_tensor(dst, !decorate);
-		if( Indices->name != "" ) {
-			dst << ", ";
-			Indices->print_tensor(dst, !decorate);
-		}
-	}
-
-
-
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
 	{
 		INDT_3  << y->data_type_str() << " curavg = 0.0;" << std::endl;
@@ -45,7 +32,7 @@ class AveragePool : public Pooling {
 	{
 		// Sum up the cells
 		INDT_4 << "numavg += 1;" <<std::endl;
-		INDT_4 << "curavg += " << x->cname() << x_idx << ";" <<std::endl;
+		INDT_4 << "curavg += x" << x_idx << ";" <<std::endl;
 	}
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const override
 	{
@@ -57,7 +44,7 @@ class AveragePool : public Pooling {
 			INDT_3 << "/* Counting padding into the average is requested */" << std::endl;
 			INDT_3 << "numavg = " << numavg << ";" << std::endl;
 		}
-		INDT_3 << y->cname() << y_idx << "= curavg/numavg;" << std::endl;
+		INDT_3 << "y" << y_idx << "= curavg/numavg;" << std::endl;
 	}
 
 
@@ -70,6 +57,7 @@ class AveragePool : public Pooling {
 	virtual void resolve(void) override
 	{
 		x = inputs[0];
+		register_input(x, "x");
 
 		if( !(  typeConstraint_plainFloatingPoints(x)
 		      ||typeConstraint_8bit(x)) )
@@ -84,7 +72,7 @@ class AveragePool : public Pooling {
 		rv->data_dim = resolve_output_size();
 		rv->data_type = x->data_type;
 		y=rv;
-		outputs.push_back(rv);
+		register_output(rv, "y");
 
 		update_pads();
 
@@ -93,7 +81,7 @@ class AveragePool : public Pooling {
 		indices_out->data_type = onnx::TensorProto_DataType::TensorProto_DataType_INT64;
 		indices_out->data_dim = rv->data_dim;
 		Indices = indices_out;
-		outputs.push_back(indices_out);
+		register_output(indices_out, "ind");
 	}
 };
 }

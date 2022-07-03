@@ -295,8 +295,8 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 	// Add the output tensors the resolve() generated to the graph's list of tensors.
 	// This will now contain all of the node's outputs, also such optional ones
 	// that are not used in the model.
-	for( unsigned o=0; o<n->outputs.size(); o++) {
-		Tensor *t = n->outputs[o];
+	for( unsigned o=0; o<n->get_outputs().size(); o++) {
+		Tensor *t = n->get_outputs()[o];
 
 		// optional outputs are named "" or just omitted
 		std::string onnx_name;
@@ -319,7 +319,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 		addTensor(t);
 	}
 	LOG(DEBUG) << "    outputs: " << std::endl;
-	for( auto o : n->outputs)
+	for( auto o : n->get_outputs())
 		LOG(DEBUG) << "         " << o->name << " - "<< o->data_type_str() << " { " << o->str_dimensions() << "}" << std::endl;
 
 	n->isResolved = true;

@@ -9,6 +9,7 @@ namespace toC {
 
 class Tensor;
 typedef std::tuple<const Tensor *, std::string> function_parameter;
+
 /* The ONNX node, or computation kernel. *
  * Node is a virtual parent class for each of the
  * ONNX node "types" or "operands" (e.g. Add, Relu, ...)
@@ -22,14 +23,20 @@ class Node {
 	std::string onnx_name; //ONNX name of the individual node
 	std::string op_name;   //ONNX name of node type
 	static int64_t onnx_ir_version;
-	std::vector< const Tensor*> inputs;
-	std::vector<Tensor *> outputs;
+	std::vector< const Tensor*> inputs; // List of input tensors in the .onnx file
 
+	// NB: this is deprecated. Whenever a node is updated,
+	// any reference to this variable should be removed.
+	// instead of outputs.push_back(), use register_output()
+	std::vector<Tensor *> outputs;
 private:
 	std::vector<function_parameter> input_params;
 	std::vector<function_parameter> output_params;
 
 public:
+	// when output is removed, get the vector of tensors from output_params.
+	std::vector<Tensor *> get_outputs(void) const {return outputs;}
+
 	/* Create the C source name. Replace all non a-z,A-Z,0-9 or _
 	 * characters. Also prefix name since ONNX allows tensors and nodes
 	 * to have the same name */
@@ -113,7 +120,7 @@ protected:
 	 * - name: the name to be used locally for the tensor in the C-function
 	 */
 	void register_input(const Tensor *, std::string name);
-	void register_output(const Tensor *, std::string name);
+	void register_output(Tensor *, std::string name);
 
 };
 }

@@ -11,39 +11,22 @@ class Conv : public SpatialFilter {
 	public:
 	Conv() {
 		op_name = "Conv";
-		auto_pad = "NOTSET";
-		group = 1;
 		b=NULL;
 	}
 	/* Conv node specific attributes */
-
 	// optional inputs
 	const Tensor *b;
-
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		x->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		w->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		if( b ) {
-			b->print_tensor_as_const(dst, !decorate);
-			dst << ", ";
-		}
-		y->print_tensor(dst, !decorate);
-	}
-
 
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
 	{
 		std::string outidx="";
 		for(unsigned i=0; i<x->rank()-2; i++)
 			outidx += "[o" + std::to_string(i) + "]";
-		INDT_3 << y->cname() << "[b][m]" << outidx << " = ";
+		INDT_3 << "y[b][m]" << outidx << " = ";
 		if( b == NULL )
 			dst << "0;" << std::endl;
 		else
-			dst << b->cname() << "[m];" << std::endl;
+			dst << "bias[m];" << std::endl;
 	};
 	virtual void print_output_cell_calc(
 		std::ostream &dst,
@@ -59,11 +42,11 @@ class Conv : public SpatialFilter {
 			iididx+= "[ii" + std::to_string(i) + "]";
 			kidx+= "[k" + std::to_string(i) + "]";
 		}
-		INDT_4 << y->cname() << "[b][m]"<<outidx<<" += "<< x->cname() << "[b][c]"<<iididx<<" *";
+		INDT_4 << "y[b][m]"<<outidx<<" += x[b][c]"<<iididx<<" *";
 		if( group == 1 )
-		   dst <<             w->cname() << "[m][c]"<<kidx<<";" << std::endl;
+		   dst << "w[m][c]"<<kidx<<";" << std::endl;
 		else
-		   dst <<             w->cname() << "[m][c-(gi*g)]"<<kidx<<";" << std::endl;
+		   dst << "w[m][c-(gi*g)]"<<kidx<<";" << std::endl;
 	}
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const override
 	{
@@ -77,9 +60,12 @@ class Conv : public SpatialFilter {
 	virtual void resolve(void) override
 	{
 		x = inputs[0]; // data
+		register_input(x,"x");
 		w = inputs[1]; // weights
+		register_input(w,"w");
 		if( inputs.size() == 3 ) {
 			b = inputs[2];
+			register_input(b,"bias");
 		}
 		else
 			b = NULL;
@@ -99,7 +85,7 @@ class Conv : public SpatialFilter {
 		rv->data_dim = resolve_output_size();
 		rv->data_type = x->data_type;
 		y=rv;
-		outputs.push_back(rv);
+		register_output(rv, "y");
 	}
 };
 }

@@ -176,7 +176,8 @@ void Node::register_input(const Tensor *t, std::string name)
 {
 	input_params.push_back(function_parameter(t, name));
 }
-void Node::register_output(const Tensor *t, std::string name)
+void Node::register_output(Tensor *t, std::string name)
 {
 	output_params.push_back(function_parameter(t, name));
+	outputs.push_back(t);
 }

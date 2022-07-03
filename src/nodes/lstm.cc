@@ -454,11 +454,8 @@ void LSTM::resolve(void)
 		ERROR("Memory allocation failed");
 	Y_c->initialize = true;
 
-	outputs.push_back(Y);
 	register_output(Y, "Y");
-	outputs.push_back(Y_h);
 	register_output(Y_h, "Y_h");
-	outputs.push_back(Y_c);
 	register_output(Y_c, "Y_c");
 }
 

@@ -60,9 +60,7 @@ void Expand::resolve(void)
 	t->data_dim = output_shape;
 	t->data_type = input->data_type;
 	output = t;
-	outputs.push_back(t);
-	register_output(output, "output");
-
+	register_output(t, "output");
 }
 
 
