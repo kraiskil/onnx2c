@@ -40,7 +40,6 @@ void Cast::resolve(void)
 	t->data_dim = input->data_dim;
 	t->data_type = static_cast<onnx::TensorProto_DataType>(to);
 	output = t;
-	outputs.push_back(t);
 	register_output(t, "output");
 }
 

@@ -36,7 +36,6 @@ void ScatterND::resolve(void)
 	t->data_dim = data->data_dim;
 	t->data_type = data->data_type;
 	output = t;
-	outputs.push_back(t);
 	register_output(t, "output");
 }
 

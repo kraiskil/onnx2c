@@ -81,7 +81,6 @@ void TEMPLATE::resolve(void)
 	/* Store the created tensor both as reference in this node, and into
 	 * the return value vector! */
 	output_1 = t;
-	outputs.push_back(t);
 	register_output(t, "Y");
 
 	/* TODO: optional outputs? */
@@ -93,7 +92,11 @@ void TEMPLATE::print(std::ostream &dst) const
 {
 	INDT_1 << "/* TEMPLATE */" << std::endl;
 	INDT_1 << "/* Print info on this node here, for debugging purposes */" << std::endl;
+
+	/* Genereate the C code here */
+	INDT_2 << "Y[0] = 42 * A[0];" << std::endl;
 }
+
 
 } // namespace
 

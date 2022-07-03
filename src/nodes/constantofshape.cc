@@ -33,7 +33,6 @@ void ConstantOfShape::resolve(void)
 	else
 		t->data_type = onnx::TensorProto_DataType_FLOAT;
 	output = t;
-	outputs.push_back(t);
 	register_output(t, "output");
 }
 

@@ -204,7 +204,6 @@ class Slice : public Node {
 
 		t->data_type = data->data_type;
 		output = t;
-		outputs.push_back(t);
 		register_output(t, "output");
 	}
 

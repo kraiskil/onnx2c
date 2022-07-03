@@ -41,7 +41,6 @@ void InstanceNormalization::resolve(void)
 	t->data_dim = input->data_dim;
 	t->data_type = input->data_type;
 	output = t;
-	outputs.push_back(t);
 	register_output(t, "output");
 }
 

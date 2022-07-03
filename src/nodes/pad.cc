@@ -75,7 +75,6 @@ void Pad::resolve(void)
 	/* Store the created tensor both as reference in this node, and into
 	 * the return value vector! */
 	output = t;
-	outputs.push_back(t);
 	register_output(t, "output");
 
 	/* TODO: optional outputs? */

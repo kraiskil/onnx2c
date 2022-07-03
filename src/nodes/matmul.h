@@ -62,7 +62,6 @@ class MatMul : public Node {
 		rv->data_dim.push_back(cols);
 		rv->data_type = A->data_type;
 		Y=rv;
-		outputs.push_back(rv);
 		register_output(rv, "Y");
 	}
 
