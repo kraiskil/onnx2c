@@ -585,6 +585,13 @@ void Graph::replaceWithQuantized(std::vector<const Tensor*> &inputs)
 uint32_t Graph::add_to_free_union(Tensor *t)
 {
 	unsigned u=0;
+	// Check if tensor is already allocated to an union
+	for( ; u<tensor_unions.size(); u++ )
+		if( tensor_unions[u] == t)
+			return u;
+
+	// If not, search for free unions
+	u=0;
 	for( ; u<tensor_unions.size(); u++ )
 		if( tensor_unions[u] == NULL ) {
 			tensor_unions[u] = t;
@@ -592,6 +599,7 @@ uint32_t Graph::add_to_free_union(Tensor *t)
 			return u;
 		}
 
+	// All unions in use, need a new one
 	LOG(TRACE) << "No free unions, creating a new one" << std::endl;
 	tensor_unions.push_back(t);
 	t->assign_union( tensor_unions.size()-1 );
