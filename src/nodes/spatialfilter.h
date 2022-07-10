@@ -33,7 +33,6 @@ class SpatialFilter : public Node {
 	std::vector<int64_t> pads;
 	std::vector<int64_t> strides;
 
-
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 		for( const auto& a : node.attribute() ) {
 			if( a.name() == "auto_pad" )
@@ -135,6 +134,13 @@ class SpatialFilter : public Node {
 		return rv;
 	}
 
+	// Does output channels map one-to-one to input channels.
+	// This is only true for pooling filters.
+	virtual bool direct_channel_map(void) const
+	{
+		return false;
+	}
+
 
 	void print_header_info_comment(std::ostream &dst) const
 	{
@@ -181,15 +187,13 @@ class SpatialFilter : public Node {
 		unsigned n_data_dims = x->data_dim.size() -2;
 		unsigned batch_size = x->data_dim[0];
 		unsigned channels = x->data_dim[1];
-		unsigned maps=0;
-		if( w )
-			maps = w->data_dim[0];
+		unsigned maps=y->data_dim[1];
 
 		/* Create various indexing strings. This makes generating the loops much cleaner,
 		 * and makes possible the code sharing in child classes. */
 		std::string x_idx = "[b][c]";
 		std::string in_kern_idxs = "[b][c]";
-		std::string y_idx = "[b][c]";
+		std::string y_idx = "[b][m]";
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string i_str = std::to_string(i);
 			x_idx += "[i" + i_str + "]";
@@ -206,8 +210,8 @@ class SpatialFilter : public Node {
 			INDT_2 << "int32_t batch_min = INT32_MAX;" << std::endl;
 			INDT_2 << "int32_t batch_max = INT32_MIN;" << std::endl;
 		}
-		if( w && group==1)
-			INDT_1 << "for( uint32_t m=0; m<" << w->data_dim[0] << "; m++) {" << std::endl;
+		if( direct_channel_map() )
+			INDT_1 << "for( uint32_t m=0, c=0; m<" << maps << "; m++, c=m) {" << std::endl;
 		else if( w && group > 1 ) {
 			INDT_1 << "uint32_t go = " << maps/group     << "; // output group size, i.e. maps/group" << std::endl;
 			INDT_1 << "uint32_t gi = " << channels/group << "; // inptput group size, i.e. channels/group" << std::endl;
@@ -215,7 +219,7 @@ class SpatialFilter : public Node {
 			INDT_1 << "for( uint32_t m=go*g; m<go*(g+1); m++) {" << std::endl;
 		}
 		else
-			INDT_1 << "for( uint32_t c=0; c<" << x->data_dim[1] << "; c++) {" << std::endl;
+			INDT_1 << "for( uint32_t m=0; m<" << maps << "; m++) {" << std::endl;
 
 
 		// loop over outputs and inputs
@@ -230,12 +234,14 @@ class SpatialFilter : public Node {
 
 		print_output_cell_init(dst, y_idx);
 
-		if( w && group == 1 )
-			INDT_3 <<   "for( int32_t c=0; c<" << channels << "; c++ ) {" << std::endl;
+		if (direct_channel_map())
+			;
 		else if( w && group > 1 )
 			INDT_3 <<   "for( int32_t c=gi*g; c<gi*(g+1); c++ ) {" << std::endl;
+		else    // same as above, just cleaner to read :)
+			INDT_3 <<   "for( int32_t c=0; c<" << channels << "; c++ ) {" << std::endl;
 
-		// loop over channels and kernel
+
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string idx = "k" + std::to_string(i);
 			INDT_3 << "for( uint32_t " << idx << "=0; ";
@@ -258,7 +264,7 @@ class SpatialFilter : public Node {
 			INDT_3 << "} /* k */" << std::endl;
 
 		// close input channels loop when it is separate from output channels
-		if( w )
+		if( direct_channel_map() == false )
 			INDT_3 << "} /* c */" << std::endl;
 		print_output_cell_finalize(dst, y_idx);
 
@@ -267,9 +273,9 @@ class SpatialFilter : public Node {
 			INDT_2 << "} /* o */" << std::endl;
 
 		// close loops over batches and output channels
-		INDT_1 << "} /* m or c, depending on this node's operator */" << std::endl;
-		if( w && group > 1 )
-			INDT_1 << "} /* g */" << std::endl;
+		INDT_1 << "} /* m */" << std::endl;
+		if( direct_channel_map() == false && group > 1 )
+			INDT_2 << "} /* g */" << std::endl;
 		INDT_1 << "} /* b */" << std::endl;
 	}
 };

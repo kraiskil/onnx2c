@@ -23,7 +23,13 @@ class Pooling : public SpatialFilter {
 	int ceil_mode;
 	int count_include_pad;
 	int storage_order;
-	
+
+
+	bool direct_channel_map(void) const override
+	{
+		return true;
+	}
+
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 
 		SpatialFilter::parseAttributes(node);
