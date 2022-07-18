@@ -180,7 +180,7 @@ void ConvTranspose::resolve(void)
 	register_input(w,"w");
 	if( inputs.size() == 3 ) {
 		b = inputs[2];
-		register_input(b,"b");
+		register_input(b,"bias"); // 'b' is the batch looping index
 	}
 	else
 		b = NULL;
@@ -330,7 +330,7 @@ void ConvTranspose::print_calculation( std::ostream &dst) const
 	dst <<    " * w" << w_idx;
 	// NB: bias is not tested by the ONNX backend tests, but docs are pretty clear here.
 	if( b )
-		dst << " + b[m]";
+		dst << " + bias[m]";
 	dst << ";" << std::endl;
 
 	// close kernel loop
