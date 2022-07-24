@@ -24,11 +24,11 @@ Graph::Graph(
 	switch(options.logging_level)
 	{
 	case 4: s = AixLog::Severity::trace;   break;
-	case 3: s = AixLog::Severity::info;    break;
+	case 3: s = AixLog::Severity::debug;   break;
 	default:
-	case 2: s = AixLog::Severity::warning; break;
-	case 1: s = AixLog::Severity::error;   break;
-	case 0: s = AixLog::Severity::fatal;   break;// there is no "off"
+	case 2: s = AixLog::Severity::info;    break;
+	case 1: s = AixLog::Severity::warning; break;
+	case 0: s = AixLog::Severity::error;   break;
 	}
 	AixLog::Log::init<AixLog::SinkCerr>(s);
 
