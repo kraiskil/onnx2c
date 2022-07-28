@@ -103,8 +103,11 @@ namespace toC {
 			size_t output_axis_size = 0;
 			size_t i, j;
 			std::vector<int> dims = inputs[0]->data_dim;
+			LOG(TRACE) << "Concatenating on axis " << axis << std::endl;
 			for (i = 0; i < input_count; i++) {
 				if( inputs[0]->rank() != inputs[i]->rank() ) {
+					LOG(DEBUG) << "Input " << inputs[0]->name << " has " << inputs[0]->rank() << " dimensions" << std::endl;
+					LOG(DEBUG) << "Input " << inputs[i]->name << " has " << inputs[i]->rank() << " dimensions" << std::endl;
 					ERROR("Concat expects all inputs to have equal number of dimensions");
 				}
 				for (j = 0; j < dims.size(); j++) {
