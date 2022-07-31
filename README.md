@@ -19,7 +19,7 @@ project, then joining the two with onnx2c should be easy.
 
 To make all of the above easier to achieve, there are some non-goals for onnx2c:
 
- - ONNX specification coverage. (For now, 90 out of 166 ONNX Operands are at least partially implemented).
+ - ONNX specification coverage. (For now, 91 out of 166 ONNX Operands are at least partially implemented).
  - accelerators
  - backpropagation (i.e. training)
 

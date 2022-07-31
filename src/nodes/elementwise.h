@@ -8,11 +8,16 @@
 namespace toC {
 
 class Elementwise : public Node {
+	const Tensor *X;
+	const Tensor *Y;
+	float alpha, beta, bias, gamma, lambd;
+
 	public:
 	Elementwise(std::string op) {
 		op_name = op;
 		X=Y=NULL;
-		alpha=beta=gamma=0;
+		alpha=beta=gamma=bias=0;
+		lambd=0.5;
 
 		// TODO: use the double precision version of the arithmetics for
 		// double precision input. OTOH - who uses doubles on MCUs?
@@ -107,6 +112,19 @@ class Elementwise : public Node {
 				//`y = gamma * (alpha * e^x - alpha) for x <= 0`, `y = gamma * x for x > 0`,
 				return x+">0 ? "+c+"*"+x+": "+c+"*("+a+"*exp("+x+")-"+a+");"; };
 		}
+		else if( op == "Shrink" ) {
+			operation = [this](const std::string& x){
+				std::string b = std::to_string(bias);
+				std::string l = std::to_string(lambd);
+				// if( x < -l ) y=x+bias; else if ( x > l ) y=x-bias; else y=0;
+				std::string rv = x+ " < - "+l+" ? ";  // if( x<-l )
+				rv += x + "+" + b;                    //     x+bias
+				rv += " : (" + x + " > " +l + " ? " ; // else if ( x>l )
+				rv += x + "-" + b;                    //     x-bias
+				rv += " : 0);";                       // else 0
+				return rv;
+			};
+		}
 		else if( op == "Sigmoid" )
 			operation = [](const std::string& x){ return  "1/(1+exp(-"+x+"));"; };
 		else if( op == "Sign" )
@@ -135,11 +153,6 @@ class Elementwise : public Node {
 			ERROR("Elementwise operand not implemented: " + op);
 	}
 
-	const Tensor *X;
-	const Tensor *Y;
-
-	float alpha, beta, gamma;
-
 	// Each instance of this class should override this lambda with the operation of the node type.
 	std::function<const std::string (const std::string & Xidx)> operation =
 		[](const std::string& x){ ERROR("onnx2c internal error"); return ""; };
@@ -161,8 +174,13 @@ class Elementwise : public Node {
 				alpha = parse_attribute_float(a);
 			else if( a.name() == "beta" )
 				beta = parse_attribute_float(a);
+			else if( a.name() == "bias")
+				bias = parse_attribute_float(a);
 			else if( a.name() == "gamma" )
 				gamma = parse_attribute_float(a);
+			else if( a.name() == "lambd") // sic - lambda? In the Shrink operator
+				lambd = parse_attribute_float(a);
+
 			else
 				ERROR("unknown attribute");
 		}

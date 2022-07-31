@@ -459,6 +459,7 @@ Node* Graph::createNode(std::string opName)
 	if( opName == "ScatterND" )return new ScatterND;
 	if( opName == "Selu" )return new Elementwise("Selu");
 	if( opName == "Shape" )return new Shape;
+	if( opName == "Shrink" )return new Elementwise("Shrink");
 	if( opName == "Sigmoid" )return new Elementwise("Sigmoid");
 	if( opName == "Sign" )return new Elementwise("Sign");
 	if( opName == "Sin" )return new Elementwise("Sin");
