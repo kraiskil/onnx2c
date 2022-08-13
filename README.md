@@ -50,7 +50,7 @@ make onnx2c
 ```
 
 
-#### Getting `error: ‘class onnx::ModelProto’ has no member named ‘ParseFromIstream’;` ?
+### Getting `error: ‘class onnx::ModelProto’ has no member named ‘ParseFromIstream’;` ?
 
 If you have ProtoBuf 3.6 or earlier, you need the following modification to `onnx/onnx/onnx.proto`
 
@@ -61,7 +61,7 @@ With ProtoBuf 3.12 (e.g. Ubuntu 20.10 onwards) this modification is not needed.
 Versions between 3.6 and 3.12 are uninvestigated.
 
 
-#### Unit tests
+### Unit tests
 
 The onnx2c build runs onnx backend tests as unit/acceptance tests.
 
@@ -72,8 +72,26 @@ make
 make test
 ```
 
+On top of these there are two classes of benchmarking tests in the test suite
 
-There is a possibility to run selected ONNX model zoo tests as additional unit tests.
+ * Google Benchmark based. This is the new version.
+ * ONNX model zoo based. Old, and less useful.
+
+#### Google Benchmark based tests
+
+The benchmark binary is built in `test/benchmarks` as a part of the unit test framework.
+
+Run it by executing the fake custom target `run_benchmarks` (e.g. `make run_benchmarks`).
+
+The `run_benchmarks` is intended as a development tool. It is useful only when chaninging the
+generated code from those operators/nodes that are included in the benchmark suite.
+
+Note, `run_benchmarks` is host computer specific, and must be first run with a clean master build
+to get a reference baseline. See the comments in `test/benchmarks/benchmark_helper.sh` for more info.
+
+#### ONNX model zoo based tests
+
+These are mostly deprecated, but the infrastructure is still left in place.
 
 Run:
 ```
@@ -104,8 +122,9 @@ Onnx2c has an [experimental quantization option](quantization.md) to convert flo
 
 `./onnx2c -h` prints out all available command line options.
 
-Performance
------------
+
+On-target performance
+---------------------
 
 or, how to extrapolate from incomplete data.
 

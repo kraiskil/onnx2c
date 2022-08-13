@@ -64,3 +64,6 @@ target_link_libraries(onnx2c onnx2c_lib ${Protobuf_LIBRARIES} timestamp)
 enable_testing()
 add_subdirectory(test)
 
+# The Google Benchmark library-subrepo
+option(BENCHMARK_ENABLE_TESTING "Tests for the 'benchmark' subrepo" OFF)
+add_subdirectory(benchmark)

@@ -103,7 +103,6 @@ function( local_node_test node_name)
 endfunction()
 
 
-
 ONNX_backend_node_test(abs)
 
 ONNX_backend_node_test(acos)
@@ -711,3 +710,4 @@ add_subdirectory(onnx_model_zoo)
 local_node_test(matmul_precision)
 local_node_test(nodes_out_of_order)
 
+add_subdirectory(benchmarks)
