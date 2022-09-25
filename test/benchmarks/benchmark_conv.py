@@ -21,15 +21,15 @@ from pathlib import Path
 #w_size = [maps, channels] + kernel_size
 
 # Values for yolov6n conv4, slowest to compute
-test_name="benchmark_conv_yolov6n_biggestconv"
-maps = 32
-channels = 32
+test_name="benchmark_conv_fits_128k"
+maps = 28
+channels = 28
 strides = [1,1]
 dilations = [1,1]
 kernel_size = [3,3]
 pads=[1,1,1,1]
-in_size = [1, channels, 160, 160]
-out_size = [1, maps, 160, 160]
+in_size = [1, channels, 20, 20]
+out_size = [1, maps, 20, 20]
 w_size = [maps, channels] + kernel_size
 
 

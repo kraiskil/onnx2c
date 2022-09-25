@@ -70,19 +70,21 @@ Included are implementations of e.g. Squeezenet and Alexnet. Some of these take 
 they are mostly interesting for onnx2c development.
 
 
-
 ### On target testing
 
-There is a build system in the `scripts` folder to complile and run a `.onnx` file on an embedded
+There is a build system in the `scripts` folder to complile and run any `.onnx` file on an embedded
 development board.
+It assumes [LibOpenCM3](https://http://libopencm3.org/), a `arm-none-eabi-gcc` compiler chain, and
+[OpenOCD](https://openocd.org/) are available in `PATH` and the `OPENCM3_DIR` environment variable.
+
 
 For now, the script hard-codes STM32F411 NUCLEO as the target (pull requests to remedy this welcome!).
 
-Run `scripts/measure_stm32f411_nucleo.sh [file.onnx]`.
-This will compile, flash and report memory usage and runtime for the `.onnx` file.
-It assumes [LibOpenCM3](https://http://libopencm3.org/), a `arm-none-eabi-gcc` compiler chain, and 
-[OpenOCD](https://openocd.org/) are available.
+To test if your own network file will fit, run `scripts/measure_stm32f411_nucleo.sh [file.onnx]`.
+This will compile, flash and report memory usage and runtime for the `.onnx` file. No checks of correctnes
+are made.
 
+A collection of benchmarking tests can be run with `make run_target_stm32f411_benchmarks`.
 
 Coding style
 ------------

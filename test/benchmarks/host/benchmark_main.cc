@@ -4,7 +4,6 @@
 #include <cmath>
 
 namespace yolov6n_biggestconv {
-//void entry(const float tensor_X[1][32][160][160], const float tensor_w[32][32][3][3], float tensor_Y[1][32][160][160]) {
 #include "conv_yolov6n_biggestconv.c"
 float X[1][32][160][160];
 float W[32][32][3][3];
@@ -48,6 +47,21 @@ static void BM_yolov6n_lastconv(benchmark::State& state) {
 }
 // Register the function as a benchmark
 BENCHMARK(BM_yolov6n_lastconv);
+}
+
+namespace conv_fits_128k{
+#include "conv_fits_128k.c"
+float X[1][28][20][20];
+float W[1][28][3][3];
+float Y[1][28][20][20];
+static void BM_conv_fits_128k(benchmark::State& state) {
+
+	for (auto _ : state) {
+		entry(X, W, Y);
+	}
+}
+// Register the function as a benchmark
+BENCHMARK(BM_conv_fits_128k);
 }
 
 

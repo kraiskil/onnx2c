@@ -80,8 +80,9 @@ Onnx2c has an [experimental quantization option](quantization.md) to convert flo
 `./onnx2c -h` prints out all available command line options.
 
 
-There is a [helper script](scripts/) to initially run any `.onnx` on a MCU development board. See the script sources
-and [the onnx2c development documentation](development.md) for instructions.
+There is a [helper script](scripts/) to initially run any `.onnx` on a MCU development board. This is intended
+as a tool when designing the network to see if it will fit the target, before starting training the network.
+See the script sources and [the onnx2c development documentation](development.md) for instructions.
 
 
 Development

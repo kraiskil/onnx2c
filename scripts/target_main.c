@@ -72,7 +72,7 @@ int main(void)
 		#ifndef DONT_RUN_TARGET
 		run_benchmark();
 		#endif
-		printf("Execution time: %ldms\n", system_millis-tick);
+		printf("Execution time: %ld ms\n", system_millis-tick);
 	}
 
 	return 0;

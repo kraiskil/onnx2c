@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 #
 # This script takes a onnx graph file
@@ -113,7 +113,8 @@ flash_and_read()
 
 	echo flashing
 	$OPENOCD -f $OPENOCD_CFG -c "program $GENERATED_ELF verify reset exit" -l openocd_log.txt 2> /dev/null
-	timeout 2s cat $SERIAL_PORT
+	timeout 2s cat $SERIAL_PORT > exec_times.txt || true
+	cat exec_times.txt
 }
 
 if [[ $# != 1 ]]
@@ -130,4 +131,15 @@ compile
 
 flash_and_read
 
+vals=$(arm-none-eabi-size  $GENERATED_ELF | tail -n 1)
+rom_size=$(echo $vals | cut -d ' ' -f1)
+data_size=$(echo $vals | cut -d ' ' -f2)
+bss_size=$(echo $vals | cut -d ' ' -f3)
+exec_time=$(grep "^Execution time: [0-9]\+ ms$" exec_times.txt  |head -n1 |cut -d ' ' -f 3)
 
+# Print out the raw data so other scripts can get it with a "|tail -n3"
+echo "In summary - mostly for scripts"
+echo "ROM/Flash usage, heap (data+bss) usage, and runtime in ms:"
+echo $rom_size
+echo $(($data_size + $bss_size))
+echo $exec_time
