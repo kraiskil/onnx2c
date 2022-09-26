@@ -61,49 +61,6 @@ With ProtoBuf 3.12 (e.g. Ubuntu 20.10 onwards) this modification is not needed.
 Versions between 3.6 and 3.12 are uninvestigated.
 
 
-### Unit tests
-
-The onnx2c build runs onnx backend tests as unit/acceptance tests.
-
-
-To run these, continue the build steps with:
-```
-make
-make test
-```
-
-On top of these there are two classes of benchmarking tests in the test suite
-
- * Google Benchmark based. This is the new version.
- * ONNX model zoo based. Old, and less useful.
-
-#### Google Benchmark based tests
-
-The benchmark binary is built in `test/benchmarks` as a part of the unit test framework.
-
-Run it by executing the fake custom target `run_benchmarks` (e.g. `make run_benchmarks`).
-
-The `run_benchmarks` is intended as a development tool. It is useful only when chaninging the
-generated code from those operators/nodes that are included in the benchmark suite.
-
-Note, `run_benchmarks` is host computer specific, and must be first run with a clean master build
-to get a reference baseline. See the comments in `test/benchmarks/benchmark_helper.sh` for more info.
-
-#### ONNX model zoo based tests
-
-These are mostly deprecated, but the infrastructure is still left in place.
-
-Run:
-```
-cd tests/onnx_model_zoo
-./donwload.sh
-```
-and continue with a fresh build (i.e. re-run `cmake`).
-
-Included are implementations of e.g. Squeezenet and Alexnet. Some of these take minutes to compile, so
-they are mostly interesting for onnx2c development.
-
-
 Usage
 -----
 
@@ -121,6 +78,16 @@ See the [GCC wiki on floating point maths](https://gcc.gnu.org/wiki/FloatingPoin
 Onnx2c has an [experimental quantization option](quantization.md) to convert floating point calculation to integers.
 
 `./onnx2c -h` prints out all available command line options.
+
+
+There is a [helper script](scripts/) to initially run any `.onnx` on a MCU development board. See the script sources
+and [the onnx2c development documentation](development.md) for instructions.
+
+
+Development
+-----------
+
+Tips for development of onnx2c, including testing is described in [a separate file](development.md).
 
 
 On-target performance

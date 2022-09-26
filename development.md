@@ -21,17 +21,67 @@ If you are adding the implementation for a new ONNX operator:
 Testing
 -------
 
-Onnx2c has functional correctness testing built with CTest. Run `make test`
-to execute this test suite. All test should and must pass.
+The main onnx2c testing is built ontop of the ONNX backend node tests.
 
-There are a few bigger networks taken from the ONNX model zoo that can be used
-as timing performance checks. Before running CMake, cd into `test/onnx_model_zoo/`
-and execute `download.sh`. CMake then picks up those tests that have their `.tar.gz`
-extracted.
+On top of these there are two classes of benchmarking tests in the test suite
 
-Beware, some of these tests compile for minutes!
+ * Google Benchmark based. This is the new version.
+ * ONNX model zoo based. Old, and less useful.
 
-Better performance test frameworks are sorely needed...
+And there is a limited support to test performance on top of embedded targets.
+
+### Unit tests
+
+The onnx2c build runs onnx backend tests as unit/acceptance tests.
+
+
+To run these, continue the build steps with:
+```
+make
+make test
+```
+
+All test should and must pass.
+
+### Google Benchmark based tests
+
+The benchmark binary is built in `test/benchmarks` as a part of the unit test framework.
+
+Run it by executing the fake custom target `run_benchmarks` (e.g. `make run_benchmarks`).
+
+The `run_benchmarks` is intended as a development tool. It is useful only when chaninging the
+generated code from those operators/nodes that are included in the benchmark suite.
+
+Note, `run_benchmarks` is host computer specific, and must be first run with a clean master build
+to get a reference baseline. See the comments in `test/benchmarks/host/benchmark_helper.sh` for more info.
+
+### ONNX model zoo based tests
+
+These are mostly deprecated, but the infrastructure is still left in place.
+
+Run:
+```
+cd tests/onnx_model_zoo
+./donwload.sh
+```
+and continue with a fresh build (i.e. re-run `cmake`).
+
+Included are implementations of e.g. Squeezenet and Alexnet. Some of these take minutes to compile, so
+they are mostly interesting for onnx2c development.
+
+
+
+### On target testing
+
+There is a build system in the `scripts` folder to complile and run a `.onnx` file on an embedded
+development board.
+
+For now, the script hard-codes STM32F411 NUCLEO as the target (pull requests to remedy this welcome!).
+
+Run `scripts/measure_stm32f411_nucleo.sh [file.onnx]`.
+This will compile, flash and report memory usage and runtime for the `.onnx` file.
+It assumes [LibOpenCM3](https://http://libopencm3.org/), a `arm-none-eabi-gcc` compiler chain, and 
+[OpenOCD](https://openocd.org/) are available.
 
 
 Coding style
