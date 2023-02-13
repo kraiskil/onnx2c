@@ -49,7 +49,7 @@ class MatMulInteger : public Node {
 	{
 		std::string intype = A->data_type_str();
 		std::string outtype = Y->data_type_str();
-        std::string weighttype = B->data_type_str();
+		std::string weighttype = B->data_type_str();
 		std::string a_zero;
 		std::string b_zero;
 
