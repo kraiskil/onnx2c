@@ -40,6 +40,9 @@ public:
 	 * unions. This make the memory buffers time shared. */
 	void unionize_tensors(void);
 
+	/* Optimization step: Fold Cast-nodes to their predecessor. */
+	void fold_casts(void);
+
 	void addInitializedTensor(onnx::TensorProto &tensor);
 	Tensor* getIoTensor(onnx::ValueInfoProto &vi);
 
@@ -92,6 +95,7 @@ private:
 	std::vector<Tensor *> tensor_unions;
 	uint32_t add_to_free_union(Tensor *t);
 	void mark_union_unoccupied(uint32_t);
+
 };
 
 }

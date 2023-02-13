@@ -13,6 +13,7 @@ struct onnx2c_opts
 	bool quantize=false;
 	bool target_avr=false;
 	bool opt_unionize=true;
+	bool opt_fold_casts=true;
 	/*
 	 * logging levels are
 	 * cmd line     aixlog     Use

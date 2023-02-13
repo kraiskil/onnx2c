@@ -68,6 +68,7 @@ void print_optimization_passes(void)
 {
 	std::cout << "Available optimization passes:" << std::endl;
 	std::cout << " - 'unionize' (defaut:on)" << std::endl;
+	std::cout << " - 'fold_casts' (defaut:on)" << std::endl;
 	std::cout << " - 'none' (disable all optimization passes)" << std::endl;
 }
 
@@ -78,6 +79,7 @@ void store_optimization_passes(const std::string &opt)
 	// disable all optimizations (i.e. override the default settings)
 	// then enable those that were requested
 	options.opt_unionize=false;
+	options.opt_fold_casts=false;
 	if( opt == "none" )
 	{
 		LOG(TRACE) << "Disabling all optimizations: " << opt << std::endl;
@@ -97,6 +99,11 @@ void store_optimization_passes(const std::string &opt)
 		{
 			LOG(DEBUG) << "Enabling 'Unionize tensors' optimization pass" << std::endl;
 			options.opt_unionize=true;
+		}
+		else if( item == "fold_casts" )
+		{
+			LOG(DEBUG) << "Enabling 'Fold casts' optimization pass" << std::endl;
+			options.opt_fold_casts=true;
 		}
 		else {
 			LOG(WARNING) << "Optimization pass " << item << " does not exist" << std::endl;

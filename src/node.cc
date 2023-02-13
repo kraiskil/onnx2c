@@ -203,3 +203,20 @@ unsigned Node::get_number_of_outputs(void) const
 {
 	return output_params.size();
 }
+
+bool Node::replace_input(Tensor *old, Tensor *replacement)
+{
+
+	for( auto &p : input_params )
+	{
+		if( std::get<0>(p) == old ) {
+			LOG(DEBUG) << "Did replacement" << std::endl;
+			std::get<0>(p) = replacement;
+			return true;
+		}
+	}
+
+	LOG(DEBUG) << "No replacement" << std::endl;
+	return false;
+}
+

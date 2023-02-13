@@ -88,6 +88,11 @@ public:
 	 * Start counting N from 0, including the non-optional outputs. */
 	bool is_output_N_used(unsigned N) const;
 
+	/* Replace input tensor 'old' with 'replacement'.
+	 * Return false if 'old' is not an input tensor.
+	 */
+	bool replace_input(Tensor *old, Tensor *replacement);
+
 	/* Not all node types have attributes. Override where needed */
 	virtual void parseAttributes( onnx::NodeProto &node )
 	{
