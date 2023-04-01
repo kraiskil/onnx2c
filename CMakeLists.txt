@@ -29,6 +29,7 @@ add_library(onnx2c_lib STATIC
 	src/node.cc
 	src/tensor.cc
 	src/util.cc
+	src/optimization_passes/unionize_tensors.cpp
 	${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc
 	src/nodes/cast.cc
 	src/nodes/constantofshape.cc
