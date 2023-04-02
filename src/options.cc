@@ -64,12 +64,54 @@ void store_define_option(const std::string &opt)
 	options.dim_defines[name] = val_num;
 }
 
+void print_optimization_passes(void)
+{
+	std::cout << "Available optimization passes:" << std::endl;
+	std::cout << " - 'unionize' (defaut:on)" << std::endl;
+	std::cout << " - 'none' (disable all optimization passes)" << std::endl;
+}
+
+void store_optimization_passes(const std::string &opt)
+{
+	LOG(TRACE) << "Parsing optimizations: " << opt << std::endl;
+
+	// disable all optimizations (i.e. override the default settings)
+	// then enable those that were requested
+	options.opt_unionize=false;
+	if( opt == "none" )
+	{
+		LOG(TRACE) << "Disabling all optimizations: " << opt << std::endl;
+		return;
+	}
+
+	if( opt == "help" )
+	{
+		print_optimization_passes();
+		exit(0);
+	}
+	std::vector<std::string> result;
+	std::stringstream ss (opt);
+	std::string item;
+	while (getline (ss, item, ',')) {
+		if( item == "unionize" )
+		{
+			LOG(DEBUG) << "Enabling 'Unionize tensors' optimization pass" << std::endl;
+			options.opt_unionize=true;
+		}
+		else {
+			LOG(WARNING) << "Optimization pass " << item << " does not exist" << std::endl;
+		}
+	}
+	LOG(TRACE) << "That was all optimizations" << std::endl;
+}
+
 void parse_cmdline_options(int argc, const char *argv[])
 {
 	args::ArgumentParser parser("Generate C code from an ONNX graph file.");
 	args::Flag avr(parser, "avr", "Target AVR-GCC", {'a', "avr"});
 	args::ValueFlagList<std::string> define(parser, "dim:size", "Define graph input dimension. Can be given multiple times", {'d', "define"});
 	args::ValueFlag<int> loglevel(parser, "level", "Logging verbosity. 0(none)-4(all)", {'l',"log"});
+	args::ValueFlag<std::string> optimizations(parser, "opt[,opt]...", "Specify optimization passes to run. ('help' to list available)", {'p', "optimizations"});
 	args::Flag help(parser, "help", "Print this help text.", {'h',"help"});
 	args::Flag quantize(parser, "quantize", "Quantize network (EXPERIMENTAL!)", {'q', "quantize"});
 	args::Flag version(parser, "version", "Print onnx2c version", {'v', "version"});
@@ -109,6 +151,7 @@ void parse_cmdline_options(int argc, const char *argv[])
 			store_define_option(d);
 		}
 	}
+	if (optimizations) { store_optimization_passes( args::get(optimizations) ); }
 	if (input) { options.input_file = args::get(input); }
 	if (options.input_file == "" ) { std::cerr << "No input file given"; hint_at_help_and_exit(); }
 }

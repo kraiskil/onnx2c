@@ -72,6 +72,9 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	options.logging_level = 1;
+	AixLog::Log::init<AixLog::SinkCerr>(AixLog::Severity::error);
+
 	onnx::ModelProto onnx_model;
 	std::string dir(argv[1]);
 

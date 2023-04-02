@@ -24,7 +24,8 @@ int main(int argc, const char *argv[])
 
 	std::cout.precision(20);
 	toC::Graph toCgraph(onnx_model);
-	toCgraph.unionize_tensors();
+	if( options.opt_unionize )
+		toCgraph.unionize_tensors();
 	toCgraph.print_source(std::cout);
 }
 

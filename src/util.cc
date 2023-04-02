@@ -6,9 +6,6 @@
 #include "tensor.h"
 #include "util.h"
 
-// command line option
-extern bool target_avr;
-
 std::string cify_name(const std::string &in)
 {
 	// Replace all non-allowed characters with underscore

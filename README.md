@@ -75,7 +75,10 @@ Call that from your main program to run inference. Function parameters are named
 Using the compiler `-ffast-math` (or equivalent) when compiling onnx2c-generated code increases computation speed.
 See the [GCC wiki on floating point maths](https://gcc.gnu.org/wiki/FloatingPointMath) for details.
 
-Onnx2c has an [experimental quantization option](quantization.md) to convert floating point calculation to integers.
+Onnx2c has a few optimization passes that modify the generated output:
+ - Tensor unionization to wrap intermediate tensors in unions to help the compiler re-use the heap memory.
+ - Optimization for AVR processors to put constants into instruction memory.
+ - An [experimental quantization option](quantization.md) to convert floating point calculation to integers.
 
 `./onnx2c -h` prints out all available command line options.
 
