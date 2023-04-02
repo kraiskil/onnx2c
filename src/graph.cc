@@ -196,10 +196,10 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 
 
 
-bool Graph::getNodeInputTensors(const onnx::NodeProto &node, std::vector<const Tensor*> &inputs)
+bool Graph::getNodeInputTensors(const onnx::NodeProto &node, std::vector<Tensor*> &inputs)
 {
 	// TODO: ugly. Move where?
-	static const Tensor unused;
+	static Tensor unused;
 
 	// if all inputs can be found in the tensors-vector, then yes, inputs are resolved
 	for( auto i : node.input() )
@@ -237,7 +237,7 @@ bool Graph::getNodeInputTensors(const onnx::NodeProto &node, std::vector<const T
  */
 bool Graph::tryResolveNode(onnx::NodeProto &node)
 {
-	std::vector<const Tensor*> inputs;
+	std::vector<Tensor*> inputs;
 	LOG(DEBUG) << "Resolving ONNX node " << node.name() <<std::endl;
 
 	for( auto o : nodes )
@@ -575,7 +575,7 @@ Tensor *Graph::findTensor(const std::string &name) const
 	return NULL;
 }
 
-void Graph::replaceWithQuantized(std::vector<const Tensor*> &inputs)
+void Graph::replaceWithQuantized(std::vector<Tensor*> &inputs)
 {
 	for( unsigned i=0; i<inputs.size(); i++ ) {
 		if(inputs[i]->quantizedCopy)

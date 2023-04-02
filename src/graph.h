@@ -43,8 +43,8 @@ public:
 	void addInitializedTensor(onnx::TensorProto &tensor);
 	Tensor* getIoTensor(onnx::ValueInfoProto &vi);
 
-	void replaceWithQuantized(std::vector<const Tensor*> &inputs);
-	bool getNodeInputTensors(const onnx::NodeProto &node, std::vector<const Tensor*> &inputs);
+	void replaceWithQuantized(std::vector<Tensor*> &inputs);
+	bool getNodeInputTensors(const onnx::NodeProto &node, std::vector<Tensor*> &inputs);
 
 	bool tryResolveNode(onnx::NodeProto &node);
 	bool hasUnresolvedNodes(void);

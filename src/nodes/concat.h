@@ -15,7 +15,7 @@ namespace toC {
 		}
 
 		// inputs
-		std::vector<const Tensor *> node_inputs; // 'inputs' in the spec
+		std::vector<Tensor *> node_inputs; // 'inputs' in the spec
 
 		// output
 		const Tensor *concat_result ;

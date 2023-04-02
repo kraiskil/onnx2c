@@ -23,7 +23,7 @@ class Node {
 	std::string onnx_name; //ONNX name of the individual node
 	std::string op_name;   //ONNX name of node type
 	static int64_t onnx_ir_version;
-	std::vector< const Tensor*> inputs; // List of input tensors in the .onnx file
+	std::vector<Tensor*> inputs; // List of input tensors in the .onnx file
 
 	// NB: this is deprecated. Whenever a node is updated,
 	// any reference to this variable should be removed.

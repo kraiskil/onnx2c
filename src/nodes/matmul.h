@@ -65,7 +65,7 @@ class MatMul : public Node {
 		register_output(rv, "Y");
 	}
 
-	void result_dim( const std::vector< const Tensor*> &inputs, int32_t &rows, int32_t &cols) const
+	void result_dim( const std::vector< Tensor*> &inputs, int32_t &rows, int32_t &cols) const
 	{
 		// TODO: this is the check for vectors. Check equivalent for N-dimensons: N>2
 		if( inputs[0]->data_dim[1] != 0 && inputs[1]->data_dim[1] != 0 )
