@@ -13,11 +13,7 @@ class AveragePool : public Pooling {
 	public:
 	AveragePool() : Pooling() {
 		op_name = "AveragePool";
-		Indices = NULL;
 	}
-
-	// optional outputs
-	const Tensor *Indices;
 
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
 	{
@@ -80,7 +76,6 @@ class AveragePool : public Pooling {
 		Tensor *indices_out = new Tensor;
 		indices_out->data_type = onnx::TensorProto_DataType::TensorProto_DataType_INT64;
 		indices_out->data_dim = rv->data_dim;
-		Indices = indices_out;
 		register_output(indices_out, "ind");
 	}
 };

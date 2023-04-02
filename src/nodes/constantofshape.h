@@ -22,11 +22,8 @@ class ConstantOfShape : public Node {
 	public:
 	ConstantOfShape() {
 		op_name = "ConstantOfShape";
-		input=output=value=NULL;
+		value=NULL;
 	}
-
-	const Tensor *input;
-	const Tensor *output;
 
 	// Attribute, not input
 	const Tensor *value;

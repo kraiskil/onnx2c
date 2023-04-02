@@ -18,29 +18,7 @@ class ConvInteger : public SpatialFilter {
 		op_name = "ConvInteger";
 		auto_pad = "NOTSET";
 		group = 1;
-		x=w=x_zero_point=w_zero_point=y=NULL;
-	}
-	/* ConvInteger node specific attributes */
-
-	// optional inputs
-	const Tensor *x_zero_point;
-	const Tensor *w_zero_point;
-
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		x->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		w->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		if( x_zero_point ) {
-			x_zero_point->print_tensor_as_const(dst, !decorate);
-			dst << ", ";
-		}
-		if( w_zero_point ) {
-			w_zero_point->print_tensor_as_const(dst, !decorate);
-			dst << ", ";
-		}
-		y->print_tensor(dst, !decorate);
+		x=w=y=NULL;
 	}
 
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
@@ -48,7 +26,7 @@ class ConvInteger : public SpatialFilter {
 		if( options.quantize )
 			INDT_3 << "int32_t cell = 0;" << std::endl;
 		else
-			INDT_3 << y->cname() << "[b][m][o0][o1] = 0;" << std::endl;
+			INDT_3 << "y[b][m][o0][o1] = 0;" << std::endl;
 	}
 
 	virtual void print_output_cell_calc(
@@ -58,19 +36,19 @@ class ConvInteger : public SpatialFilter {
 		const std::string &y_idx) const override
 	{
 		std::string x_zero;
-		if( x_zero_point )
-			x_zero = constant_acces_code( x_zero_point->cname() + "[0]");
+		if( inputs.size() >= 3 ) // x_zero_point is optional, 3rd input
+			x_zero = constant_acces_code( "x_zero_point[0]");
 		else
 			x_zero = "0";
 
-		INDT_4 << w->data_type_str() << " w = " << constant_acces_code( w->cname() + "[m][c][k0][k1]") << ";" << std::endl;
+		INDT_4 << w->data_type_str() << " w_ = " << constant_acces_code("w[m][c][k0][k1]") << ";" << std::endl;
 		std::string dest;
 		if( options.quantize )
 			dest = "cell";
 		else
-			dest = y->cname() + "[b][m][o0][o1]";
+			dest = "y[b][m][o0][o1]";
 
-		INDT_4 << dest << "+= ("<< x->cname() << "[b][c][i0+k0][i1+k1] - " << x_zero << ") * w;" << std::endl;
+		INDT_4 << dest << "+= (x[b][c][i0+k0][i1+k1] - " << x_zero << ") * w_;" << std::endl;
 	}
 
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const override
@@ -81,7 +59,7 @@ class ConvInteger : public SpatialFilter {
 			INDT_3 << "int32_t tmp = cell/" << divisor << ";" << std::endl;
 			INDT_3 << "tmp = tmp > 127?127:tmp;" << std::endl;
 			INDT_3 << "tmp = tmp < -127?-127:tmp;" << std::endl;
-			INDT_3 << y->cname() + "[b][m][o0][o1] = tmp;" << std::endl;
+			INDT_3 << "y[b][m][o0][o1] = tmp;" << std::endl;
 		}
 	}
 
@@ -95,12 +73,14 @@ class ConvInteger : public SpatialFilter {
 	virtual void resolve(void) override
 	{
 		x = inputs[0]; // data
+		register_input(x, "x");
 		w = inputs[1]; // weights
+		register_input(w, "w");
 
 		if( inputs.size() > 2 )
-			x_zero_point = inputs[2];
+			register_input(inputs[2], "x_zero_point");
 		if( inputs.size() > 3 ){
-			w_zero_point = inputs[3];
+			register_input(inputs[3], "w_zero_point");
 			ERROR("unimplemented: weight zero points");
 		}
 
@@ -128,7 +108,7 @@ class ConvInteger : public SpatialFilter {
 		else
 			rv->data_type = onnx::TensorProto_DataType_INT32;
 		y=rv;
-		outputs.push_back(rv);
+		register_output(rv, "y");
 	}
 };
 }

@@ -11,11 +11,7 @@ class Conv : public SpatialFilter {
 	public:
 	Conv() {
 		op_name = "Conv";
-		b=NULL;
 	}
-	/* Conv node specific attributes */
-	// optional inputs
-	const Tensor *b;
 
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
 	{
@@ -23,7 +19,7 @@ class Conv : public SpatialFilter {
 		for(unsigned i=0; i<x->rank()-2; i++)
 			outidx += "[o" + std::to_string(i) + "]";
 		INDT_3 << "y[b][m]" << outidx << " = ";
-		if( b == NULL )
+		if( inputs.size() < 3 ) // bias is the 3rd input, optional
 			dst << "0;" << std::endl;
 		else
 			dst << "bias[m];" << std::endl;
@@ -64,16 +60,11 @@ class Conv : public SpatialFilter {
 		w = inputs[1]; // weights
 		register_input(w,"w");
 		if( inputs.size() == 3 ) {
-			b = inputs[2];
-			register_input(b,"bias");
+			register_input(inputs[2],"bias");
 		}
-		else
-			b = NULL;
 
 		if(  typeConstraint_highPrecisionNumeric(x) == false
 		   ||typeConstraint_highPrecisionNumeric(w) == false)
-			ERROR("Incorrect input for node");
-		if( b && (typeConstraint_highPrecisionNumeric(b) == false) )
 			ERROR("Incorrect input for node");
 
 		resolve_strides();

@@ -24,23 +24,12 @@ class BatchNormalization : public Node {
 		op_name = "BatchNormalization";
 		epsilon = 1e-5;
 		momentum = 0.9;
-		input=scale=bias=mean=var=output=NULL;
 		sqrt_var_offline = false;
 	}
 	bool sqrt_var_offline; // TODO: is it ever possible that we can't compute sqrt(var) offline?
 
 	float epsilon;
 	float momentum;
-
-	// inputs
-	const Tensor *input; // 'X' in the spec
-	const Tensor *scale;
-	const Tensor *bias;  // 'B' in the spec
-	const Tensor *mean;
-	const Tensor *var;
-	// outputs
-	const Tensor *output;
-	// ... optional outputs not yet implmeneted
 
 
 	void parseAttribute_epsilon( const onnx::AttributeProto &a ) {
@@ -78,6 +67,9 @@ class BatchNormalization : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
+		Tensor *input = inputs[0];
+		const Tensor *scale = inputs[1];
+		const Tensor *bias  = inputs[2];
 		int batch_size =input->data_dim[0]; 
 		int num_chan =input->data_dim[1]; 
 		std::string type = input->data_type_str();
@@ -114,10 +106,11 @@ class BatchNormalization : public Node {
 			dst << "( sqrt( var[c] + epsilon));" << std::endl;
 
 		INDT_2 << "output" << idxs << " = tmp_X ";
-		if( scale )
-			dst << "* scale[c]";
-		if( bias )
-			dst << " + bias[c]";
+
+		if( !isSplatted(scale, 1.0f) )
+		    dst << "* scale[c]";
+		if( !isSplatted(bias, 0.0f) )
+		    dst << " + bias[c]";
 		dst << ";" << std::endl;
 
 		for( unsigned i = 2; i<input->data_dim.size(); i++)
@@ -128,7 +121,7 @@ class BatchNormalization : public Node {
 	}
 
 	// TODO: this could be useful elsewhere too
-	bool isSplatted(const Tensor *t, float value)
+	bool isSplatted(const Tensor *t, float value) const
 	{
 		if( t->data_type != onnx::TensorProto_DataType_FLOAT )
 			ERROR("Unimplemented");
@@ -147,7 +140,7 @@ class BatchNormalization : public Node {
 	// Updates variance tensor in-place to contain the entire denominator
 	// of the BatchNormalization formula.
 	// TODO: This breaks if var is used anywere else.
-	void calculateSqrtVarOffline(void)
+	void calculateSqrtVarOffline(Tensor *var)
 	{
 		float *v = (float*)var->data_buffer;
 		for( int i=0; i<var->data_num_elem(); i++)
@@ -159,44 +152,20 @@ class BatchNormalization : public Node {
 		if( inputs.size() != 5 )
 			ERROR("wrong number of inputs to BatchNormalization");
 
-		input = inputs[0]; // "X"
-		register_input(input, "X");
-		scale = inputs[1];
-		register_input(scale, "scale");
-		bias = inputs[2]; // "B" in spec
-		register_input(bias, "bias");
-		mean = inputs[3];
-		register_input(mean, "mean");
-		var = inputs[4];
-		register_input(var, "var");
+		register_input(inputs[0], "X");
+		register_input(inputs[1], "scale");
+		register_input(inputs[2], "bias");
+		register_input(inputs[3], "mean");
+		register_input(inputs[4], "var");
 
-		if( typeConstraint_plainFloatingPoints(input) == false)
-			ERROR("Incorrect input for node");
-		if( typeConstraint_plainFloatingPoints(scale) == false)
-			ERROR("Incorrect input for node");
-		if( typeConstraint_plainFloatingPoints(bias) == false)
-			ERROR("Incorrect input for node");
-		if( typeConstraint_plainFloatingPoints(mean) == false)
-			ERROR("Incorrect input for node");
-		if( typeConstraint_plainFloatingPoints(var) == false)
-			ERROR("Incorrect input for node");
-
-		// It is possible that scale is all ones, and bias is all zeros!
-		// But the scale and bias tensors are not optional inputs in ONNX, so they are always
-		// provided.
-		if( isSplatted(scale, 1.0f) )
-			scale = NULL;
-		if( isSplatted(bias, 0.0f) )
-			bias = NULL;
-		if( var->isConst ) {
-			calculateSqrtVarOffline();
+		if( inputs[4]->isConst ) {
+			calculateSqrtVarOffline(inputs[4]);
 			sqrt_var_offline = true;
 		}
 
 		Tensor *rv = new Tensor;
-		rv->data_dim = input->data_dim;
-		rv->data_type = input->data_type;
-		output = rv;
+		rv->data_dim = inputs[0]->data_dim;
+		rv->data_type = inputs[0]->data_type;
 		register_output(rv, "output");
 	}
 };

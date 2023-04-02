@@ -20,10 +20,8 @@ void Cast::parseAttributes( onnx::NodeProto &node )
 
 void Cast::resolve(void)
 {
-	// TODO: should we warn user here. What is the use-case of 'Cast' in embedded systems?
-
-	input  = inputs[0];
-	register_input(input, "input");
+	LOG(INFO) << "'Cast' node found." << std::endl;
+	register_input(inputs[0], "input");
 
 	switch(to)
 	{
@@ -37,9 +35,8 @@ void Cast::resolve(void)
 	}
 
 	Tensor *t = new Tensor;
-	t->data_dim = input->data_dim;
+	t->data_dim = inputs[0]->data_dim;
 	t->data_type = static_cast<onnx::TensorProto_DataType>(to);
-	output = t;
 	register_output(t, "output");
 }
 
@@ -47,6 +44,9 @@ void Cast::resolve(void)
 void Cast::print(std::ostream &dst) const
 {
 	INDT_1 << "/* Cast */" << std::endl;
+	const Tensor *input = inputs[0];
+	const Tensor *output = outputs[0];
+
 	std::string intype = input->data_type_str();
 	std::string outtype = output->data_type_str();
 

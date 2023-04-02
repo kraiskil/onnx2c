@@ -22,18 +22,10 @@ class TEMPLATE : public Node {
 	public:
 	TEMPLATE() {
 		op_name = "TEMPLATE";
-		input_1=input_2_optional=output_1=output_2_optional=NULL;
 	}
 	/* Examples of ONNX Operand attributes */
 	std::vector<float> a_floatarray_attribute;
 	int an_int_attribute;
-
-	// input and output tensors
-	const Tensor *input_1;
-	const Tensor *input_2_optional;
-	const Tensor *output_1;
-	const Tensor *output_2_optional;
-
 
 	// Mandatory "API" functions towards the rest of onnx2c
 	virtual void parseAttributes( onnx::NodeProto &node ) override;
@@ -60,14 +52,14 @@ void TEMPLATE::parseAttributes( onnx::NodeProto &node )
 /* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 void TEMPLATE::resolve(void)
 {
-	input_1  = inputs[0];
+	Tensor *input_1  = inputs[0];
 	// Remember the parameters to the generated function,
 	// along with a descriptive name that is used locally in the generated source.
 	// The most "descriptive name" usually is the one this tensor has in the ONNX documentation.
 	register_input(input_1, "A");
 
 	if (inputs.size() == 2) {
-		input_2_optional = inputs[1];
+		Tensor *input_2_optional = inputs[1];
 		register_input(input_2_optional, "descriptive_name");
 	}
 	// else leave input_2_optional as null so other functions here know to ignore it
@@ -78,9 +70,6 @@ void TEMPLATE::resolve(void)
 	Tensor *t = new Tensor;
 	t->data_dim.push_back(42);
 	t->data_type = onnx::TensorProto_DataType_FLOAT;
-	/* Store the created tensor both as reference in this node, and into
-	 * the return value vector! */
-	output_1 = t;
 	register_output(t, "Y");
 
 	/* TODO: optional outputs? */

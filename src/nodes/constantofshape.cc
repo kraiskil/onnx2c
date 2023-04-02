@@ -19,7 +19,7 @@ void ConstantOfShape::parseAttributes( onnx::NodeProto &node )
 
 void ConstantOfShape::resolve(void)
 {
-	input  = inputs[0];
+	Tensor *input  = inputs[0];
 	register_input(input, "input");
 
 	Tensor *t = new Tensor;
@@ -32,16 +32,16 @@ void ConstantOfShape::resolve(void)
 		t->data_type = value->data_type;
 	else
 		t->data_type = onnx::TensorProto_DataType_FLOAT;
-	output = t;
 	register_output(t, "output");
 }
 
 
-/* Body of the node implementing function */
 void ConstantOfShape::print(std::ostream &dst) const
 {
-	INDT_1 << "/* ConstantOfShape */" << std::endl;
+	Tensor *output  = outputs[0];
 	std::string type = output->data_type_str();
+
+	INDT_1 << "/* ConstantOfShape */" << std::endl;
 
 	INDT_1 << type << " *dst = (" << type << "*)output;" << std::endl;
 	INDT_1 << "for( unsigned i=0; i< " << output->data_num_elem() << "; i++)" << std::endl;

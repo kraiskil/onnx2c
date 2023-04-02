@@ -11,26 +11,10 @@ namespace toC {
 		Concat() {
 			op_name = "Concat";
 			axis = 1;
-			concat_result  = nullptr;
 		}
-
-		// inputs
-		std::vector<Tensor *> node_inputs; // 'inputs' in the spec
-
-		// output
-		const Tensor *concat_result ;
 
 		// attribute
 		int axis;
-
-		void print_parameters(std::ostream &dst, bool decorate) const override {
-			size_t input_count = node_inputs.size();
-			for (size_t i = 0; i < input_count; i++) {
-				node_inputs[i]->print_tensor_as_const(dst, !decorate);
-				dst << ", ";
-			}
-			concat_result->print_tensor(dst, !decorate);
-		}
 
 		void parseAttributes(onnx::NodeProto &node) override {
 			for (const auto &a : node.attribute()) {
@@ -46,35 +30,39 @@ namespace toC {
 		void print(std::ostream &dst) const override {
 
 			dst << "\t/* Concat */" << std::endl;
+			const Tensor *concat_result = outputs[0];
 
 			// the axisPitch is the number of elements to add to move to the next split axis in the concat_result
 			int64_t axisPitch = 1;
-			for (int i = concat_result ->data_dim.size() - 1; i >= axis; i--) {
-				axisPitch *= concat_result ->data_dim[i];
+			for (int i = concat_result->data_dim.size() - 1; i >= axis; i--) {
+				axisPitch *= concat_result->data_dim[i];
 			}
 
 			dst << "\tint64_t outputOffset;" << std::endl;
 
 			int64_t outputBase = 0;
-			int64_t input_count = node_inputs.size();
+			int64_t input_count = inputs.size();
 
 			for (int64_t inputIndex = 0; inputIndex < input_count; inputIndex++) {
 
+				std::string input_name = "input_";
+				input_name += std::to_string(inputIndex);
+
 				// the inputAxisPitch is the number of elements to add to move to the next split axis in the inputs
 				int64_t inputAxisPitch = 1;
-				for (int i = node_inputs[inputIndex]->data_dim.size() - 1; i >= axis; i--) {
-					inputAxisPitch *= node_inputs[inputIndex]->data_dim[i];
+				for (int i = inputs[inputIndex]->data_dim.size() - 1; i >= axis; i--) {
+					inputAxisPitch *= inputs[inputIndex]->data_dim[i];
 				}
 
-				int64_t inputSize = node_inputs[inputIndex]->data_num_elem();
+				int64_t inputSize = inputs[inputIndex]->data_num_elem();
 
 				// copy the data across: for every 'inputAxisPitch' values copied, we move over by the 'axisPitch'
 				dst << "\toutputOffset = " << outputBase << ";" << std::endl;
 				dst << "\tfor (int64_t i = 0, j = 0; i < " << inputSize << "; i++) {" << std::endl;
 
-				dst << "\t\t*((" << concat_result ->data_type_str() << "*)" << concat_result ->cname();
+				dst << "\t\t*((" << concat_result ->data_type_str() << "*)output";
 				dst << " + (outputOffset + i)) = *((" << concat_result ->data_type_str() << "*)";
-				dst << node_inputs[inputIndex]->cname() << " + i);" << std::endl;
+				dst << input_name << " + i);" << std::endl;
 
 				dst << "\t\tif (++j == " << inputAxisPitch << ") {" << std::endl;
 				dst << "\t\t\toutputOffset += (" << axisPitch - inputAxisPitch << ");" << std::endl;
@@ -89,7 +77,6 @@ namespace toC {
 		}
 
 		void resolve(void) override {
-			node_inputs = inputs;
 			if (inputs.size() == 1 ) {
 				LOG(WARNING) << "Concat node " << onnx_name << " has only one input." << std::endl;
 			}
@@ -99,7 +86,7 @@ namespace toC {
 
 			auto *rv = new Tensor;
 			rv->data_dim = inputs[0]->data_dim;
-			size_t input_count = node_inputs.size();
+			size_t input_count = inputs.size();
 			size_t output_axis_size = 0;
 			size_t i, j;
 			std::vector<int> dims = inputs[0]->data_dim;
@@ -115,12 +102,15 @@ namespace toC {
 						ERROR("Concat's input tensors must have the same shape, except for the "
 							  "dimension size of the axis to concatenate on.");
 				}
+
+				std::string input_name = "input_";
+				input_name += std::to_string(i);
+				register_input(inputs[i], input_name);
 				output_axis_size += inputs[i]->data_dim[axis];
 			}
 			rv->data_dim[axis] = output_axis_size;
 			rv->data_type = inputs[0]->data_type;
-			concat_result  = rv;
-			outputs.push_back(rv);
+			register_output(rv, "output");
 		}
 	};
 }

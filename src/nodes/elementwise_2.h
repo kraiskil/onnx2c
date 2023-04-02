@@ -12,10 +12,6 @@ class Elementwise_2 : public Node {
 	std::function<const std::string (const std::string&, const std::string&)> operation =
 		[](const std::string &a, const std::string &b){ ERROR("onnx2c internal error"); return ""; };
 
-	// input and output: C = A ? B
-	const Tensor *A;
-	const Tensor *B;
-	const Tensor *C;
 	bool output_is_bool;
 
 	// Union of attributes over implemented nodes
@@ -24,7 +20,6 @@ class Elementwise_2 : public Node {
 
 	Elementwise_2(std::string op) {
 		op_name = op;
-		A=B=C=NULL;
 		output_is_bool = false;
 		fmod=0;
 		shift_dir="NOT_GIVEN"; // mandatory for BitShift, but no default
@@ -109,13 +104,13 @@ class Elementwise_2 : public Node {
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
-		A->print_tensor_as_const(dst, !decorate);
+		inputs[0]->print_tensor_as_const(dst, !decorate);
 
 		dst << ", ";
-		B->print_tensor_as_const(dst, !decorate);
+		inputs[1]->print_tensor_as_const(dst, !decorate);
 
 		dst << ", ";
-		C->print_tensor(dst, !decorate);
+		outputs[0]->print_tensor(dst, !decorate);
 	}
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
@@ -140,6 +135,11 @@ class Elementwise_2 : public Node {
 		INDT_1 << "   shift_dir: " << shift_dir << std::endl;
 		INDT_1 << "   fmod: " << fmod << std::endl;
 		INDT_1 << " */" << std::endl;
+
+		// C = A ? B
+		Tensor *A = inputs[0];
+		Tensor *B = inputs[1];
+		Tensor *C = outputs[0];
 
 		// if either A or B does not have enough dimensions, prepend
 		// dimensions of 1 to match rank of C
@@ -190,8 +190,8 @@ class Elementwise_2 : public Node {
 
 	virtual void resolve(void) override
 	{
-		A = inputs[0];
-		B = inputs[1];
+		Tensor *A = inputs[0];
+		Tensor *B = inputs[1];
 
 		std::vector<int> result_dim;
 		multidirectional_broadcast_size(A->data_dim, B->data_dim, result_dim);
@@ -202,7 +202,6 @@ class Elementwise_2 : public Node {
 			t->data_type = onnx::TensorProto_DataType_BOOL;
 		else
 			t->data_type = A->data_type;
-		C = t;
 		outputs.push_back(t);
 	}
 };
