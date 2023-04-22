@@ -6,12 +6,27 @@ class Reshape : public Node {
 	Reshape() {
 		op_name = "Reshape";
 		data=shape=reshaped=NULL;
+		allowzero=0;
 	}
 	// inputs
 	const Tensor *data;
 	const Tensor *shape;
 	// outputs
 	const Tensor *reshaped;
+
+	int32_t allowzero;
+
+	void parseAttributes( onnx::NodeProto &node )
+	{
+		for( const auto& a : node.attribute() ) {
+			LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
+			if( a.name() == "allowzero" )
+				allowzero = parse_attribute_int(a);
+			else
+				LOG(ERROR) << "Ignoring attribute " << a.name() << " for node TEMPLATE/" << onnx_name << std::endl;
+		}
+	}
+
 
 	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
 	{
@@ -54,6 +69,10 @@ class Reshape : public Node {
 
 		if( shape->initialize == false ) {
 			ERROR("Reshaping to a run-time defined shape is not supported");
+		}
+
+		if( allowzero != 0) {
+			ERROR("Allowzero attribute set. What exactly are you expecting as the output here?");
 		}
 
 		std::vector<int> out_data_dim;
