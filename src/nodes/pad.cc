@@ -41,15 +41,26 @@ void Pad::resolve(void)
 
 	if (pads_tensor && pads_tensor->isConst == false)
 		ERROR("Non-constant 'pads' input to Pad would result in dynamic memory allocation");
-	if (constant_value && constant_value->isConst == false)
-		ERROR("Non-constant 'constant_value' input to Pad would result in dynamic memory allocation");
-
+	if( pads_tensor && pads_tensor->data_type != onnx::TensorProto_DataType_INT64 )
+		ERROR("Malformed input. Input 2 to Pads is not a tensor of int64");
 
 	// Use attribute is given, use that. The tensor should not be given in that case.
 	constant = value_attribute;
-	if (constant_value)
-		// Not sure this works. constant_value is supposed to be a scalar
-		constant = constant_value->get_data_element_float(0);
+	if (constant_value) {
+		// The documentation of Pad is a bit complex, and it seems there are
+		// .onnx generators out ther who create a tensor of undefined data type for Pad
+		// This must be the default of pad with zeros they mean?
+		if( constant_value->data_type == onnx::TensorProto_DataType_UNDEFINED ) {
+			constant = 0;
+		}
+		else if (constant_value->isConst == false) {
+			ERROR("Non-constant 'constant_value' input to Pad would result in dynamic memory allocation");
+		}
+		else {
+			// Not sure this works. constant_value is supposed to be a scalar
+			constant = constant_value->get_data_element_float(0);
+		}
+	}
 
 	if (pads_tensor) {
 		int i;
