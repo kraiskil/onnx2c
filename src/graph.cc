@@ -270,7 +270,6 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 		const_cast<Tensor*>(i)->consumers.push_back(n);
 	}
 
-	n->onnx_node = &node;
 	n->isResolved = false;
 	n->op_name = new_node;
 	n->onnx_name = node.name();
@@ -288,6 +287,28 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 
 	if( node.attribute_size() != 0 )
 		n->parseAttributes( node );
+
+	// create output nodes for the tensor.
+	// this is a kludge around a chicken & egg problem caused by bad design in
+	// onnx2c:
+	// we don't want to save a copy of the onnx::NodeProto in the onnx2c::node object
+	// (since who knows how protobuf keeps its internals).
+	// So create a list of that tells if outputs are used or not *before* resolving
+	// the node.
+	std::vector<bool> output_used;
+	for(int nn = 0; nn<node.output_size(); nn++)
+	{
+		// ONNX spec:
+		// "There are two ways to leave an optional input or output unspecified:
+		// the first, available only for trailing inputs and outputs, is to simply
+		// not provide that input; the second method is to use an empty string in
+		// place of an input or output name."
+		if( node.output(nn) == "" )
+			output_used.push_back(false);
+		else
+			output_used.push_back(true);
+	}
+	n->set_output_used(output_used);
 
 	// Configure Node internals, and populate its outputs vector.
 	n->resolve();

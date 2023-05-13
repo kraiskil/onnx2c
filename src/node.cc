@@ -7,20 +7,11 @@
 using namespace toC;
 
 int64_t Node::onnx_ir_version;
-bool Node::is_output_N_used(unsigned N)
+bool Node::is_output_N_used(unsigned N) const
 {
-	// ONNX spec:
-	// "There are two ways to leave an optional input or output unspecified:
-	// the first, available only for trailing inputs and outputs, is to simply
-	// not provide that input; the second method is to use an empty string in
-	// place of an input or output name."
-
-	if( (int)N >= onnx_node->output_size() )
+	if( N >= output_used.size() )
 		return false;
-
-	if( onnx_node->output(N) == "" )
-		return false;
-
+	return output_used[N];
 	return true;
 }
 
