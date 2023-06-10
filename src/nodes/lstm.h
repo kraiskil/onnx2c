@@ -26,34 +26,8 @@ class LSTM : public Node {
 		clip = -1.0;
 		hidden_size = -1;
 		input_forget = 0;
-		X=NULL;
-		W=NULL;
-		R=NULL;
-		B=NULL;
-		sequence_lens=NULL;
-		initial_h=NULL;
-		initial_c=NULL;
-		P=NULL;
-		Y=NULL;
-		Y_h=NULL;
-		Y_c=NULL;
 		layout=0;
 	}
-
-	// inputs
-	const Tensor *X;
-	const Tensor *W;
-	const Tensor *R;
-	// optional inputs
-	const Tensor *B;
-	const Tensor *sequence_lens;
-	const Tensor *initial_h;
-	const Tensor *initial_c;
-	const Tensor *P;
-	// optional outputs
-	Tensor *Y;
-	Tensor *Y_h;
-	Tensor *Y_c;
 
 	// Attributes
 	std::vector<float> activation_alpha;
@@ -78,6 +52,29 @@ class LSTM : public Node {
 
 	float get_activation_alpha( const std::string &a);
 	float get_activation_beta( const std::string &a);
+	const Tensor* get_X(void) const { return inputs[0]; }
+	const Tensor* get_W(void) const { return inputs[1]; }
+	const Tensor* get_R(void) const { return inputs[2]; }
+	const Tensor* get_Y(void) const { return outputs[0]; }
+	const Tensor* get_Y_h(void) const { return outputs[1]; }
+	const Tensor* get_Y_c(void) const { return outputs[2]; }
+
+	// ONNX allows omitting optional inputs by either:
+	//  - not give them at all
+	//  - named with the empty string
+	const Tensor* get_optional(unsigned N) const
+	{
+		if( inputs.size() <= N )
+			return nullptr;
+		if( inputs[N]->name == "" )
+			return nullptr;
+		return inputs[N];
+	}
+	const Tensor* get_B(void) const { return get_optional(3); }
+	const Tensor* get_sequence_lens(void) const { return get_optional(4); }
+	const Tensor* get_initial_h(void) const {return get_optional(5); }
+	const Tensor* get_initial_c(void) const {return get_optional(6); }
+	const Tensor* get_P(void) const {return get_optional(7); }
 
 	void print_activation(std::ostream &dst, const std::string &activation, const std::string &var) const;
 	void print_lstm_kernel(std::ostream &dst, bool forward) const;
