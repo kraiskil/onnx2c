@@ -5,17 +5,12 @@ class MatMul : public Node {
 	public:
 	MatMul() {
 		op_name = "MatMul";
-		A=B=Y=NULL;
 	}
-	// inputs
-	const Tensor *A;
-	const Tensor *B;
-	// outputs
-	const Tensor *Y;
-
 
 	virtual void print(std::ostream &dst) const override
 	{
+		Tensor *A = inputs[0];
+		Tensor *B = inputs[1];
 		std::string type = A->data_type_str();
 
 		if( A->data_dim.size() != 2 )
@@ -44,8 +39,8 @@ class MatMul : public Node {
 	} 
 	virtual void resolve(void) override
 	{
-		A = inputs[0];
-		B = inputs[1];
+		Tensor *A = inputs[0];
+		Tensor *B = inputs[1];
 		register_input(A, "A");
 		register_input(B, "B");
 		if(  typeConstraint_highPrecisionNumeric(A) == false )
@@ -61,7 +56,6 @@ class MatMul : public Node {
 		rv->data_dim.push_back(rows);
 		rv->data_dim.push_back(cols);
 		rv->data_type = A->data_type;
-		Y=rv;
 		register_output(rv, "Y");
 	}
 
