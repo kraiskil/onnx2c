@@ -17,7 +17,7 @@ class AveragePool : public Pooling {
 
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
 	{
-		INDT_3  << y->data_type_str() << " curavg = 0.0;" << std::endl;
+		INDT_3  << get_Y()->data_type_str() << " curavg = 0.0;" << std::endl;
 		INDT_3  << "int numavg = 0;" << std::endl;
 	}
 	virtual void print_output_cell_calc(
@@ -52,12 +52,7 @@ class AveragePool : public Pooling {
  
 	virtual void resolve(void) override
 	{
-		x = inputs[0];
-		register_input(x, "x");
-
-		if( !(  typeConstraint_plainFloatingPoints(x)
-		      ||typeConstraint_8bit(x)) )
-			ERROR("Incorrect input for node"); 
+		register_input(inputs[0], "x");
 
 		resolve_strides();
 		resolve_dilations();
@@ -66,8 +61,7 @@ class AveragePool : public Pooling {
 
 		Tensor *rv = new Tensor;
 		rv->data_dim = resolve_output_size();
-		rv->data_type = x->data_type;
-		y=rv;
+		rv->data_type = get_X()->data_type;
 		register_output(rv, "y");
 
 		update_pads();

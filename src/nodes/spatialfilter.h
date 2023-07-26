@@ -17,14 +17,8 @@ class SpatialFilter : public Node {
 	public:
 	SpatialFilter() {
 		auto_pad = "NOTSET";
-		x=w=y=NULL;
 		group=1;
 	}
-	// inputs
-	const Tensor *x;
-	const Tensor *w;
-	// outputs
-	const Tensor *y;
 
 	// Attributes
 	std::vector<int64_t> kernel_shape;
@@ -33,6 +27,16 @@ class SpatialFilter : public Node {
 	int group;
 	std::vector<int64_t> pads;
 	std::vector<int64_t> strides;
+
+	const Tensor* get_X(void) const { return inputs[0]; }
+	const Tensor* get_W(void) const {
+		if( inputs.size() > 1 )
+			return inputs[1];
+		else
+			return nullptr;
+	}
+	const Tensor* get_Y(void) const { return outputs[0]; }
+	uint32_t get_numDataDim(void) const {return get_X()->rank() - 2; }
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 		for( const auto& a : node.attribute() ) {
@@ -54,9 +58,8 @@ class SpatialFilter : public Node {
 
 	void resolve_strides(void)
 	{
-		unsigned num_data_dim = x->rank()-2;
 		if( strides.size() == 0 )
-			for( unsigned i=0; i<num_data_dim; i++)
+			for( unsigned i=0; i<get_numDataDim(); i++)
 				strides.push_back(1);
 	}
 
@@ -65,21 +68,20 @@ class SpatialFilter : public Node {
 		//if kernel shape is not given, infer from w
 		if( kernel_shape.size() == 0 ) {
 			// skip M and C/group dimensions
-			for( unsigned i=2; i<w->rank(); i++)
-				kernel_shape.push_back(w->data_dim[i]);
+			for( unsigned i=2; i<get_W()->rank(); i++)
+				kernel_shape.push_back(get_W()->data_dim[i]);
 		}
 	}
 
 	void resolve_dilations(void)
 	{
-		unsigned num_data_dim = x->rank()-2;
 		if( dilations.size() == 0 )
-			for( unsigned i=0; i< num_data_dim; i++ )
+			for( unsigned i=0; i< get_numDataDim(); i++ )
 				dilations.push_back(1);
 	}
 	void resolve_pads(void)
 	{
-		unsigned num_data_dim = x->rank()-2;
+		unsigned num_data_dim = get_numDataDim();
 		if( pads.size() == 0 ) {
 			pads.resize(num_data_dim*2);
 			for( unsigned i=0; i< num_data_dim; i++ ) {
@@ -100,13 +102,14 @@ class SpatialFilter : public Node {
 	virtual std::vector<int> resolve_output_size(void)
 	{
 		std::vector<int> rv;
-		unsigned num_data_dim = x->rank()-2;
-		rv.push_back(x->data_dim[0]);//batch size
-		rv.push_back(w->data_dim[0]);//"number of feature maps"
+		unsigned num_data_dim = get_numDataDim();
+		rv.push_back(get_X()->data_dim[0]);//batch size
+		rv.push_back(get_W()->data_dim[0]);//"number of feature maps"
 
-		for( unsigned xdim=2; xdim < x->data_dim.size(); xdim++) {
+		for( unsigned dim=0, xdim=2;
+		     dim < num_data_dim;
+		     dim++, xdim++) {
 			int outdim;
-			unsigned dim = xdim-2;
 			// Not sure if the naming is correct. Here
 			// kernel: the (number of) weights of the filter
 			// filter: the spatial placement of the kernel weights
@@ -118,10 +121,10 @@ class SpatialFilter : public Node {
 			// SAME_UPPER or SAME_LOWER mean pad the input so that the output spatial size match the input.
 			// "match" here means "is equal".
 			if( auto_pad == "SAME_UPPER" || auto_pad == "SAME_LOWER" )
-				outdim = x->data_dim[xdim];
+				outdim = get_X()->data_dim[xdim];
 			else if( auto_pad == "NOTSET" || auto_pad == "VALID") {
 				//padded input
-				int input_size = x->data_dim[xdim] + pads[dim]+pads[dim+num_data_dim];
+				int input_size = get_X()->data_dim[xdim] + pads[dim]+pads[dim+num_data_dim];
 				// [ 0 1 2 3 4 5 6 7 8 9  ]
 				//                |kern=3|
 				// last output=7
@@ -185,10 +188,10 @@ class SpatialFilter : public Node {
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx="") const = 0;
 	void print_loop_with_padding_checks(std::ostream &dst) const
 	{
-		unsigned n_data_dims = x->data_dim.size() -2;
-		unsigned batch_size = x->data_dim[0];
-		unsigned channels = x->data_dim[1];
-		unsigned maps=y->data_dim[1];
+		unsigned n_data_dims = get_numDataDim();
+		unsigned batch_size = get_X()->data_dim[0];
+		unsigned channels = get_X()->data_dim[1];
+		unsigned maps=get_Y()->data_dim[1];
 
 		/* Create various indexing strings. This makes generating the loops much cleaner,
 		 * and makes possible the code sharing in child classes. */
@@ -213,7 +216,7 @@ class SpatialFilter : public Node {
 		}
 		if( direct_channel_map() )
 			INDT_1 << "for( uint32_t m=0, c=0; m<" << maps << "; m++, c=m) {" << std::endl;
-		else if( w && group > 1 ) {
+		else if( get_W() && group > 1 ) {
 			INDT_1 << "uint32_t go = " << maps/group     << "; // output group size, i.e. maps/group" << std::endl;
 			INDT_1 << "uint32_t gi = " << channels/group << "; // inptput group size, i.e. channels/group" << std::endl;
 			INDT_1 << "for( uint32_t g=0; g<" << group << "; g++) {" << std::endl;
@@ -229,7 +232,7 @@ class SpatialFilter : public Node {
 			std::string i_idx = "i" + std::to_string(i);
 			INDT_2 << "for( int32_t " << o_idx << "=0, ";
 			   dst <<       i_idx << "=" << -pads[i] << "; ";
-			   dst <<       o_idx << "<" << y->data_dim[2+i] << "; ";
+			   dst <<       o_idx << "<" << get_Y()->data_dim[2+i] << "; ";
 			   dst <<       o_idx <<"++, "<< i_idx << "+=" << strides[i] << ") {" << std::endl;
 		}
 
@@ -237,7 +240,7 @@ class SpatialFilter : public Node {
 
 		if (direct_channel_map())
 			;
-		else if( w && group > 1 )
+		else if( get_W() && group > 1 )
 			INDT_3 <<   "for( int32_t c=gi*g; c<gi*(g+1); c++ ) {" << std::endl;
 		else    // same as above, just cleaner to read :)
 			INDT_3 <<   "for( int32_t c=0; c<" << channels << "; c++ ) {" << std::endl;
@@ -255,7 +258,7 @@ class SpatialFilter : public Node {
 			std::string i_str = std::to_string(i);
 			INDT_4 <<  "int ii" << i_str << " = i" << i_str << "+k" << i_str <<" * " << dilations[i] <<";" << std::endl;
 			INDT_4 <<  "if( ii" << i_str << "<0) continue;" << std::endl;
-			INDT_4 <<  "if( ii" << i_str << ">=" << x->data_dim[2+i] << ") continue;" << std::endl;
+			INDT_4 <<  "if( ii" << i_str << ">=" << get_X()->data_dim[2+i] << ") continue;" << std::endl;
 		}
 
 		print_output_cell_calc(dst, in_kern_idxs, "", y_idx);

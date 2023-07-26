@@ -12,24 +12,9 @@ class MaxPool : public Pooling {
 	public:
 	MaxPool() {
 		op_name = "MaxPool";
-		Indices=NULL;
 	}
-
-	// optional outputs
-	const Tensor *Indices;
 
 	std::vector<int> pad_shapes;
-
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		x->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		y->print_tensor(dst, !decorate);
-		if( Indices->name != "" ) {
-			dst << ", ";
-			Indices->print_tensor(dst, !decorate);
-		}
-	}
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 
@@ -43,7 +28,7 @@ class MaxPool : public Pooling {
 
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
 	{
-		std::string type = x->data_type_str();
+		std::string type = get_X()->data_type_str();
 		std::string type_min_value;
 		if( type == "float" )
 			type_min_value = "-FLT_MAX";
@@ -57,7 +42,7 @@ class MaxPool : public Pooling {
 			ERROR("Unimplemented: minimum value for this type");
 
 		INDT_3  << type << " curmax = " << type_min_value << ";" << std::endl;
-		if( Indices->name != "" )
+		if( get_Indices() )
 			INDT_3 << "int64_t curmaxind = -1;" << std::endl;
 
 
@@ -68,7 +53,9 @@ class MaxPool : public Pooling {
 		const std::string &w_idx,
 		const std::string &y_idx) const override
 	{
-		unsigned n_data_dims = x->data_dim.size()-2;
+		unsigned n_data_dims = get_numDataDim();
+		const Tensor *x = get_X();
+
 		// Calculate how much one index means in terms of the Indices output.
 		// Generate helper string for the next step.
 		std::vector<int>size_of_dim(x->rank());
@@ -80,9 +67,9 @@ class MaxPool : public Pooling {
 			indices_value += "+(ii" + std::to_string(i) + "*" + std::to_string(size_of_dim[i+2]) + ")";
 
 		// Update the max and index value
-		INDT_4 << "if( curmax < " << x->cname() << x_idx << ") {" <<std::endl;
-		INDT_4 << "curmax = MAX( curmax, " << x->cname() << x_idx << ");" <<std::endl;
-		if( Indices->name != "" )
+		INDT_4 << "if( curmax < x" << x_idx << ") {" <<std::endl;
+		INDT_4 << "curmax = MAX( curmax, x" << x_idx << ");" <<std::endl;
+		if( get_Indices() )
 			INDT_4  << "curmaxind = " << indices_value << ";" <<std::endl;
 		INDT_4 << "}" << std::endl;
 
@@ -91,9 +78,9 @@ class MaxPool : public Pooling {
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const override
 	{
 		// Store the calculated values into output tensors
-		INDT_3  << y->cname() << y_idx << "= curmax;" << std::endl;
-		if( Indices->name != "" )
-			INDT_3 << Indices->cname() << y_idx << "= curmaxind;" << std::endl;
+		INDT_3  << "y" << y_idx << "= curmax;" << std::endl;
+		if( get_Indices() )
+			INDT_3 << "Indices " << y_idx << "= curmaxind;" << std::endl;
 	}
 
 
@@ -105,7 +92,7 @@ class MaxPool : public Pooling {
 
 	virtual void resolve(void) override
 	{
-		x = inputs[0];
+		register_input(inputs[0], "x");
 
 		resolve_strides();
 		resolve_dilations();
@@ -118,9 +105,8 @@ class MaxPool : public Pooling {
 		Tensor *rv = new Tensor;
 		rv->data_dim = resolve_output_size();
 
-		rv->data_type = x->data_type;
-		y=rv;
-		outputs.push_back(rv);
+		rv->data_type = get_X()->data_type;
+		register_output(rv, "y");
 
 		update_pads();
 
@@ -128,10 +114,13 @@ class MaxPool : public Pooling {
 		Tensor *indices_out = new Tensor;
 		indices_out->data_type = onnx::TensorProto_DataType::TensorProto_DataType_INT64;
 		indices_out->data_dim = rv->data_dim;
-		Indices = indices_out;
-		outputs.push_back(indices_out);
-
-
+		register_output(indices_out, "Indices");
+	}
+	const Tensor* get_Indices(void) const {
+		if( outputs[1]->name != "" )
+			return outputs[1];
+		else
+			return nullptr;
 	}
 };
 }

@@ -18,7 +18,6 @@ class ConvInteger : public SpatialFilter {
 		op_name = "ConvInteger";
 		auto_pad = "NOTSET";
 		group = 1;
-		x=w=y=NULL;
 	}
 
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
@@ -41,7 +40,7 @@ class ConvInteger : public SpatialFilter {
 		else
 			x_zero = "0";
 
-		INDT_4 << w->data_type_str() << " w_ = " << constant_acces_code("w[m][c][k0][k1]") << ";" << std::endl;
+		INDT_4 << get_W()->data_type_str() << " w_ = " << constant_acces_code("w[m][c][k0][k1]") << ";" << std::endl;
 		std::string dest;
 		if( options.quantize )
 			dest = "cell";
@@ -72,10 +71,8 @@ class ConvInteger : public SpatialFilter {
 
 	virtual void resolve(void) override
 	{
-		x = inputs[0]; // data
-		register_input(x, "x");
-		w = inputs[1]; // weights
-		register_input(w, "w");
+		register_input(inputs[0], "x");
+		register_input(inputs[1], "w");
 
 		if( inputs.size() > 2 )
 			register_input(inputs[2], "x_zero_point");
@@ -84,7 +81,7 @@ class ConvInteger : public SpatialFilter {
 			ERROR("unimplemented: weight zero points");
 		}
 
-		if( x->data_dim.size() != 4 )
+		if( get_X()->data_dim.size() != 4 )
 			ERROR("Unimplemented: ConvInteger for non 2D images");
 
 
@@ -107,7 +104,6 @@ class ConvInteger : public SpatialFilter {
 			rv->data_type = onnx::TensorProto_DataType_INT8;
 		else
 			rv->data_type = onnx::TensorProto_DataType_INT32;
-		y=rv;
 		register_output(rv, "y");
 	}
 };

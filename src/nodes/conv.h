@@ -16,7 +16,7 @@ class Conv : public SpatialFilter {
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
 	{
 		std::string outidx="";
-		for(unsigned i=0; i<x->rank()-2; i++)
+		for(unsigned i=0; i<get_numDataDim(); i++)
 			outidx += "[o" + std::to_string(i) + "]";
 		INDT_3 << "y[b][m]" << outidx << " = ";
 		if( inputs.size() < 3 ) // bias is the 3rd input, optional
@@ -33,7 +33,7 @@ class Conv : public SpatialFilter {
 		std::string outidx="";
 		std::string iididx="";
 		std::string kidx="";
-		for(unsigned i=0; i<x->rank()-2; i++){
+		for(unsigned i=0; i<get_numDataDim(); i++){
 			outidx += "[o" + std::to_string(i) + "]";
 			iididx+= "[ii" + std::to_string(i) + "]";
 			kidx+= "[k" + std::to_string(i) + "]";
@@ -55,17 +55,11 @@ class Conv : public SpatialFilter {
  
 	virtual void resolve(void) override
 	{
-		x = inputs[0]; // data
-		register_input(x,"x");
-		w = inputs[1]; // weights
-		register_input(w,"w");
+		register_input(inputs[0],"x");
+		register_input(inputs[1],"w");
 		if( inputs.size() == 3 ) {
 			register_input(inputs[2],"bias");
 		}
-
-		if(  typeConstraint_highPrecisionNumeric(x) == false
-		   ||typeConstraint_highPrecisionNumeric(w) == false)
-			ERROR("Incorrect input for node");
 
 		resolve_strides();
 		resolve_dilations();
@@ -74,8 +68,7 @@ class Conv : public SpatialFilter {
 
 		Tensor *rv = new Tensor;
 		rv->data_dim = resolve_output_size();
-		rv->data_type = x->data_type;
-		y=rv;
+		rv->data_type = get_X()->data_type;
 		register_output(rv, "y");
 	}
 };
