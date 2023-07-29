@@ -25,9 +25,9 @@ void ScatterND::resolve(void)
 	if (inputs.size() != 3) {
 		ERROR("Wrong number of inputs to ScatterND");
 	}
-	data = inputs[0];
-	indices = inputs[1];
-	updates = inputs[2];
+	const Tensor *data = inputs[0];
+	const Tensor *indices = inputs[1];
+	const Tensor *updates = inputs[2];
 	register_input(data, "data");
 	register_input(indices, "indices");
 	register_input(updates, "updates");
@@ -35,13 +35,15 @@ void ScatterND::resolve(void)
 	Tensor *t = new Tensor;
 	t->data_dim = data->data_dim;
 	t->data_type = data->data_type;
-	output = t;
 	register_output(t, "output");
 }
 
 
 void ScatterND::print(std::ostream &dst) const
 {
+	const Tensor *data = inputs[0];
+	const Tensor *indices = inputs[1];
+	const Tensor *output = outputs[0];
 
 	unsigned k = indices->data_dim[indices->rank()-1];
 	std::string data_op="=";

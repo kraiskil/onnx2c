@@ -8,16 +8,13 @@ class Shape : public Node {
 	public:
 	Shape() {
 		op_name = "Shape";
-		data=output=NULL;
 	}
-
-	const Tensor *data;
-	const Tensor *output;
 
 
 	virtual void resolve(void) override
 	{
-		data = inputs[0];
+		const Tensor *data = inputs[0];
+		register_input(data, "data");
 
 		Tensor *t = new Tensor;
 		t->data_dim.push_back(data->rank());
@@ -30,21 +27,14 @@ class Shape : public Node {
 			db[i] = data->data_dim[i];
 		t->data_buffer = (void*) db;
 
-		output = t;
-		outputs.push_back(t);
-	}
-
-
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		data->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		output->print_tensor(dst, !decorate);
+		register_output(t, "output");
 	}
 
 
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *data = inputs[0];
+		const Tensor *output= outputs[0];
 
 		INDT_1 << "/* Shape */" << std::endl;
 
@@ -55,7 +45,7 @@ class Shape : public Node {
 			return;
 
 		for( unsigned d = 0; d<data->rank(); d++ ) {
-			INDT_1 << output->cname() << "["<<d<<"]=";
+			INDT_1 << "output["<<d<<"]=";
 			dst    << data->data_dim[d] << ";";
 		}
 	}

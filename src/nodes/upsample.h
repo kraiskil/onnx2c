@@ -15,9 +15,10 @@ class Upsample : public Resize {
 
 	virtual void resolve(void) override
 	{
-		X = inputs[0];
-
-		scales = inputs[1];
+		const Tensor *X = inputs[0];
+		const Tensor *scales = inputs[1];
+		register_input(X, "X");
+		register_input(scales, "scales");
 
 		if( scales->isConst == false )
 			ERROR("Unimplemented: Upsample 'sizes' input is not a compile-time constant: " + scales->name);
@@ -34,18 +35,13 @@ class Upsample : public Resize {
 		/* Create output tensors.
 		 * Set data dimensions and data type for the created tensors. */
 		Tensor *t = new Tensor;
-
-
 		for( auto s : output_size )
 			t->data_dim.push_back(s);
 		t->data_type = onnx::TensorProto_DataType_FLOAT;
 		/* Store the created tensor both as reference in this node, and into
 		 * the return value vector! */
-		Y = t;
-		outputs.push_back(t);
+		register_output(t, "Y");
 	}
-
-
 };
 }
 

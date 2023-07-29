@@ -16,17 +16,7 @@ class Slice : public Node {
 	public:
 	Slice() {
 		op_name = "Slice";
-		output=data=starts=ends=axes=steps=NULL;
 	}
-
-	// input and output
-	const Tensor *output;
-	const Tensor *data;
-	const Tensor *starts;
-	const Tensor *ends;
-	// optional inputs
-	const Tensor *axes;
-	const Tensor *steps;
 
 	// contents of the input tensors, attributes or default values; padded
 	// to output dimensions in resolve(void).
@@ -51,7 +41,11 @@ class Slice : public Node {
 
 	virtual void resolve(void) override
 	{
-		data = inputs[0];
+		const Tensor *data = inputs[0];
+		const Tensor *starts = nullptr;
+		const Tensor *ends= nullptr;
+		const Tensor *axes= nullptr;
+		const Tensor *steps= nullptr;
 		register_input(data, "data");
 
 		if (inputs.size() > 1) {
@@ -203,13 +197,14 @@ class Slice : public Node {
 		stp=stp_;
 
 		t->data_type = data->data_type;
-		output = t;
 		register_output(t, "output");
 	}
 
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *data= inputs[0];
+		const Tensor *output = outputs[0];
 
 		INDT_1 << "/* Slice */" << std::endl;
 		std::string out_idx, in_idx;
