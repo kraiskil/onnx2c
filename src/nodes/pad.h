@@ -9,7 +9,6 @@ class Pad : public Node {
 	public:
 	Pad() {
 		op_name = "Pad";
-		data=output=pads_tensor=constant_value=0;
 		value_attribute=0;
 		mode = "constant";
 	}
@@ -19,14 +18,6 @@ class Pad : public Node {
 	/* These two removed in version 11 */
 	std::vector<int64_t> pads_attribute;
 	float value_attribute;
-
-	// input and output tensors
-	const Tensor *data;
-	const Tensor *output;
-	// inputs added in version 11
-	const Tensor *pads_tensor;
-	const Tensor *constant_value;
-
 
 	// The actual paddings used. Collected from pads_attribute or pads_tensor
 	std::vector<int64_t> paddings_start;

@@ -10,14 +10,7 @@ class Range : public Node {
 	public:
 	Range() {
 		op_name = "Range";
-		start=limit=delta=output=NULL;
 	}
-
-	// input and output
-	const Tensor *start;
-	const Tensor *limit;
-	const Tensor *delta;
-	const Tensor *output;
 
 	uint32_t output_size;
 
@@ -34,6 +27,9 @@ class Range : public Node {
 	void resolve_limits()
 	{
 		data_type v_start, v_limit, v_delta;
+		const Tensor *start = inputs[0];
+		const Tensor *limit = inputs[1];
+		const Tensor *delta = inputs[2];
 
 		v_start = resolve_input_var<data_type>(start);
 		v_limit = resolve_input_var<data_type>(limit);
@@ -49,9 +45,12 @@ class Range : public Node {
 
 		if (inputs.size() != 3)
 			ERROR("Range node does not have 3 inputs");
-		start = inputs[0];
-		limit = inputs[1];
-		delta = inputs[2];
+		const Tensor *start = inputs[0];
+		const Tensor *limit = inputs[1];
+		const Tensor *delta = inputs[2];
+		register_input(start, "start_arg");
+		register_input(limit, "limit_arg");
+		register_input(delta, "delta_arg");
 
 		if( start->isConst == false )
 			ERROR("Unimplemented: non-constant input (start) to Range node");
@@ -78,40 +77,24 @@ class Range : public Node {
 		t->data_type = start->data_type;
 		/* Store the created tensor both as reference in this node, and into
 		 * the return value vector! */
-		output = t;
-		outputs.push_back(t);
-
-		/* TODO: optional outputs? */
-	}
-
-
-	/* Print the function parameters - use the order they are introduced in the
-	 * ONNX documentation */
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		start->print_tensor(dst, !decorate);
-		dst << ", ";
-		limit->print_tensor(dst, !decorate);
-		dst << ", ";
-		delta->print_tensor(dst, !decorate);
-		dst << ", ";
-		output->print_tensor(dst, !decorate);
+		register_output(t, "output");
 	}
 
 
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *start = inputs[0];
 		std::string dt = start->data_type_str();
 
 		INDT_1 << "/* Range" << std::endl;
 		INDT_1 << " */" << std::endl;
 
 
-		INDT_1 << dt <<" start = " << start->cname() << "[0];" << std::endl;
-		INDT_1 << dt <<" delta = " << delta->cname() << "[0];" << std::endl;
+		INDT_1 << dt <<" start = start_arg[0];" << std::endl;
+		INDT_1 << dt <<" delta = delta_arg[0];" << std::endl;
 		INDT_1 << "for(int i=0; i< "<< output_size << "; ++i) {" << std::endl;
-		INDT_2 <<   output->cname() << "[i] = start + (i * delta);" << std::endl;
+		INDT_2 <<   "output[i] = start + (i * delta);" << std::endl;
 		INDT_1 << "}" << std::endl;
 	}
 };

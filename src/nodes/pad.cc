@@ -26,13 +26,15 @@ void Pad::parseAttributes( onnx::NodeProto &node )
 /* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 void Pad::resolve(void)
 {
-	data = inputs[0];
-	register_input(data, "data");
+	const Tensor *data = inputs[0];
+	register_input(inputs[0], "data");
 
+	const Tensor *pads_tensor = nullptr;
 	if (inputs.size() > 1) {
 		pads_tensor = inputs[1];
 		register_input(pads_tensor, "pads");
 	}
+	const Tensor *constant_value= nullptr;
 	if (inputs.size() > 2) {
 		// This is not a tensor but a scalar. Not sure how to handle - first scalar in onnx2c :)
 		constant_value = inputs[2];
@@ -85,7 +87,6 @@ void Pad::resolve(void)
 	t->data_type = onnx::TensorProto_DataType_FLOAT;
 	/* Store the created tensor both as reference in this node, and into
 	 * the return value vector! */
-	output = t;
 	register_output(t, "output");
 
 	/* TODO: optional outputs? */
@@ -108,6 +109,8 @@ void Pad::print(std::ostream &dst) const
 	INDT_1 << " * mode: " << mode << std::endl;
 	INDT_1 << " */" << std::endl;
 
+	const Tensor *data = inputs[0];
+	const Tensor *output = outputs[0];
 
 	std::string iidxs = "";
 	std::string oidxs = "";

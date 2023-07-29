@@ -5,14 +5,8 @@ class Reshape : public Node {
 	public:
 	Reshape() {
 		op_name = "Reshape";
-		data=shape=reshaped=NULL;
 		allowzero=0;
 	}
-	// inputs
-	const Tensor *data;
-	const Tensor *shape;
-	// outputs
-	const Tensor *reshaped;
 
 	int32_t allowzero;
 
@@ -28,36 +22,32 @@ class Reshape : public Node {
 	}
 
 
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		data->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		shape->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		reshaped->print_tensor(dst, !decorate);
-	}
-
-
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *data = inputs[0];
 		std::string type = data->data_type_str();
 
 		/* TODO: is there ANY case where a reshape needs to re-order the internal data layout ? */
 		/* TODO: and if not - check that at least gcc can get rid of this copy! (So onnx2c doesn't need to) */
+		/*       (check if implementing this with a single call to memcpy() would be sufficient hint for gcc to
+		         optimize it away?) */
 		/* TODO: or - can we mark output an onnx2c-alias of input? */
+		/* Sounds similar to the aliasing of "Cast" node? */
 		dst << "\t/*Reshape*/" << std::endl;
-		dst << "\t" << type << " *data = (" << type << "*)" << data->cname() << ";" << std::endl;
-		dst << "\t" << type << " *reshaped = (" << type << "*)" << reshaped->cname() << ";" << std::endl;
+		dst << "\t" << type << " *data_ptr = (" << type << "*)data;" << std::endl;
+		dst << "\t" << type << " *reshaped_ptr = (" << type << "*)reshaped;" << std::endl;
 
 		dst << "\t" << "for( uint32_t i=0; i<" << data->data_num_elem() << "; i++ )" << std::endl;
-		dst << "\t\treshaped[i] = data[i];" << std::endl;
+		dst << "\t\treshaped_ptr[i] = data_ptr[i];" << std::endl;
 		dst << std::endl;
 	}
 
 	virtual void resolve(void) override
 	{
-		data = inputs[0];
-		shape = inputs[1];
+		const Tensor *data= inputs[0];
+		register_input(data, "data");
+		const Tensor *shape = inputs[1];
+		register_input(shape, "shape");
 
 		/* Reshape should allow only int64_t here,
 		 * but that is a pointless restriction at this stage and does not play well
@@ -118,8 +108,7 @@ class Reshape : public Node {
 		rv->data_dim = out_data_dim;
 
 		rv->data_type = data->data_type;
-		reshaped = rv;
-		outputs.push_back(rv);
+		register_output(rv, "reshaped");
 	}
 };
 }
