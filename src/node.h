@@ -61,17 +61,12 @@ public:
 	 * or decorated
 	 *   "float tensor_X[1][2][3], float tensor_Y[2][3][4]"
 	 *
-	 * "old" vs "new":
-	 * Currently print_parameters() is splatted all over the node implementing
-	 * subclasses. It used to be a pure virtual function for bad design reasons.
-	 * The new way, which is being implemented piecemeal is to have the
-	 * node::resolve() function create mappings for all of its function parameters
+	 * node::resolve() function creates mappings for all of its function parameters
 	 * so that each tensor has a "local name" corresponding to the tensor name in
 	 * the ONNX Operands specificaion.
-	 * In short, don't override print_parameters() for new node subclasses!
 	 */
-	virtual void print_parameters(std::ostream &destination, bool decorate ) const;
-	void print_function_parameters_shapes(std::ostream &destination) const;
+	void print_parameters(std::ostream &destination, bool decorate ) const;
+	void print_function_parameters_definition(std::ostream &destination) const;
 	void print_function_parameters_callsite(std::ostream &destination) const;
 
 	/* Figure out in what format the output is in.

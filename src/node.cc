@@ -110,56 +110,45 @@ void Node::multidirectional_broadcast_size(
 
 
 
-// NB: old node implementations that dont use input_params and output_params
-// must and have overridden this function.
-// New mode node implementations use the Node::register_input() and
-// Node::register_output() functions
 void Node::print_parameters(std::ostream &dst, bool not_callsite ) const
 {
+	// First create the parameter names as strings (with or without dimensions)
 	std::vector<std::string> params;
-
-	if( not_callsite )
-	{
-		for( auto i : input_params ) {
-			const Tensor *t = std::get<0>(i);
-			std::string name = std::get<1>(i);
+	for( auto i : input_params ) {
+		const Tensor *t = std::get<0>(i);
+		std::string name = std::get<1>(i);
+		if( not_callsite )
 			params.push_back( t->print_tensor_as_const(name) );
-		}
-		for( auto o : output_params ) {
-			const Tensor *t = std::get<0>(o);
-			// A node does not know at its resolve time if an optional
-			// output is used, so it registers all. Once all nodes
-			// are resolved, the tensor knows if some one uses it.
-			if( t->is_used() == false )
-				continue;
-			std::string name = std::get<1>(o);
-			params.push_back( t->print_tensor(name) );
-		}
+		else
+			params.push_back( t->print_tensor_callsite() );
 	}
-	else
-	{
-		for( auto i : input_params ) {
-			const Tensor *t = std::get<0>(i);
+	for( auto o : output_params ) {
+		const Tensor *t = std::get<0>(o);
+		// A node does not know at its resolve time if an optional
+		// output is used, so it registers all. Once all nodes
+		// are resolved, the tensor knows if some one uses it.
+		if( t->is_used() == false )
+			continue;
+		std::string name = std::get<1>(o);
+		if( not_callsite )
+			params.push_back( t->print_tensor(name) );
+		else
 			params.push_back( t->print_tensor_callsite() );
-		}
-		for( auto o : output_params ) {
-			const Tensor *t = std::get<0>(o);
-			if( t->is_used() == false )
-				continue;
-			params.push_back( t->print_tensor_callsite() );
-		}
 	}
 
+	// Then print the parmeters as comma-separated string
 	auto i = params.begin();
 	dst << *i ;
 	for( i++; i != params.end(); i++)
 		dst << ", " << *i;
 }
 
-void Node::print_function_parameters_shapes(std::ostream &destination) const
+// parameters at function definition/declaration
+void Node::print_function_parameters_definition(std::ostream &destination) const
 {
 	print_parameters(destination, true);
 }
+// parameters when calling a function
 void Node::print_function_parameters_callsite(std::ostream &destination) const
 {
 	print_parameters(destination, false);

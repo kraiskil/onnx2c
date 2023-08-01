@@ -99,7 +99,7 @@ void Graph::print_functions(std::ostream &dst)
 	for( auto n : nodes ) {
 		dst << "static inline void ";
 		dst << n->c_name() << "( ";
-		n->print_function_parameters_shapes(dst);
+		n->print_function_parameters_definition(dst);
 		dst << " )";
 		dst <<  std::endl << "{" << std::endl;
 
