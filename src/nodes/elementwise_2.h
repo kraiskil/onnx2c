@@ -102,17 +102,6 @@ class Elementwise_2 : public Node {
 			ERROR("Elementwise_2 operand " + op + " not implemented");
 	}
 
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		inputs[0]->print_tensor_as_const(dst, !decorate);
-
-		dst << ", ";
-		inputs[1]->print_tensor_as_const(dst, !decorate);
-
-		dst << ", ";
-		outputs[0]->print_tensor(dst, !decorate);
-	}
-
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 		for( const auto& a : node.attribute() ) {
 			LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
@@ -124,7 +113,6 @@ class Elementwise_2 : public Node {
 				ERROR("unknown attribute");
 		}
 	}
-
 
 	virtual void print(std::ostream &dst) const override
 	{
@@ -152,9 +140,9 @@ class Elementwise_2 : public Node {
 
 		// print out the loops over all C dimensions.
 		// at the same time, create the indexing strings into A and B
-		std::string Aidx = A->cname();
-		std::string Bidx = B->cname();
-		std::string Cidx = C->cname();
+		std::string Aidx = "A";
+		std::string Bidx = "B";
+		std::string Cidx = "C";
 		for( unsigned r=0; r<C->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
 			INDT_1 << "for (unsigned " << lv << "=0; " << lv << "<" << C->data_dim[r] << "; " << lv << "++) {" << std::endl;
@@ -190,8 +178,10 @@ class Elementwise_2 : public Node {
 
 	virtual void resolve(void) override
 	{
-		Tensor *A = inputs[0];
-		Tensor *B = inputs[1];
+		const Tensor *A = inputs[0];
+		const Tensor *B = inputs[1];
+		register_input(A, "A");
+		register_input(B, "B");
 
 		std::vector<int> result_dim;
 		multidirectional_broadcast_size(A->data_dim, B->data_dim, result_dim);
@@ -202,7 +192,7 @@ class Elementwise_2 : public Node {
 			t->data_type = onnx::TensorProto_DataType_BOOL;
 		else
 			t->data_type = A->data_type;
-		outputs.push_back(t);
+		register_output(t, "C");
 	}
 };
 }

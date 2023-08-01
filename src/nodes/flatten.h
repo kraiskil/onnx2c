@@ -6,20 +6,8 @@ class Flatten : public Node {
 	Flatten() {
 		op_name = "Flatten";
 		axis = 1;
-		input=output=NULL;
 	}
 	int axis;
-
-	const Tensor *input;
-	const Tensor *output;
-
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		input->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		output->print_tensor(dst, !decorate);
-	}
-
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 
@@ -38,15 +26,16 @@ class Flatten : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *input = inputs[0];
 		std::string type = input->data_type_str();
 
 		dst << "\t/* Flatten*/" << std::endl;
 
-		dst << "\t" << type << " *input = (" << type << "*)" << input->cname() << ";" << std::endl;
-		dst << "\t" << type << " *output = (" << type << "*)" << output->cname() << ";" << std::endl;
+		dst << "\t" << type << " *input_ = (" << type << "*)input;" << std::endl;
+		dst << "\t" << type << " *output_ = (" << type << "*)output;" << std::endl;
 
 		dst << "\t" << "for( uint32_t i=0; i<" << input->data_num_elem() << "; i++ )" << std::endl;
-		dst << "\t\toutput[i] = input[i];" << std::endl;
+		dst << "\t\toutput_[i] = input_[i];" << std::endl;
 		dst << std::endl;
 	}
 
@@ -57,7 +46,8 @@ class Flatten : public Node {
 		if( inputs.size() != 1 )
 			ERROR("wrong number of inputs to Flatten");
 
-		input = inputs[0];
+		const Tensor *input = inputs[0];
+		register_input(input, "input");
 
 		// output:
 		// A 2D tensor with the contents of the input tensor, with input dimensions up to axis
@@ -84,8 +74,7 @@ class Flatten : public Node {
 		Tensor *rv = new Tensor;
 		rv->data_dim = result_dim;
 		rv->data_type = input->data_type;
-		output = rv;
-		outputs.push_back(rv);
+		register_output(rv, "output");
 	}
 };
 }

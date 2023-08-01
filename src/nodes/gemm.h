@@ -13,7 +13,6 @@ class Gemm : public Node {
 	public:
 	Gemm() {
 		op_name = "Gemm";
-		A=B=C=Y=NULL;
 		alpha=beta=1;
 		transA=transB=0;
 	}
@@ -23,30 +22,6 @@ class Gemm : public Node {
 	float beta;
 	int transA; // boolean for 'do the tranpose'
 	int transB;
-
-	// input and output
-	const Tensor *A;
-	const Tensor *B;
-	const Tensor *C; // optional
-	const Tensor *Y;
-
-
-	/* Print the function parameters - use the order they are introduced in the
-	 * ONNX documentation */
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		A->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		B->print_tensor_as_const(dst, !decorate);
-
-		if (C) {
-			dst << ", ";
-			C->print_tensor_as_const(dst, !decorate);
-		}
-
-		dst << ", ";
-		Y->print_tensor(dst, !decorate);
-	}
 
 	/* Parse attributes, if this node has them. */
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
@@ -71,7 +46,10 @@ class Gemm : public Node {
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
-		int A1 = A->data_dim[1];
+		const Tensor *A  = inputs[0];
+		const Tensor *B  = inputs[1];
+		const Tensor *C  = inputs.size() > 2 ? inputs[2]:nullptr;
+		//int A1 = A->data_dim[1];
 		int C0,C1; C0=C1=0;
 		if( C ) {
 			C0 = C->data_dim[0];
@@ -97,9 +75,6 @@ class Gemm : public Node {
 		dst << "\t" << "const int M = " << M << ";" << std::endl;
 		dst << "\t" << "const int K = " << K << ";" << std::endl;
 		dst << "\t" << "const int N = " << N << ";" << std::endl;
-		// C has some ugly syntax sometimes, but now we can do A[r][c]
-		dst << "\t" << type << " (*A)["<<A1<<"]  = (" << type << "(*)["<<A1<<"])" << A->cname() << ";" << std::endl;
-		dst << "\t" << type << " (*Y)["<<N<<"]  = (" << type << "(*)["<<N<<"])" << Y->cname() << ";" << std::endl;
 		dst << "\t" << "float alpha = " << alpha << ";" << std::endl;
 		dst << "\t" << "float beta = " << beta << ";" << std::endl;
 
@@ -107,7 +82,7 @@ class Gemm : public Node {
 		std::string B_idx = transB ? "[c][i]" : "[i][c]";
 
 		// Cast optional C matrix to generated variable
-		// "C[M][N]"
+		// "C_[M][N]"
 		std::string C_idx;
 		if( C  ) {
 			C_idx = "";
@@ -150,7 +125,7 @@ class Gemm : public Node {
 				C_idx += "[0]";
 			else
 				C_idx += "[c]";
-			INDT_1 << type << " (*C)["<<C1<<"]  = (" << type << "(*)["<<C1<<"])" << C->cname() << ";" << std::endl;
+			INDT_1 << type << " (*C_)["<<C1<<"]  = (" << type << "(*)["<<C1<<"])C;" << std::endl;
 		}
 
 
@@ -168,8 +143,8 @@ class Gemm : public Node {
 			INDT_3 << type <<" ABrc = 0;" << std::endl;
 		}
 		INDT_3 << "for( uint32_t i=0; i<K; i++ ) {" << std::endl;
-		INDT_4 <<   B->data_type_str() << " B = " << constant_acces_code( B->cname() + B_idx ) << ";" << std::endl;
-		INDT_4 <<   "ABrc += " << A_el << " * B;" << std::endl;
+		INDT_4 <<   B->data_type_str() << " B_el = " << constant_acces_code( "B" + B_idx ) << ";" << std::endl;
+		INDT_4 <<   "ABrc += " << A_el << " * B_el;" << std::endl;
 		INDT_3 << "}" << std::endl;
 
 
@@ -180,7 +155,7 @@ class Gemm : public Node {
 			INDT_3 << type <<" tmp = ABrc * alpha;" << std::endl;
 
 		if( C ) {
-			INDT_3 << "tmp += C" << C_idx << " * beta;" << std::endl;
+			INDT_3 << "tmp += C_" << C_idx << " * beta;" << std::endl;
 		}
 
 		if( options.quantize ) {
@@ -201,11 +176,14 @@ class Gemm : public Node {
 		if (inputs.size() < 2)
 			ERROR("Not enough inputs");
 
-		A  = inputs[0];
-		B  = inputs[1];
+		const Tensor *A  = inputs[0];
+		const Tensor *B  = inputs[1];
+		register_input(A, "A");
+		register_input(B, "B");
 
-		if (inputs.size() == 3)
-			C = inputs[2];
+		if (inputs.size() == 3) {
+			register_input(inputs[2], "C");
+		}
 
 		// output dimensions - see the specification
 		int M = transA ? A->data_dim[1] : A->data_dim[0];
@@ -217,10 +195,7 @@ class Gemm : public Node {
 		t->data_dim.push_back(M);
 		t->data_dim.push_back(N);
 		t->data_type = A->data_type;
-		/* Store the created tensor both as reference in this node, and into
-		 * the return value vector! */
-		outputs.push_back(t);
-		Y = t;
+		register_output(t, "Y");
 	}
 };
 }

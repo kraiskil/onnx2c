@@ -8,14 +8,11 @@
 namespace toC {
 
 class Elementwise : public Node {
-	const Tensor *X;
-	const Tensor *Y;
 	float alpha, beta, bias, gamma, lambd;
 
 	public:
 	Elementwise(std::string op) {
 		op_name = op;
-		X=Y=NULL;
 		alpha=beta=gamma=bias=0;
 		lambd=0.5;
 
@@ -157,13 +154,6 @@ class Elementwise : public Node {
 	std::function<const std::string (const std::string & Xidx)> operation =
 		[](const std::string& x){ ERROR("onnx2c internal error"); return ""; };
 
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		X->print_tensor_as_const(dst, !decorate);
-
-		dst << ", ";
-		Y->print_tensor(dst, !decorate);
-	}
 
 	// NB: not all ONNX operators implemented with Elementwise have attributes.
 	// This gets the attributes over an union of all implemented operators
@@ -189,6 +179,7 @@ class Elementwise : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *Y = outputs[0];
 		INDT_1 << "/* " << op_name << std::endl;
 		INDT_1 << "   alpha = " << alpha << std::endl;
 		INDT_1 << "   beta = " << beta << std::endl;
@@ -196,8 +187,8 @@ class Elementwise : public Node {
 
 		// print out the loops over all C dimensions.
 		// at the same time, create the indexing strings into X and Y
-		std::string Xidx = X->cname();
-		std::string Yidx = Y->cname();
+		std::string Xidx = "X";
+		std::string Yidx = "Y";
 		for( unsigned r=0; r< Y->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
 			INDT_1 << "for (unsigned " << lv << "=0; " << lv << "<" << Y->data_dim[r] << "; " << lv << "++) {" << std::endl;
@@ -216,13 +207,13 @@ class Elementwise : public Node {
 
 	virtual void resolve(void) override
 	{
-		X = inputs[0];
+		const Tensor *X = inputs[0];
+		register_input(X, "X");
 
 		Tensor *t = new Tensor;
 		t->data_dim = X->data_dim;
 		t->data_type = X->data_type;
-		Y = t;
-		outputs.push_back(t);
+		register_output(t, "Y");
 	}
 };
 }

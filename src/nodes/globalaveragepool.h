@@ -8,26 +8,14 @@ class GlobalAveragePool : public Node {
 	public:
 	GlobalAveragePool() {
 		op_name = "GlobalAveragePool";
-		X=Y=NULL;
 	}
 
 	std::vector<float> an_attribute;
 
-	const Tensor *X;
-	const Tensor *Y;
-
-
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		X->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-
-		Y->print_tensor(dst, !decorate);
-	}
-
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *X=inputs[0];
 		int batch_size = X->data_dim[0];
 		int num_channels = X->data_dim[1];
 
@@ -39,8 +27,8 @@ class GlobalAveragePool : public Node {
 		dst << "\t\tfloat dimsum=0.0f;" << std::endl;
 
 		int dim_num_elem=1; // number of elements averaged over
-		std::string in_idx_string = X->cname() + "[b][c]"; // start of the input element access string 
-		std::string out_idx_string = Y->cname() + "[b][c]"; // start of the input element access string 
+		std::string in_idx_string = "input[b][c]"; // start of the input element access string
+		std::string out_idx_string = "output[b][c]"; // start of the input element access string
 
 		for( unsigned dim = 2; dim < X->data_dim.size(); dim ++ ) {
 			int dim_size = X->data_dim[dim];
@@ -70,7 +58,8 @@ class GlobalAveragePool : public Node {
 
 	virtual void resolve(void) override
 	{
-		X = inputs[0];
+		const Tensor *X = inputs[0];
+		register_input(X, "input");
 		if(  typeConstraint_plainFloatingPoints(X) == false )
 			ERROR("Incorrect input for node"); 
 
@@ -82,9 +71,7 @@ class GlobalAveragePool : public Node {
 		for( unsigned i=2; i<X->data_dim.size(); i++)
 			rv->data_dim.push_back(1);
 		rv->data_type = X->data_type;
-		Y=rv;
-		outputs.push_back(rv);
-
+		register_output(rv, "output");
 	}
 };
 }

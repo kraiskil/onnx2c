@@ -8,17 +8,10 @@ class Gather : public Node {
 	public:
 	Gather() {
 		op_name = "Gather";
-		data=indices=output=NULL;
 		axis=0;
 	}
 	/* Node attributes */
 	int axis;
-
-	// input and output
-	const Tensor *data;
-	const Tensor *indices;
-	const Tensor *output;
-
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 		for( const auto& a : node.attribute() ) {
@@ -33,8 +26,10 @@ class Gather : public Node {
 
 	virtual void resolve(void) override
 	{
-		data = inputs[0];
-		indices = inputs[1];
+		const Tensor *data = inputs[0];
+		const Tensor *indices = inputs[1];
+		register_input(data, "X");
+		register_input(indices, "indices");
 
 		unsigned a = axis >= 0 ? axis : data->rank()+axis;
 
@@ -58,23 +53,14 @@ class Gather : public Node {
 			t->data_dim.push_back(data->data_dim[d]);
 
 		t->data_type = data->data_type;
-		output = t;
-		outputs.push_back(t);
+		register_output(t, "Y");
 	}
-
-
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		data->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		indices->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		output->print_tensor(dst, !decorate);
-	}
-
 
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *data = inputs[0];
+		const Tensor *indices = inputs[1];
+		const Tensor *output= outputs[0];
 		INDT_1 << "/* Gather" << std::endl;
 		INDT_1 << "   axis = " << axis << std::endl;
 		INDT_1 << " */" << std::endl;
@@ -86,9 +72,9 @@ class Gather : public Node {
 		// and at the same time create the indexing strings into the input and output tensors
 		// The logic should be the same as above in resolve(void), only here we loop over the
 		// output dimensions, not input.
-		std::string oidx = output->cname();
-		std::string didx = data->cname();
-		std::string iidx = indices->cname();
+		std::string oidx = "Y";
+		std::string didx = "X";
+		std::string iidx = "indices";
 		for( unsigned r=0; r< output->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
 			INDT_1 << "for (unsigned " << lv << "=0; ";

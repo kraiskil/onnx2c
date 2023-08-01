@@ -10,15 +10,9 @@ class Unsqueeze : public Node {
 	public:
 	Unsqueeze() {
 		op_name = "Unsqueeze";
-		data=axes_tensor=expanded=NULL;
 	}
 
 	std::vector<int64_t> axes_attr;
-
-	// input and output
-	const Tensor *data;
-	const Tensor *axes_tensor;
-	const Tensor *expanded;
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 		// In ONNX versions before 12, the axes were passed as a node,
@@ -33,31 +27,16 @@ class Unsqueeze : public Node {
 		return;
 	}
 
-	/* Print the function parameters - use the order they are introduced in the
-	 * ONNX documentation */
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		data->print_tensor_as_const(dst, !decorate);
-
-		/* Axes is "optional" for ONNX versions earlier than 13 */
-		if( axes_tensor ) {
-			dst << ", ";
-			axes_tensor->print_tensor_as_const(dst, !decorate);
-		}
-
-		dst << ", ";
-		expanded->print_tensor(dst, !decorate);
-	}
-
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *data = inputs[0];
 		std::string type = data->data_type_str();
 
 		dst << "\t/* Unsqueeze */" << std::endl;
 
-		dst << "\t" << type << " *data = (" << type << "*)" << data->cname() << ";" << std::endl;
-		dst << "\t" << type << " *expanded= (" << type << "*)" << expanded->cname() << ";" << std::endl;
+		dst << "\t" << type << " *data = (" << type << "*)input;" << std::endl;
+		dst << "\t" << type << " *expanded= (" << type << "*)output;" << std::endl;
 
 		// TODO: can't this be a no-op? Check if the compiler can optimize this away?
 		//       also if not, can it optimize a memcpy()?
@@ -70,7 +49,8 @@ class Unsqueeze : public Node {
 	/* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 	virtual void resolve(void) override
 	{
-		data = inputs[0];
+		const Tensor *data = inputs[0];
+		register_input(data, "input");
 
 		// ONNX13 changed how axes were passed (but not the contents).
 		// if axes_attr is set, then the padding axes are passed as attribute
@@ -81,7 +61,8 @@ class Unsqueeze : public Node {
 		if (axes_attr.size() == 0 ) {
 			if( inputs.size() != 2 )
 				ERROR("axes not provided. Malformatted ONNX?");
-			axes_tensor = inputs[1];
+			const Tensor *axes_tensor = inputs[1];
+			register_input(axes_tensor, "axes_tensor");
 			if (axes_tensor->initialize == false)
 				ERROR("provided axes are dynamic, not implmeneted");
 			for( unsigned i=0; (int)i<axes_tensor->data_num_elem(); i++) {
@@ -127,8 +108,7 @@ class Unsqueeze : public Node {
 			}
 		}
 
-		expanded = t;
-		outputs.push_back(t);
+		register_output(t, "output");
 	}
 };
 }

@@ -10,22 +10,9 @@ class Squeeze : public Node {
 	public:
 	Squeeze() {
 		op_name = "Squeeze";
-		data=squeezed=NULL;
 	}
-	// inputs
-	const Tensor *data;
-	const Tensor *axes_tensor;
-	// outputs
-	const Tensor *squeezed;
 
 	std::vector<int64_t> axes;
-
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		data->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		squeezed->print_tensor(dst, !decorate);
-	}
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override
 	{
@@ -39,11 +26,12 @@ class Squeeze : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *data = inputs[0];
 		std::string type = data->data_type_str();
 
 		dst << "\t/*Squeeze*/" << std::endl;
-		dst << "\t" << type << " *data = (" << type << "*)" << data->cname() << ";" << std::endl;
-		dst << "\t" << type << " *squeezed= (" << type << "*)" << squeezed->cname() << ";" << std::endl;
+		dst << "\t" << type << " *data = (" << type << "*)input" << ";" << std::endl;
+		dst << "\t" << type << " *squeezed= (" << type << "*)output" << ";" << std::endl;
 
 		// TODO: is a memcpy faster?
 		dst << "\t" << "for( uint32_t i=0; i<" << data->data_num_elem() << "; i++ )" << std::endl;
@@ -53,9 +41,11 @@ class Squeeze : public Node {
  
 	virtual void resolve(void) override
 	{
-		data = inputs[0];
+		const Tensor *data = inputs[0];
+		register_input(data, "input");
 		if (inputs.size() == 2) {
-			axes_tensor = inputs[1];
+			const Tensor *axes_tensor = inputs[1];
+			register_input(axes_tensor, "axes_tensor");
 			if (axes_tensor->initialize == false)
 				ERROR("provided axes are dynamic, not implmeneted");
 			for( unsigned i=0; (int)i<axes_tensor->data_num_elem(); i++) {
@@ -96,8 +86,7 @@ class Squeeze : public Node {
 		}
 
 		rv->data_type = data->data_type;
-		squeezed = rv;
-		outputs.push_back(rv);
+		register_output(rv, "output");
 	}
 };
 }

@@ -31,20 +31,9 @@ class Softmax : public Node {
 			axis = 1;
 		else
 			axis = -1;
-		input=output=NULL;
 	}
 	// Axis to do the softmax on
 	int axis;
-
-	const Tensor *input;
-	const Tensor *output;
-
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		input->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		output->print_tensor(dst, !decorate);
-	}
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 
@@ -71,6 +60,7 @@ class Softmax : public Node {
 
 	void print11(std::ostream &dst) const
 	{
+		const Tensor *input=inputs[0];
 		std::string type = input->data_type_str();
 		unsigned n_dim = input->data_dim.size();
 		std::string expfunc = "expf";
@@ -103,7 +93,7 @@ class Softmax : public Node {
 		}
 
 		// Calculate max of the flattened inner dimensions, and close those loops
-		dst << "\t\t" << "max = max>" << input->cname() << idxs << " ? max :" << input->cname() << idxs << ";" << std::endl;
+		dst << "\t\t" << "max = max>input" << idxs << " ? max : input" << idxs << ";" << std::endl;
 		for( unsigned i = flatten_axis; i<n_dim; i++)
 			dst << "\t}" << std::endl;
 
@@ -114,9 +104,9 @@ class Softmax : public Node {
 			dst <<               idx << "<" << input->data_dim[i] << "; ";
 			dst <<               idx <<"++ ) {" << std::endl;
 		}
-		dst << "\t\t" << output->cname() << idxs << " = ";
-		dst           << expfunc << "(" << input->cname() << idxs << "-max);" << std::endl;
-		dst << "\t\t" << "sum += " << output->cname() << idxs << ";" << std::endl; 
+		INDT_2 << "output"<< idxs << " = ";
+		dst           << expfunc << "(input" << idxs << "-max);" << std::endl;
+		INDT_2 << "sum += output" << idxs << ";" << std::endl;
 		for( unsigned i = flatten_axis; i<n_dim; i++)
 			dst << "\t}" << std::endl;
 			
@@ -127,7 +117,7 @@ class Softmax : public Node {
 			dst <<               idx << "<" << input->data_dim[i] << "; ";
 			dst <<               idx <<"++ ) {" << std::endl;
 		}
-		dst << "\t\t" << output->cname() <<idxs<<" /= sum;" << std::endl;
+		INDT_2 << "output" << idxs <<" /= sum;" << std::endl;
 		for( unsigned i = flatten_axis; i<n_dim; i++)
 			dst << "\t}" << std::endl;
 
@@ -141,6 +131,8 @@ class Softmax : public Node {
 
 	void print13(std::ostream &dst) const
 	{
+		const Tensor *input=inputs[0];
+
 		std::string type = input->data_type_str();
 		unsigned num_dim = input->rank();
 		std::string expfunc = "expf";
@@ -180,7 +172,7 @@ class Softmax : public Node {
 		INDT_2 << "for( uint32_t " << ridx << "=0; ";
 		   dst <<       ridx << "<" << reduce_axis_size << "; ";
 		   dst <<       ridx <<"++ ) {" << std::endl;
-		INDT_3 << "max = max>" << input->cname() << idxs << " ? max :" << input->cname() << idxs << ";" << std::endl;
+		INDT_3 << "max = max>input" << idxs << " ? max :input" << idxs << ";" << std::endl;
 		INDT_2 << "};" << std::endl;
 
 		// Now loop to calculate sum
@@ -188,15 +180,15 @@ class Softmax : public Node {
 		INDT_2 << "for( uint32_t " << ridx << "=0; ";
 		   dst <<       ridx << "<" << reduce_axis_size << "; ";
 		   dst <<       ridx <<"++ ) {" << std::endl;
-		INDT_3 << "sum += " << expfunc << "(" << input->cname() << idxs << " - max);" << std::endl;
+		INDT_3 << "sum += " << expfunc << "(input" << idxs << " - max);" << std::endl;
 		INDT_2 << "};" << std::endl;
 
 		// And last the elementwise softmax
 		INDT_2 << "for( uint32_t " << ridx << "=0; ";
 		   dst <<       ridx << "<" << reduce_axis_size << "; ";
 		   dst <<       ridx <<"++ ) {" << std::endl;
-		INDT_3 << output->cname() << idxs << " = ";
-		   dst << expfunc << "(" << input->cname() << idxs << " - max)/sum;" << std::endl;
+		INDT_3 << "output" << idxs << " = ";
+		   dst << expfunc << "(input" << idxs << " - max)/sum;" << std::endl;
 		INDT_2 << "};" << std::endl;
 
 		for( unsigned i = 0; i<num_dim-1; i++ )
@@ -209,15 +201,12 @@ class Softmax : public Node {
 		if( inputs.size() != 1 )
 			ERROR("wrong number of inputs to Softmax");
 
-		input = inputs[0];
-		if( typeConstraint_allFloatingPoints(input) == false)
-			ERROR("Incorrect input for node");
+		register_input(inputs[0], "input");
 
 		Tensor *rv = new Tensor;
-		rv->data_dim = input->data_dim;
-		rv->data_type = input->data_type;
-		output = rv;
-		outputs.push_back(rv);
+		rv->data_dim = inputs[0]->data_dim;
+		rv->data_type = inputs[0]->data_type;
+		register_output(rv, "output");
 	}
 };
 }

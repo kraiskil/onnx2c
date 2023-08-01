@@ -8,22 +8,8 @@ class Transpose : public Node {
 	public:
 	Transpose() {
 		op_name = "Transpose";
-		data=transposed=NULL;
 	}
 	std::vector<int> perm;
-
-	// inputs
-	const Tensor *data;
-	// outputs
-	const Tensor *transposed;
-
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		data->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		transposed->print_tensor(dst, !decorate);
-	}
-
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
 
@@ -43,6 +29,7 @@ class Transpose : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *data = inputs[0];
 		std::string type = data->data_type_str();
 		unsigned n_dim = data->data_dim.size();
 
@@ -69,8 +56,8 @@ class Transpose : public Node {
 		}
 
 		// copy data
-		dst << "\t\t" << transposed->cname() << out_idx << " = ";
-		dst <<           data->cname() << in_idx << ";" << std::endl;
+		INDT_2 << "output" << out_idx << " = ";
+		dst <<           "input" << in_idx << ";" << std::endl;
 
 		// close loops
 		for( unsigned i = 0; i<n_dim; i++)
@@ -84,7 +71,8 @@ class Transpose : public Node {
 		if( inputs.size() != 1 )
 			ERROR("wrong number of inputs to Transpose");
 
-		data = inputs[0];
+		const Tensor *data = inputs[0];
+		register_input(data, "input");
 		unsigned n_dim = data->data_dim.size();
 
 		// "By default, reverse the dimensions, otherwise permute the axes according to the values given."
@@ -98,8 +86,7 @@ class Transpose : public Node {
 		Tensor *rv = new Tensor;
 		rv->data_dim = out_dim;
 		rv->data_type = data->data_type;
-		transposed = rv;
-		outputs.push_back(rv);
+		register_output(rv, "output");
 	}
 };
 }

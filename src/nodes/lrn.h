@@ -15,7 +15,6 @@ class LRN : public Node {
 	public:
 	LRN() {
 		op_name = "LRN";
-		X=Y=NULL;
 		alpha = 0.0001;
 		beta  = 0.75;
 		bias  = 1.0;
@@ -26,11 +25,6 @@ class LRN : public Node {
 	float beta;
 	float bias;
 	int   size;
-
-	// input and output
-	const Tensor *X;
-	const Tensor *Y;
-
 
 	/* Parse attributes, if this node has them. */
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
@@ -51,7 +45,8 @@ class LRN : public Node {
 	/* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 	virtual void resolve(void) override
 	{
-		X = inputs[0];
+		const Tensor *X = inputs[0];
+		register_input(X, "X");
 
 		if( size == -1 )
 			ERROR("LRN: attribute 'size' was not given");
@@ -61,29 +56,12 @@ class LRN : public Node {
 		Tensor *t = new Tensor;
 		t->data_dim = X->data_dim;
 		t->data_type = X->data_type;
-		/* Store the created tensor both as reference in this node, and into
-		 * the return value vector! */
-		Y = t;
-		outputs.push_back(t);
-
-		/* TODO: optional outputs? */
+		register_output(t, "Y");
 	}
 
-
-	/* Print the function parameters - use the order they are introduced in the
-	 * ONNX documentation */
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		X->print_tensor_as_const(dst, !decorate);
-
-		dst << ", ";
-		Y->print_tensor(dst, !decorate);
-	}
-
-
-	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *X = inputs[0];
 
 		INDT_1 << "/* LRN */" << std::endl;
 		INDT_1 << "/* attributes:" << std::endl;
@@ -121,10 +99,10 @@ class LRN : public Node {
 			INDT_2 << "int end_i   = MIN(C-1, c+ceil((size-1)/2));" << std::endl;
 			INDT_2 << "float square_sum = 0;" << std::endl;
 			INDT_2 << "for (unsigned i=start_i; i<=end_i; i++) {" << std::endl;
-				INDT_3 << "square_sum += pow(" << X->cname() <<"[n][i]"<<y_idx <<", 2);" << std::endl;
+				INDT_3 << "square_sum += pow(X[n][i]"<<y_idx <<", 2);" << std::endl;
 			INDT_2 << "}" << std::endl;
 
-			INDT_2 << Y->cname() << "[n][c]" << y_idx << "=" << X->cname() <<"[n][c]" << y_idx << "/" << std::endl;
+			INDT_2 << "Y[n][c]" << y_idx << "=X[n][c]" << y_idx << "/" << std::endl;
 			/// (bias + alpha / size * square_sum[n, c, d1, ..., dk] ) ^ beta
 			INDT_2 <<     "pow(bias + alpha/size * square_sum, beta);" << std::endl;
 

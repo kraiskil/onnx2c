@@ -11,24 +11,6 @@ class DynamicQuantizeLinear : public Node {
 	public:
 	DynamicQuantizeLinear() {
 		op_name = "DynamicQuantizeLinear";
-		x=y=y_scale=y_zero_point=NULL;
-	}
-
-	const Tensor *x;
-	const Tensor *y;
-	const Tensor *y_scale;
-	const Tensor *y_zero_point;
-
-
-	virtual void print_parameters(std::ostream &dst, bool decorate ) const override
-	{
-		x->print_tensor_as_const(dst, !decorate);
-		dst << ", ";
-		y->print_tensor(dst, !decorate);
-		dst << ", ";
-		y_scale->print_tensor(dst, !decorate);
-		dst << ", ";
-		y_zero_point->print_tensor(dst, !decorate);
 	}
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {
@@ -40,14 +22,15 @@ class DynamicQuantizeLinear : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *x = inputs[0];
 		int n_el = x->data_num_elem();
 
 		INDT_1 << "/* DynamicQuantizeLinear */" << std::endl;
 
-		INDT_1 << "float *in_data = (float*)" << x->cname() << ";" << std::endl;
-		INDT_1 << "uint8_t *out_data = (uint8_t*)" << y->cname()<< ";" << std::endl;
-		INDT_1 << "float *y_scale = (float*)" << y_scale->cname() << ";" << std::endl;
-		INDT_1 << "uint8_t *y_zero_point = (uint8_t*)" << y_zero_point->cname() << ";" << std::endl;
+		INDT_1 << "float *in_data = (float*)x;" << std::endl;
+		INDT_1 << "uint8_t *out_data = (uint8_t*)y;" << std::endl;
+		INDT_1 << "float *y_scale_ = (float*)y_scale;" << std::endl;
+		INDT_1 << "uint8_t *y_zero_point_ = (uint8_t*)y_zero_point;" << std::endl;
 		INDT_1 << "float min, max; min=max=0.0;" << std::endl;
 
 		INDT_1 << "for (int i=0; i<" << n_el << "; i++ ) {" << std::endl;
@@ -57,7 +40,7 @@ class DynamicQuantizeLinear : public Node {
 		INDT_1 << "}" << std::endl;
 
 		// TODO: assert output is uint8. Reading between the lines says this will change in the future
-		INDT_1 << "*y_scale = (max-min)/255;" << std::endl;
+		INDT_1 << "*y_scale_ = (max-min)/255;" << std::endl;
 
 		INDT_1 << "float fl_zero_point = (0 - min) / *y_scale;" << std::endl;
 		// specs say:
@@ -68,7 +51,7 @@ class DynamicQuantizeLinear : public Node {
 		// round() should be good enough
 		INDT_1 << "fl_zero_point = fl_zero_point < 0 ? 0 : fl_zero_point;" << std::endl;
 		INDT_1 << "fl_zero_point = fl_zero_point > 255 ? 255 : fl_zero_point;" << std::endl;
-		INDT_1 << "*y_zero_point = round(fl_zero_point);" << std::endl;
+		INDT_1 << "*y_zero_point_ = round(fl_zero_point);" << std::endl;
 
 
 		INDT_1 << "for (int i=0; i<" << n_el << "; i++ ) {" << std::endl;
@@ -82,25 +65,23 @@ class DynamicQuantizeLinear : public Node {
 
 	virtual void resolve(void) override
 	{
-		x = inputs[0];
+		const Tensor *x = inputs[0];
+		register_input(x, "x");
 
 		Tensor *t = new Tensor;
 		t->data_dim = x->data_dim;
 		t->data_type = onnx::TensorProto_DataType_UINT8;
-		y = t;
-		outputs.push_back(t);
+		register_output(t, "y");
 
 		t = new Tensor;
 		t->data_dim.push_back(1);
 		t->data_type = onnx::TensorProto_DataType_FLOAT;
-		y_scale = t;
-		outputs.push_back(t);
+		register_output(t, "y_scale");
 
 		t = new Tensor;
 		t->data_dim.push_back(1);
 		t->data_type = onnx::TensorProto_DataType_UINT8;
-		y_zero_point = t;
-		outputs.push_back(t);
+		register_output(t, "y_zero_point");
 	}
 };
 }
