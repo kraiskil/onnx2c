@@ -92,7 +92,6 @@ void parse_cmdline_options(int argc, const char *argv[])
 	}
 	if (input) { options.input_file = args::get(input); }
 	if (loglevel) {options.logging_level = args::get(loglevel); }
-	else options.logging_level = 2;
 	if (options.input_file == "" ) { std::cerr << "No input file given"; hint_at_help_and_exit(); }
 }
 

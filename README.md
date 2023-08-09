@@ -45,7 +45,7 @@ then run a standard CMake build
 ```
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make onnx2c
 ```
 

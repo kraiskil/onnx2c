@@ -22,7 +22,7 @@ struct onnx2c_opts
 	 *   3          DEBUG      Notes on generated nodes and tensors.
 	 *   4          TRACE      Detailed info on generated nodes and tensors.
 	 */
-	int logging_level=1;
+	int logging_level=DEFAULT_LOG_LEVEL;  // Default level set by CMake. 1 in release, 4 in debug builds
 	std::string input_file;
 	std::map<std::string, uint32_t> dim_defines;
 };
