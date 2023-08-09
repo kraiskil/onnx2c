@@ -24,6 +24,21 @@ void print_version_and_exit(void)
 	exit(0);
 }
 
+void initialize_logging(void)
+{
+	AixLog::Severity s;
+	switch(options.logging_level)
+	{
+	case 4: s = AixLog::Severity::trace;   break;
+	case 3: s = AixLog::Severity::debug;   break;
+	default:
+	case 2: s = AixLog::Severity::info;    break;
+	case 1: s = AixLog::Severity::warning; break;
+	case 0: s = AixLog::Severity::error;   break;
+	}
+	AixLog::Log::init<AixLog::SinkCerr>(s);
+}
+
 void store_define_option(const std::string &opt)
 {
 	auto delim_pos = opt.find(':', 0 );
@@ -82,6 +97,10 @@ void parse_cmdline_options(int argc, const char *argv[])
 
 	if (help) { std::cout << parser; exit(0); }
 	if (version) { print_version_and_exit(); }
+	if (loglevel) {options.logging_level = args::get(loglevel); }
+
+	// initialize logging as soon as possible, so logging is available in parsing the options too
+	initialize_logging();
 
 	if (quantize) { options.quantize = true; }
 	if (avr) { options.target_avr = true; }
@@ -91,7 +110,6 @@ void parse_cmdline_options(int argc, const char *argv[])
 		}
 	}
 	if (input) { options.input_file = args::get(input); }
-	if (loglevel) {options.logging_level = args::get(loglevel); }
 	if (options.input_file == "" ) { std::cerr << "No input file given"; hint_at_help_and_exit(); }
 }
 

@@ -20,18 +20,6 @@ Graph::Graph(
 	:model(onnx_model)
 {
 
-	AixLog::Severity s;
-	switch(options.logging_level)
-	{
-	case 4: s = AixLog::Severity::trace;   break;
-	case 3: s = AixLog::Severity::debug;   break;
-	default:
-	case 2: s = AixLog::Severity::info;    break;
-	case 1: s = AixLog::Severity::warning; break;
-	case 0: s = AixLog::Severity::error;   break;
-	}
-	AixLog::Log::init<AixLog::SinkCerr>(s);
-
 	processGraph(onnx_model, ext_inputs);
 }
 
