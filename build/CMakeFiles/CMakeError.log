@@ -1,0 +1,51 @@
+Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
+Compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc 
+Build flags: 
+Id flags:  
+
+The output was:
+1
+ld: library not found for -lSystem
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ 
+Build flags: 
+Id flags:  
+
+The output was:
+1
+ld: library not found for -lc++
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+
+
+Determining if the function shm_open exists in the rt failed with the following output:
+Change Dir: /Users/yjack/GitHub/andes/onnx2c/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_8ef29/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_8ef29.dir/build.make CMakeFiles/cmTC_8ef29.dir/build
+Building C object CMakeFiles/cmTC_8ef29.dir/CheckFunctionExists.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc   -Wall -Werror -DCHECK_FUNCTION_EXISTS=shm_open -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk -MD -MT CMakeFiles/cmTC_8ef29.dir/CheckFunctionExists.c.o -MF CMakeFiles/cmTC_8ef29.dir/CheckFunctionExists.c.o.d -o CMakeFiles/cmTC_8ef29.dir/CheckFunctionExists.c.o -c /opt/homebrew/Cellar/cmake/3.24.3/share/cmake/Modules/CheckFunctionExists.c
+Linking C executable cmTC_8ef29
+/opt/homebrew/Cellar/cmake/3.24.3/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8ef29.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc  -Wall -Werror -DCHECK_FUNCTION_EXISTS=shm_open -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/cmTC_8ef29.dir/CheckFunctionExists.c.o -o cmTC_8ef29  -lrt 
+ld: library not found for -lrt
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+make[1]: *** [cmTC_8ef29] Error 1
+make: *** [cmTC_8ef29/fast] Error 2
+
+
+
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_WD654 failed with the following output:
+Change Dir: /Users/yjack/GitHub/andes/onnx2c/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_0904f/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_0904f.dir/build.make CMakeFiles/cmTC_0904f.dir/build
+Building CXX object CMakeFiles/cmTC_0904f.dir/src.cxx.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ -DHAVE_CXX_FLAG_WD654  -Wall -Werror -Wfatal-errors  -std=c++11  -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wstrict-aliasing  -wd654 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk   -wd654 -std=gnu++11 -MD -MT CMakeFiles/cmTC_0904f.dir/src.cxx.o -MF CMakeFiles/cmTC_0904f.dir/src.cxx.o.d -o CMakeFiles/cmTC_0904f.dir/src.cxx.o -c /Users/yjack/GitHub/andes/onnx2c/build/CMakeFiles/CMakeTmp/src.cxx
+clang: fatal error: unknown argument: '-wd654'
+make[1]: *** [CMakeFiles/cmTC_0904f.dir/src.cxx.o] Error 1
+make: *** [cmTC_0904f/fast] Error 2
+
+
+Source file was:
+int main() { return 0; }

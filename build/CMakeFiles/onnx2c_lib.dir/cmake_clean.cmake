@@ -1,0 +1,41 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/onnx2c_lib.dir/onnx.pb.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/onnx.pb.cc.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/graph.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/src/graph.cc.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/graph_print.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/src/graph_print.cc.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/node.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/src/node.cc.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/cast.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/cast.cc.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/constantofshape.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/constantofshape.cc.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/convtranspose.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/convtranspose.cc.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/expand.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/expand.cc.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/instancenorm.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/instancenorm.cc.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/lstm.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/lstm.cc.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/pad.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/pad.cc.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/scatternd.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/src/nodes/scatternd.cc.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/optimization_passes/unionize_tensors.cpp.o"
+  "CMakeFiles/onnx2c_lib.dir/src/optimization_passes/unionize_tensors.cpp.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/tensor.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/src/tensor.cc.o.d"
+  "CMakeFiles/onnx2c_lib.dir/src/util.cc.o"
+  "CMakeFiles/onnx2c_lib.dir/src/util.cc.o.d"
+  "libonnx2c_lib.a"
+  "libonnx2c_lib.pdb"
+  "onnx.pb.cc"
+  "onnx.pb.h"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/onnx2c_lib.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

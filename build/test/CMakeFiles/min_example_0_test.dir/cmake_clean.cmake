@@ -1,0 +1,12 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/min_example_0_test.dir/min_example_0_generated.c.o"
+  "CMakeFiles/min_example_0_test.dir/min_example_0_generated.c.o.d"
+  "min_example_0_generated.c"
+  "min_example_0_test"
+  "min_example_0_test.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C)
+  include(CMakeFiles/min_example_0_test.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
