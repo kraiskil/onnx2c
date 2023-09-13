@@ -10,7 +10,7 @@ class Reshape : public Node {
 
 	int32_t allowzero;
 
-	void parseAttributes( onnx::NodeProto &node )
+    void parseAttributes( onnx::NodeProto &node ) override
 	{
 		for( const auto& a : node.attribute() ) {
 			LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
