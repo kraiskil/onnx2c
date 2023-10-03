@@ -68,6 +68,12 @@ private:
 	 * the existing tensor is updated */
 	void addTensor(Tensor *t);
 
+	void log_trace_all_tensors(void)
+	{
+		LOG(TRACE) << "All known tensors at this moment:" << std::endl;
+		for( auto t : tensors ) LOG(TRACE) << "  " << t->print_trace_dump() << std::endl;
+	}
+
 	Tensor *findTensor(const std::string &name) const;
 
 	static int anonymous_nodes;

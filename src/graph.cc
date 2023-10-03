@@ -522,19 +522,8 @@ void Graph::addTensor(Tensor *t)
 	}
 	else {
 		LOG(DEBUG) << "Updating existing tensor: " << t->name << std::endl;
-		LOG(TRACE) << "   was: gen " << prev->generate
-		           << "  init " << prev->initialize
-		           << "  IO " << prev->isIO
-		           << "  const " << prev->isConst
-		           << "  recurs " << prev->isRecursive
-		           << std::endl;
-		LOG(TRACE) << "   new: gen " << t->generate
-		           << "  init " << t->initialize
-		           << "  IO " << t->isIO
-		           << "  const " << t->isConst
-		           << "  recurs " << t->isRecursive
-		           << std::endl;
-
+		LOG(TRACE) << "  was: " << prev->print_trace_dump() << std::endl;
+		LOG(TRACE) << "  new: " << t->print_trace_dump() << std::endl;
 
 		// if updating an output to be recursive:
 		if( t->isRecursive ) {
@@ -567,12 +556,7 @@ void Graph::addTensor(Tensor *t)
 		if( t->isIO && prev->initialize == false)
 			prev->isIO=true;
 
-		LOG(TRACE) << "   now: gen " << prev->generate
-		           << "  init " << prev->initialize
-		           << "  IO " << prev->isIO
-		           << "  const " << prev->isConst
-		           << "  recurs " << prev->isRecursive
-		           << std::endl;
+		LOG(TRACE) << "  now: " << prev->print_trace_dump() << std::endl;
 	}
 }
 

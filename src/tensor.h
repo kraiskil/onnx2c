@@ -120,6 +120,7 @@ class Tensor {
 		union_no = u;
 	}
 
+	std::string print_trace_dump(void) const;
 };
 
 }

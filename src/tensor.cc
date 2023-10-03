@@ -532,3 +532,20 @@ float Tensor::get_data_element_float(uint64_t i) const
 	return 0;
 }
 
+std::string Tensor::print_trace_dump(void) const
+{
+	// TODO: there was some new pretty printing stuff in C++20?
+	std::stringstream rv;
+	rv << "  " <<  name << ":" // "global", ONNX name
+		   << "  gen " << generate
+		   << "  init " << initialize
+		   << "  IO " << isIO
+		   << "  const " << isConst
+		   << "  recurs " << isRecursive
+		   << "  dims { " << str_dimensions() << "}"
+		   << "  buffer " << data_buffer
+		;
+
+	return rv.str();
+}
+
