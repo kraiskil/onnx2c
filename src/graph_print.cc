@@ -127,7 +127,7 @@ void Graph::print_includes(std::ostream &dst)
 	}
 }
 
-void Graph::print_interface_function(std::ostream &dst)
+void Graph::print_interface_function(std::ostream &dst, bool definition)
 {
 	bool isfirst = true;
 	// TODO: take the interface function name from the ONNX file name
@@ -162,7 +162,14 @@ void Graph::print_interface_function(std::ostream &dst)
 		}
 	}
 
-	dst << ") {" << std::endl;
+	dst << ")";
+	if( !definition ) { // not definition, i.e. decalaration
+		dst << ";" << std::endl;
+		return;
+	}
+
+	// else: definition - print the rest
+	dst << "{" << std::endl;
 
 	// since nodes were resolved from graph inputs in the order there were
 	// node inputs resolved, the nodes vector is now sorted in order so that

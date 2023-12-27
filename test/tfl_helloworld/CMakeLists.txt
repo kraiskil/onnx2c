@@ -1,12 +1,8 @@
 enable_testing()
 
-add_custom_command(
-	OUTPUT
+compile_onnx(
+	${CMAKE_CURRENT_SOURCE_DIR}/model.onnx
 	generated.c
-	COMMAND
-	onnx2c ${CMAKE_CURRENT_SOURCE_DIR}/model.onnx > generated.c
-	DEPENDS
-	onnx2c model.onnx
 	)
 add_executable(test_tfl_helloworld
 	test.c

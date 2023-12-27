@@ -27,7 +27,7 @@ public:
 	void print_tensor(const Tensor *, std::ostream &dst);
 	void print_functions(std::ostream &destination);
 	void print_includes(std::ostream &dst);
-	void print_interface_function(std::ostream &dst);
+	void print_interface_function(std::ostream &dst, bool print_definition=true);
 
 	/* Create the onnx2c graph elements from the ONNX graph */
 	void processGraph(
