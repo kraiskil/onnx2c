@@ -49,8 +49,9 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make onnx2c
 ```
 
+### FAQ
 
-### Getting `error: ‘class onnx::ModelProto’ has no member named ‘ParseFromIstream’;` ?
+#### Getting `error: ‘class onnx::ModelProto’ has no member named ‘ParseFromIstream’;` ?
 
 If you have ProtoBuf 3.6 or earlier, you need the following modification to `onnx/onnx/onnx.proto`
 
@@ -60,6 +61,13 @@ With ProtoBuf 3.12 (e.g. Ubuntu 20.10 onwards) this modification is not needed.
 
 Versions between 3.6 and 3.12 are uninvestigated.
 
+#### Seeing build error  `void* __builtin_memset ... is out of the bounds ...` ?
+
+On (at least) protobuf 3.6, which ships as default on Ubuntu 20.04, the build fails when onnx2c is build in `Release` mode.
+
+Change the buildstep above to `cmake -DCMAKE_BUILD_TYPE=Debug ..`
+Or update your protobuf.
+See kraiskil/onnx2c#39 and onnx/onnx#4756.
 
 Usage
 -----
