@@ -337,6 +337,8 @@ ONNX_backend_node_test(convtranspose_pad)
 ONNX_backend_node_test(convtranspose_3d)
 ONNX_backend_node_test(convtranspose_kernel_shape)
 ONNX_backend_node_test(convtranspose_pads)
+ONNX_backend_pytorch_converted_test(ConvTranspose2d)
+ONNX_backend_pytorch_converted_test(ConvTranspose2d_no_bias)
 
 ONNX_backend_node_test(div)
 ONNX_backend_node_test(div_bcast)
