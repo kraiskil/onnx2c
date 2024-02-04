@@ -345,7 +345,6 @@ void ConvTranspose::print_calculation( std::ostream &dst) const
 	INDT_1 << "} /* m */" << std::endl;
 	INDT_1 << "} /* b */" << std::endl;
     
-    // NB: bias is not tested by the ONNX backend tests, but docs are pretty clear here.
     // YK: bias should be added only once
     if( b ) {
         // Create the loops over batches and maps (output channels).
