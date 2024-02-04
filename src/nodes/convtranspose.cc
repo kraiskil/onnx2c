@@ -328,9 +328,6 @@ void ConvTranspose::print_calculation( std::ostream &dst) const
 	INDT_4 << "y" << y_idx;
 	dst <<    " += x" << x_idx;
 	dst <<    " * w" << w_idx;
-	// NB: bias is not tested by the ONNX backend tests, but docs are pretty clear here.
-	if( b )
-		dst << " + bias[m]";
 	dst << ";" << std::endl;
 
 	// close kernel loop
@@ -347,6 +344,32 @@ void ConvTranspose::print_calculation( std::ostream &dst) const
 	// close loops over batches and output channels
 	INDT_1 << "} /* m */" << std::endl;
 	INDT_1 << "} /* b */" << std::endl;
+    
+    // NB: bias is not tested by the ONNX backend tests, but docs are pretty clear here.
+    // YK: bias should be added only once
+    if( b ) {
+        // Create the loops over batches and maps (output channels).
+        INDT_1 << "for( uint32_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
+        INDT_2 << "for( uint32_t m=0; m<" << maps << "; m++) {" << std::endl;
+        for( unsigned i = 0; i<n_data_dims; i++) {
+            std::string i_str = std::to_string(i);
+            INDT_3 << "for( uint32_t o"<<i_str<<"=0; o"<<i_str<<"<" << output_shape[i] << "; o"<<i_str<<"++) {" << std::endl;
+            
+        }
+        INDT_4 << "y" << y_idx;
+        dst << " += bias[m]";
+        dst << ";" << std::endl;
+        
+        for( unsigned i = 0; i<n_data_dims; i++) {
+            std::string i_str = std::to_string(i);
+            INDT_3 << "} /* o"<<i_str<<" */" << std::endl;
+        }
+        
+        
+        INDT_2 << "} /* m */" << std::endl;
+        INDT_1 << "} /* b */" << std::endl;
+    }
+        
 }
 
 } // namespace
