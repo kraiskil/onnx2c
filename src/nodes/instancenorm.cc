@@ -28,14 +28,14 @@ void InstanceNormalization::parseAttributes( onnx::NodeProto &node )
 
 void InstanceNormalization::resolve(void)
 {
-	input = inputs[0];
-	register_input(input, "input");
+	input = get_input_tensor(0);
+	name_input(0, "input");
 
-	scale = inputs[1];
-	register_input(scale, "scale");
+	scale = get_input_tensor(1);
+	name_input(1, "scale");
 
-	B = inputs[2];
-	register_input(B, "B");
+	B = get_input_tensor(2);
+	name_input(2, "B");
 
 	Tensor *t = new Tensor;
 	t->data_dim = input->data_dim;

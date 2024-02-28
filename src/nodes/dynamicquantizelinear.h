@@ -22,7 +22,7 @@ class DynamicQuantizeLinear : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *x = inputs[0];
+		const Tensor *x = get_input_tensor(0);
 		int n_el = x->data_num_elem();
 
 		INDT_1 << "/* DynamicQuantizeLinear */" << std::endl;
@@ -65,8 +65,8 @@ class DynamicQuantizeLinear : public Node {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *x = inputs[0];
-		register_input(x, "x");
+		const Tensor *x = get_input_tensor(0);
+		name_input(0, "x");
 
 		Tensor *t = new Tensor;
 		t->data_dim = x->data_dim;

@@ -79,7 +79,6 @@ void TEMPLATE::resolve(void)
 /* Body of the node implementing function */
 void TEMPLATE::print(std::ostream &dst) const
 {
-	INDT_1 << "/* TEMPLATE */" << std::endl;
 	INDT_1 << "/* Print info on this node here, for debugging purposes */" << std::endl;
 
 	/* Genereate the C code here */

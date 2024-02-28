@@ -10,7 +10,7 @@ class Relu : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *X=inputs[0];
+		const Tensor *X=get_input_tensor(0);
 		std::string type = X->data_type_str();
 
 		dst << "\t/*Relu*/" << std::endl;
@@ -25,8 +25,8 @@ class Relu : public Node {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *X = inputs[0];
-		register_input(X, "X");
+		const Tensor *X = get_input_tensor(0);
+		name_input(0, "X");
 		if((  typeConstraint_allFloatingPoints(X)
 		    ||typeConstraint_signed_integers(X)   ) == false )
 			ERROR("Incorrect input for Relu"); 

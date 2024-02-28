@@ -13,8 +13,8 @@ class Shape : public Node {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *data = inputs[0];
-		register_input(data, "data");
+		const Tensor *data = get_input_tensor(0);
+		name_input(0, "data");
 
 		Tensor *t = new Tensor;
 		t->data_dim.push_back(data->rank());
@@ -33,10 +33,8 @@ class Shape : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *data = inputs[0];
-		const Tensor *output= outputs[0];
-
-		INDT_1 << "/* Shape */" << std::endl;
+		const Tensor *data = get_input_tensor(0);
+		const Tensor *output= get_output_tensor(0);
 
 		// In the odd case of the shape result being a graph output, print it.
 		// Othervise those nodes that take Shape output have already

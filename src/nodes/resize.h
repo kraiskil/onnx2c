@@ -51,22 +51,22 @@ class Resize : public Node {
 
 	const Tensor *get_roi(void) const
 	{
-		if(inputs.size() > 1 && inputs[1]->is_used() )
-			return inputs[1];
+		if(get_number_of_inputs() > 1 && get_input_tensor(1)->is_used() )
+			return get_input_tensor(1);
 		else
 			return nullptr;
 	}
 	const Tensor *get_scales(void) const
 	{
-		if(inputs.size() > 2 && inputs[2]->is_used() )
-			return inputs[2];
+		if(get_number_of_inputs() > 2 && get_input_tensor(2)->is_used() )
+			return get_input_tensor(2);
 		else
 			return nullptr;
 	}
 	const Tensor *get_sizes(void) const
 	{
-		if(inputs.size() > 3)
-			return inputs[3];
+		if(get_number_of_inputs() > 3)
+			return get_input_tensor(3);
 		else
 			return nullptr;
 	}
@@ -75,18 +75,18 @@ class Resize : public Node {
 	/* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 	virtual void resolve(void) override
 	{
-		const Tensor *X = inputs[0];
+		const Tensor *X = get_input_tensor(0);
 		const Tensor *roi = get_roi();
 		const Tensor *scales = get_scales();
 		const Tensor *sizes = get_sizes();
 
-		register_input(X, "X");
+		name_input(0, "X");
 		if (roi)
-			register_input(roi, "roi");
+			name_input(1, "roi");
 		if (scales)
-			register_input(scales, "scales");
+			name_input(2, "scales");
 		if (sizes)
-			register_input(sizes, "sizes");
+			name_input(3, "sizes");
 
 		// "One of 'scales' and 'sizes' MUST be specified and it is an error if both are specified."
 		if (scales == NULL && sizes == NULL)
@@ -129,8 +129,8 @@ class Resize : public Node {
 	/* Print the coordinate transform algorithm, without integer roundings. */
 	std::string coordinate_transformation( int dim, std::string y_coordinate) const
 	{
-		const Tensor *X = inputs[0];
-		const Tensor *Y = outputs[0];
+		const Tensor *X = get_input_tensor(0);
+		const Tensor *Y = get_output_tensor(0);
 		std::string scale = std::to_string(dim_scales[dim]);
 		std::string x_dimsize = std::to_string(X->data_dim[dim]);
 		std::string y_dimsize = std::to_string(Y->data_dim[dim]);
@@ -176,7 +176,7 @@ class Resize : public Node {
 	/* For the mode 'nearest', calculate the rounding of x_resized to indexes */
 	std::string x_coord_nearest( int dim) const
 	{
-		const Tensor *X = inputs[0];
+		const Tensor *X = get_input_tensor(0);
 		std::string x_dimsize = std::to_string(X->data_dim[dim]);
 		std::string x_resized = "x_orig_" + std::to_string(dim);
 		// Apply rounding
@@ -209,7 +209,7 @@ class Resize : public Node {
 
 	void print_calc_nearest(std::ostream &dst) const
 	{
-		const Tensor *Y = outputs[0];
+		const Tensor *Y = get_output_tensor(0);
 		std::string out = "Y";
 		std::string in = "X";
 		unsigned n_data_dims = Y->rank();
@@ -223,8 +223,8 @@ class Resize : public Node {
 	
 	void print_calc_linear(std::ostream &dst) const
 	{
-		const Tensor *X = inputs[0];
-		const Tensor *Y = outputs[0];
+		const Tensor *X = get_input_tensor(0);
+		const Tensor *Y = get_output_tensor(0);
 		std::string out = "Y";
 		std::string in = "X";
 		std::vector<int> interpolate_dims;
@@ -344,7 +344,7 @@ class Resize : public Node {
 			INDT_1 << " * " << s << std::endl;
 		INDT_1 << " */" << std::endl;
 
-		const Tensor *Y = outputs[0];
+		const Tensor *Y = get_output_tensor(0);
 		unsigned n_data_dims = Y->rank();
 
 		// loop over output

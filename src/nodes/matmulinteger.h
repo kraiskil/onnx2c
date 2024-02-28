@@ -19,9 +19,9 @@ class MatMulInteger : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		Tensor *A = inputs[0];
-		Tensor *B = inputs[1];
-		Tensor *Y = outputs[0];
+		const Tensor *A = get_input_tensor(0);
+		const Tensor *B = get_input_tensor(1);
+		const Tensor *Y = get_output_tensor(0);
 		std::string intype = A->data_type_str();
 		std::string outtype = Y->data_type_str();
 		std::string weighttype = B->data_type_str();
@@ -43,11 +43,11 @@ class MatMulInteger : public Node {
 		if( inner != inner2 )
 			ERROR("MatMulInteger input's inner dimensions don't match");
 
-		if( inputs.size() > 2)
+		if( get_number_of_inputs() > 2)
 			a_zero = "a_zero_point[0]";
 		else
 			a_zero = "0";
-		if( inputs.size() > 3)
+		if( get_number_of_inputs() > 3)
 			b_zero = "b_zero_point[0]";
 		else
 			b_zero = "0";
@@ -88,23 +88,23 @@ class MatMulInteger : public Node {
 
 	virtual void resolve(void) override
 	{
-		register_input(inputs[0], "input_A");
-		register_input(inputs[1], "input_B");
+		name_input(0, "input_A");
+		name_input(1, "input_B");
 
-		if( inputs.size() > 2 ) {
-			register_input(inputs[2], "a_zero_point");
+		if( get_number_of_inputs() > 2 ) {
+			name_input(2, "a_zero_point");
 			/* There is no backend reference test for this case */
-			if( inputs[2]->data_dim[0] != 1 )
+			if( get_input_tensor(2)->data_dim[0] != 1 )
 				ERROR("Unimplemented: 1D zero_point input");
 		}
-		if( inputs.size() > 3 ) {
-			register_input(inputs[3], "b_zero_point");
-			if( inputs[3]->data_dim[0] != 1 )
+		if( get_number_of_inputs() > 3 ) {
+			name_input(3, "b_zero_point");
+			if( get_input_tensor(3)->data_dim[0] != 1 )
 				ERROR("Unimplemented: 1D zero_point input");
 		}
 
 		int32_t rows, cols;
-		result_dim(inputs, rows, cols);
+		result_dim(rows, cols);
 
 		Tensor *rv = new Tensor;
 		rv->data_dim.push_back(rows);
@@ -117,33 +117,33 @@ class MatMulInteger : public Node {
 		register_output(rv, "output_Y");
 	}
 
-	void result_dim( const std::vector< Tensor*> &inputs, int32_t &rows, int32_t &cols) const
+	void result_dim( int32_t &rows, int32_t &cols) const
 	{
 		// TODO: this is the check for vectors. Check equivalent for N-dimensons: N>2
-		if( inputs[0]->data_dim[1] != 0 && inputs[1]->data_dim[1] != 0 )
+		if( get_input_tensor(0)->data_dim[1] != 0 && get_input_tensor(1)->data_dim[1] != 0 )
 		{
-			rows = inputs[0]->data_dim[0];
-			cols = inputs[1]->data_dim[1];
+			rows = get_input_tensor(0)->data_dim[0];
+			cols = get_input_tensor(1)->data_dim[1];
 		}
-		else if( inputs[0]->data_dim[1] == 0 && inputs[1]->data_dim[1] == 0 )
+		else if( get_input_tensor(0)->data_dim[1] == 0 && get_input_tensor(1)->data_dim[1] == 0 )
 		{
 			ERROR("Bad input/unhandled: 2 vectors to MatMulInteger");
 		}
-		else if( inputs[0]->data_dim[1] == 0 )
+		else if( get_input_tensor(0)->data_dim[1] == 0 )
 		{
-			cols = inputs[1]->data_dim[1];
-			if( inputs[0]->data_dim[0] == inputs[1]->data_dim[0] )
+			cols = get_input_tensor(1)->data_dim[1];
+			if( get_input_tensor(0)->data_dim[0] == get_input_tensor(1)->data_dim[0] )
 				rows = 1;
 			else
-				rows = inputs[0]->data_dim[0];
+				rows = get_input_tensor(0)->data_dim[0];
 		}
 		else
 		{
-			rows = inputs[0]->data_dim[0];
-			if( inputs[0]->data_dim[1] == inputs[1]->data_dim[0] )
+			rows = get_input_tensor(0)->data_dim[0];
+			if( get_input_tensor(0)->data_dim[1] == get_input_tensor(1)->data_dim[0] )
 				cols = 1;
 			else
-				cols = inputs[1]->data_dim[0];
+				cols = get_input_tensor(1)->data_dim[0];
 		}
 	}
 };

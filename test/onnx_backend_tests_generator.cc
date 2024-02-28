@@ -96,7 +96,11 @@ int main(int argc, char *argv[])
 		if( t == NULL )
 			break;
 		t->isIO = true;
-		t->initialize = true;
+		// Don't write the initialization from the onnx2c graph
+		// It is written from the test suite, which is part of "the application",
+		// not the neural net
+		t->initialize = false;
+		t->generate = false;
 		t->isConst=true;
 		if( t->name == "" )
 			t->name = std::string("input_") + std::to_string(input_number);
@@ -176,15 +180,17 @@ int main(int argc, char *argv[])
 #endif
 
 	for( auto i : inputs) {
+		std::string refname = "graphin_" + i->cname();
 		std::cout << "static ";
-		i->print_tensor(std::cout, false, i->cname());
+		i->print_tensor(std::cout, false, refname);
 		std::cout << " = ";
 		i->print_tensor_initializer(std::cout);
 		std::cout << ";" << std::endl;
 	}
 	for( auto o : outputs) {
+		std::string refname = "graphout_" + o->cname();
 		std::cout << "static ";
-		o->print_tensor(std::cout, false, o->cname());
+		o->print_tensor(std::cout, false, refname);
 		std::cout << ";" << std::endl;
 	}
 	// print the reference tensors
@@ -204,18 +210,14 @@ int main(int argc, char *argv[])
 	std::cout << "\t"<<  "entry(";
 	bool isfirst = true;
 	for( auto i : inputs) {
-//		if( i-> isAliasOf )
-//			continue;
 		if( isfirst ) isfirst=false;
 		else          std::cout << ", ";
-		std::cout << i->cname();
+		std::cout << "graphin_" + i->cname();
 	}
 	for( auto r : outputs ) {
-//		if( r->isAliasOf )
-//			continue;
 		if( isfirst ) isfirst=false;
 		else          std::cout << ", ";
-		std::cout << r->cname();
+		std::cout << "graphout_"+r->cname();
 	}
 	std::cout << ");" << std::endl;
 	std::cout << std::endl;
@@ -227,7 +229,7 @@ int main(int argc, char *argv[])
 		Tensor *r = references[i];
 		Tensor *o = outputs[i];
 		//std::string outname = o->isAliasOf? o->isAliasOf->cname() : o->cname();
-		std::string outname = o->cname();
+		std::string outname = "graphout_" + o->cname();
 		std::string refname = "reference_" + r->cname();
 		std::string type = r->data_type_str();
 

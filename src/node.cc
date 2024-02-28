@@ -1,6 +1,5 @@
 
 #include "error.h"
-#include "graph.h"
 #include "node.h"
 
 
@@ -117,19 +116,29 @@ void Node::print_parameters(std::ostream &dst, bool not_callsite ) const
 	for( auto i : input_params ) {
 		const Tensor *t = std::get<0>(i);
 		std::string name = std::get<1>(i);
+		// Unused inputs in the ONNX model still exist in the onnx2c node too
+		if( t->is_used() == false )
+			continue;
 		if( not_callsite )
 			params.push_back( t->print_tensor_as_const(name) );
 		else
 			params.push_back( t->print_tensor_callsite() );
 	}
 	for( auto o : output_params ) {
-		const Tensor *t = std::get<0>(o);
+		Tensor *t = std::get<0>(o);
 		// A node does not know at its resolve time if an optional
 		// output is used, so it registers all. Once all nodes
 		// are resolved, the tensor knows if some one uses it.
 		if( t->is_used() == false )
 			continue;
 		std::string name = std::get<1>(o);
+
+		// corner case with Shape node: in case the shape output is graph output
+		// it is marked const (since other nodes have already used the compile-time generated output
+		// of the shape node).
+		if( t->isIO )
+			t->isConst = false;
+
 		if( not_callsite )
 			params.push_back( t->print_tensor(name) );
 		else
@@ -154,12 +163,43 @@ void Node::print_function_parameters_callsite(std::ostream &destination) const
 	print_parameters(destination, false);
 }
 
-void Node::register_input(const Tensor *t, std::string name)
+void Node::register_input(Tensor *t, std::string name)
 {
 	input_params.push_back(function_parameter(t, name));
 }
 void Node::register_output(Tensor *t, std::string name)
 {
+	//t->generate=true;
 	output_params.push_back(function_parameter(t, name));
-	outputs.push_back(t);
+}
+
+void Node::name_input(unsigned input_no, std::string name)
+{
+	std::get<1>(input_params[input_no]) = name;
+}
+void Node::register_output(unsigned output_no, std::string name)
+{
+	std::get<1>(output_params[output_no]) = name;
+}
+Tensor* Node::get_output_tensor(unsigned N) const
+{
+	if( output_params.size() < N )
+		return nullptr;
+	return std::get<0>(output_params[N]);
+}
+Tensor* Node::get_input_tensor(unsigned N) const
+{
+	if( input_params.size() < N )
+		return nullptr;
+	return std::get<0>(input_params[N]);
+}
+
+unsigned Node::get_number_of_inputs(void) const
+{
+	return input_params.size();
+}
+
+unsigned Node::get_number_of_outputs(void) const
+{
+	return output_params.size();
 }

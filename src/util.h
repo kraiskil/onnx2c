@@ -41,3 +41,11 @@ std::string cast_to_ndim_arrayptr(const toC::Tensor *t, const std::string shortn
 bool isFloat(onnx::TensorProto_DataType data_type);
 // is data_type any sort of integer type
 bool isInt(onnx::TensorProto_DataType data_type);
+
+// print the start over a loopnest
+// for( uint32_t d0=0; d0 < dim0size; d0++) {
+// for( uint32_t d1=0; d1 < dim1size; d1++) {
+void print_loops_over_dims(std::ostream &dst, const toC::Tensor *, std::string prefix, unsigned num_indents);
+// and the same for the loop closes
+void print_loop_closes_over_dims(std::ostream &dst, const toC::Tensor *t, unsigned indents);
+

@@ -21,7 +21,7 @@ void Cast::parseAttributes( onnx::NodeProto &node )
 void Cast::resolve(void)
 {
 	LOG(INFO) << "'Cast' node found." << std::endl;
-	register_input(inputs[0], "input");
+	name_input(0, "input");
 
 	switch(to)
 	{
@@ -35,7 +35,7 @@ void Cast::resolve(void)
 	}
 
 	Tensor *t = new Tensor;
-	t->data_dim = inputs[0]->data_dim;
+	t->data_dim = get_input_tensor(0)->data_dim;
 	t->data_type = static_cast<onnx::TensorProto_DataType>(to);
 	register_output(t, "output");
 }
@@ -44,8 +44,8 @@ void Cast::resolve(void)
 void Cast::print(std::ostream &dst) const
 {
 	INDT_1 << "/* Cast */" << std::endl;
-	const Tensor *input = inputs[0];
-	const Tensor *output = outputs[0];
+	const Tensor *input = get_input_tensor(0);
+	const Tensor *output = get_output_tensor(0);
 
 	std::string intype = input->data_type_str();
 	std::string outtype = output->data_type_str();

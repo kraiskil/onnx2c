@@ -52,23 +52,23 @@ class LSTM : public Node {
 
 	float get_activation_alpha( const std::string &a);
 	float get_activation_beta( const std::string &a);
-	const Tensor* get_X(void) const { return inputs[0]; }
-	const Tensor* get_W(void) const { return inputs[1]; }
-	const Tensor* get_R(void) const { return inputs[2]; }
-	const Tensor* get_Y(void) const { return outputs[0]; }
-	const Tensor* get_Y_h(void) const { return outputs[1]; }
-	const Tensor* get_Y_c(void) const { return outputs[2]; }
+	const Tensor* get_X(void) const { return get_input_tensor(0); }
+	const Tensor* get_W(void) const { return get_input_tensor(1); }
+	const Tensor* get_R(void) const { return get_input_tensor(2); }
+	const Tensor* get_Y(void) const { return get_output_tensor(0); }
+	const Tensor* get_Y_h(void) const { return get_output_tensor(1); }
+	const Tensor* get_Y_c(void) const { return get_output_tensor(2); }
 
 	// ONNX allows omitting optional inputs by either:
 	//  - not give them at all
 	//  - named with the empty string
 	const Tensor* get_optional(unsigned N) const
 	{
-		if( inputs.size() <= N )
+		if( get_number_of_inputs() <= N )
 			return nullptr;
-		if( inputs[N]->name == "" )
+		if( get_input_tensor(N)->name == "" )
 			return nullptr;
-		return inputs[N];
+		return get_input_tensor(N);
 	}
 	const Tensor* get_B(void) const { return get_optional(3); }
 	const Tensor* get_sequence_lens(void) const { return get_optional(4); }

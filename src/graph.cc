@@ -1,6 +1,7 @@
 // model resolving part of the toC Graph class
 #include "error.h"
 #include "graph.h"
+#include "nodes/graph_io.h"
 #include "onnx.pb.h"
 #include "options.h"
 
@@ -36,30 +37,47 @@ void Graph::processGraph(
 		LOG(DEBUG) << "  - " << t->name <<std::endl;
 		tensors.push_back(t);
 	}
+	LOG(TRACE) << "  (done adding external tensors)." <<std::endl;
 
 	// 1. add initializers as resolved tensors
 	// in case of quantization, make quantized copies here
 	LOG(DEBUG) << "Adding initialized constant tensors from .onnx file." <<std::endl;
 	for( auto i : onnx_graph.initializer() )
 		addInitializedTensor( i );
+	LOG(TRACE) << "  (done adding initialized tensors)." <<std::endl;
 
 	// 2. add graph inputs as resolved tensors
 	// in case of quantization, convert all IO to INT8
+	addGraphInputMetanode();
 	LOG(DEBUG) << "Marking graph input tensors as IO." <<std::endl;
 	for ( auto i : onnx_graph.input() ) {
 		Tensor *n = getIoTensor( i );
+		n->isConst = true;
 		addTensor( n );
 	}
+	LOG(TRACE) << "  (done marking input tensors)." <<std::endl;
 
 	// 3. Do the nodes
 	LOG(DEBUG) << "Resolving nodes." <<std::endl;
 	resolveGraphNodes(onnx_graph);
 
 	// 4. Add the IO tag to those tensors the user wants back.
+	Node *graph_output_node = addGraphOutputMetanode();
 	LOG(DEBUG) << "Marking graph output tensors as IO." <<std::endl;
 	for ( auto o : onnx_graph.output() ) {
-		Tensor *n = getIoTensor( o );
-		addTensor(n);
+		LOG(TRACE) << "\t- found graph output tensor '" << o.name() << "':" << std::endl;
+		Tensor *t = findTensor(o.name());
+		if( t == nullptr )
+			ERROR("Badly formed ONNX graph: No node produced this graph output tensor");
+		t->isIO = true;
+		// There is the odd case (in tests, mostly), where an constant tensor is passed
+		// as graph output. Only in this case should the graph's output be generated into
+		// the C source
+		t->generate = t->isConst;
+
+		t->consumers.push_back(graph_output_node);
+		graph_output_node->register_input(t, "");
+		LOG(TRACE) << "\t\t " << t->print_trace_dump() << std::endl;
 	}
 }
 
@@ -183,34 +201,44 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 }
 
 
-
-bool Graph::getNodeInputTensors(const onnx::NodeProto &node, std::vector<Tensor*> &inputs)
+// Populate the onnx2c_node's
+// input tensors using already created tensors in the graph.
+// All inputs should exist as onnx2c tensors before calling this, or else we return false.
+bool Graph::getNodeInputTensors(const onnx::NodeProto &node, toC::Node *onnx2c_node)
 {
-	// TODO: ugly. Move where?
-	static Tensor unused;
-
-	// if all inputs can be found in the tensors-vector, then yes, inputs are resolved
+	// Step through the ONNX node's input tensors
 	for( auto i : node.input() )
 	{
 		bool input_resolved = false;
-		// Unused inputs don't need to be resolved.
+		// in case the input is not used by the node, ONNX has a dummy input
+		// for the node. This dummy input serves only to put the rest of the
+		// node's inputs in correct order
 		if( i == "" ) {
+			static Tensor input_is_unused_sentinel;
+			LOG(TRACE) << "\t-unnamed input tensor - using shared 'unused' sentinel tensor" << std::endl;
 			input_resolved = true;
-			inputs.push_back(&unused);
+			onnx2c_node->register_input(&input_is_unused_sentinel, "");
 			continue;
 		}
 
+		LOG(TRACE) << "Looking for input tensor '" << i << "':" << std::endl;
 		for( auto t : tensors ) {
 			if ( t->name == i ) {
+				LOG(TRACE) << "\t- found input tensor '" << i << "':" << std::endl;
+				LOG(TRACE) << "\t\t " << t->print_trace_dump() << std::endl;
 				input_resolved = true;
-				inputs.push_back(t);
+				// register node with local name "" - since we don't have node context here
+				// we don't know if it is named 'X', 'input', 'A' or whatever. Node resolver
+				// assigns that name.
+				onnx2c_node->register_input(t, "");
 				break;
 			}
 		}
+		LOG(TRACE) << "    finished looking" << std::endl;
 
 		// Node has an unresolved input tensor
 		if( input_resolved == false ) {
-			LOG(TRACE) << "Input tensor " << i << " not resolved" << std::endl;
+			LOG(DEBUG) << "Input tensor '" << i << "' not resolved" << std::endl;
 			return false;
 		}
 	}
@@ -223,26 +251,23 @@ bool Graph::getNodeInputTensors(const onnx::NodeProto &node, std::vector<Tensor*
  * @return true node is (or was earlier) added to Graph::nodes datastructure.
  *          Return false if Graph::tensors does not yet have all the input tensor for this node.
  */
-bool Graph::tryResolveNode(onnx::NodeProto &node)
+bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 {
 	std::vector<Tensor*> inputs;
-	LOG(DEBUG) << "Resolving ONNX node " << node.name() <<std::endl;
+	LOG(DEBUG) << "Resolving ONNX node: '" << onnx_node.name() << "'" <<std::endl;
 
+	// This check is needed in case the caller needs to iterate over the nodes more than once.
 	for( auto o : nodes )
-		if( node.name() == o->onnx_name ) {
-			LOG(TRACE) << "Node " << node.name() << " already resolved"<<std::endl;
+		if( onnx_node.name() == o->onnx_name ) {
+			LOG(TRACE) << "Node '" << onnx_node.name() << "' already resolved"<<std::endl;
 			return true;
 		}
-
-	// Early exit on error cases - cannot resolve this node (now)
-	if( getNodeInputTensors(node, inputs) == false )
-		return false;
 
 	// ONNX has a few nodes that have quantized alternatives.
 	// Switch to those here.
 	// For the rest, rely on optional quantization in the
 	// onnx2c implementation.
-	std::string new_node = node.op_type();
+	std::string new_node = onnx_node.op_type();
 	if( options.quantize ) {
 		replaceWithQuantized(inputs);
 		if( new_node == "Conv" )
@@ -250,31 +275,53 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 		if( new_node == "MatMul" )
 			new_node = "MatMulInteger";
 	}
+	LOG(DEBUG) << "Creating new node: " << onnx_node.name() << std::endl;
+	LOG(DEBUG) << "     Operand type: " << new_node << std::endl;
 	Node *n = createNode(new_node);
-	LOG(DEBUG) << "    inputs: " << std::endl;
-	for( auto i : inputs) {
-		LOG(DEBUG) << "         " << i->name << " - "<< i->data_type_str() << " { " << i->str_dimensions() << "}" << std::endl;
-		n->inputs.push_back(i);
-		const_cast<Tensor*>(i)->consumers.push_back(n);
+	if( getNodeInputTensors(onnx_node, n) == false ) {
+		LOG(DEBUG) << "getNodeInputTensors() failed. Not adding node!"<< std::endl;
+		delete n;
+		return false;
 	}
 
-	n->isResolved = false;
-	n->op_name = new_node;
-	n->onnx_name = node.name();
-
-	// onnx allows (or at least some tools create) nodes without names
-	// create unique names for those, e.g. "anonymous_5_relu"
-	if( n->onnx_name == "" ) {
+	// ONNX allows (or at least some tools create) nodes without names.
+	// Here we create unique names for those, e.g. "anonymous_5_relu".
+	if( onnx_node.name() == "" ) {
 		std::string name = "anonymous_";
 		name += n->op_name;
 		name +=  "_" + std::to_string(anonymous_nodes);
 		n->onnx_name = name;
 		anonymous_nodes++;
 	}
-	LOG(DEBUG) << "    Name in C sources " << n->c_name() << std::endl;
+	else
+		n->onnx_name = onnx_node.name();
 
-	if( node.attribute_size() != 0 )
-		n->parseAttributes( node );
+	LOG(DEBUG) << "    Node name in C sources " << n->c_name() << std::endl;
+	LOG(DEBUG) << "    inputs: " << std::endl;
+
+	// Record this node as the consumer of the the input tensors
+	for(unsigned iidx=0; iidx<(n->get_number_of_inputs()); iidx++) {
+		Tensor *i = n->get_input_tensor(iidx);
+		LOG(DEBUG) << "         " << i->name << " - "<< i->data_type_str() << " { " << i->str_dimensions() << "}" << std::endl;
+		const_cast<Tensor*>(i)->consumers.push_back(n);
+		i->print_trace_dump();
+	}
+	LOG(TRACE) << "     (no more inputs)" << std::endl;
+	n->isResolved = false;
+	n->op_name = new_node;
+
+	LOG(DEBUG) << "  Parsing node attributes" << std::endl;
+	if( onnx_node.attribute_size() != 0 )
+		n->parseAttributes( onnx_node );
+	LOG(TRACE) << "    (done parsing attributes)" << std::endl;
+
+	// Now loop over the node inputs, check that they are all added
+	// into the graph's known tensors - seems the ONNX graph does not keep track of
+	// vectors provided as nodes' attributes.
+	LOG(DEBUG) << "  Making sure node attributes are in the graph" << std::endl;
+	for(unsigned nn = 0; nn<n->get_number_of_inputs(); nn++)
+		addTensor(n->get_input_tensor(nn));
+	LOG(TRACE) << "   (end of attribute-input-vectors)" << std::endl;
 
 	// create output nodes for the tensor.
 	// this is a kludge around a chicken & egg problem caused by bad design in
@@ -284,14 +331,14 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 	// So create a list of that tells if outputs are used or not *before* resolving
 	// the node.
 	std::vector<bool> output_used;
-	for(int nn = 0; nn<node.output_size(); nn++)
+	for(int nn = 0; nn<onnx_node.output_size(); nn++)
 	{
 		// ONNX spec:
 		// "There are two ways to leave an optional input or output unspecified:
 		// the first, available only for trailing inputs and outputs, is to simply
 		// not provide that input; the second method is to use an empty string in
 		// place of an input or output name."
-		if( node.output(nn) == "" )
+		if( onnx_node.output(nn) == "" )
 			output_used.push_back(false);
 		else
 			output_used.push_back(true);
@@ -299,18 +346,22 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 	n->set_output_used(output_used);
 
 	// Configure Node internals, and populate its outputs vector.
+	LOG(TRACE) << "Resolving node" << std::endl;
 	n->resolve();
 
 	// Add the output tensors the resolve() generated to the graph's list of tensors.
+	// Name the generated output tensors according to how they are named in
+	// the ONNX model.
 	// This will now contain all of the node's outputs, also such optional ones
 	// that are not used in the model.
-	for( unsigned o=0; o<n->get_outputs().size(); o++) {
-		Tensor *t = n->get_outputs()[o];
+	LOG(DEBUG) << "Adding resolved node's output to graph's tensors" << std::endl;
+	for( unsigned o=0; o<n->get_number_of_outputs(); o++) {
+		Tensor *t = n->get_output_tensor(o);
 
 		// optional outputs are named "" or just omitted
 		std::string onnx_name;
 		if( n->is_output_N_used(o) )
-			onnx_name = node.output(o);
+			onnx_name = onnx_node.output(o);
 		else
 			onnx_name = "";
 
@@ -327,10 +378,14 @@ bool Graph::tryResolveNode(onnx::NodeProto &node)
 
 		addTensor(t);
 	}
-	LOG(DEBUG) << "    outputs: " << std::endl;
-	for( auto o : n->get_outputs())
-		LOG(DEBUG) << "         " << o->name << " - "<< o->data_type_str() << " { " << o->str_dimensions() << "}" << std::endl;
+	LOG(DEBUG) << "   (done) all outputs now:" << std::endl;
+	for( unsigned o=0; o<n->get_number_of_outputs(); o++) {
+		Tensor *t = n->get_output_tensor(o);
+		LOG(DEBUG) << "         " << t->name << " - "<< t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
+	}
+	LOG(TRACE) << "      (no more outputs)" << std::endl;
 
+	log_trace_all_tensors();
 	n->isResolved = true;
 	nodes.push_back(n);
 	return true;
@@ -395,6 +450,8 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/unsqueeze.h"
 #include "nodes/upsample.h"
 
+// Create a new onnx2c Node from an operand name of an ONNX Graph node.
+// NB: the onnx2c-special graph input and graph output nodes are not created here
 Node* Graph::createNode(std::string opName)
 {
 	if( opName == "Abs" )return new Elementwise("Abs");
@@ -518,6 +575,7 @@ void Graph::addTensor(Tensor *t)
 	if( prev == NULL ) {
 		tensors.push_back(t);
 		LOG(DEBUG) << "New tensor: " << t->name << " - "<< t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
+		LOG(TRACE) << "    " << t->print_trace_dump();
 		// TODO return & remove else {}
 	}
 	else {
@@ -530,8 +588,6 @@ void Graph::addTensor(Tensor *t)
 			// Since this tensor was already added, it was added
 			// because it is a graph output.
 			// This is because recursion means recursion to same node, not a general loop in the network
-			if( prev->isIO == false )
-				ERROR("Update logic failure (i.e. this is an assert fail)");
 			prev->generate = t->generate;
 			prev->initialize = t->initialize;
 			prev->isRecursive = true;
@@ -556,6 +612,10 @@ void Graph::addTensor(Tensor *t)
 		if( t->isIO && prev->initialize == false)
 			prev->isIO=true;
 
+		// Some graph IO (output) tensors are not marked with dimensions in ONNX files
+		if( prev->rank() == 0 )
+			prev->data_dim = t->data_dim;
+
 		LOG(TRACE) << "  now: " << prev->print_trace_dump() << std::endl;
 	}
 }
@@ -578,3 +638,28 @@ void Graph::replaceWithQuantized(std::vector<Tensor*> &inputs)
 
 
 
+Node* Graph::addGraphInputMetanode()
+{
+	Node *n = new graph_io();
+	n->isResolved = true;
+	n->onnx_name = "graph_input";
+	nodes.push_back(n);
+	return n;
+}
+
+Node* Graph::addGraphOutputMetanode()
+{
+	Node *n = new graph_io();
+	n->isResolved = true;
+	n->onnx_name = "graph_output";
+	nodes.push_back(n);
+	return n;
+}
+
+Node* Graph::findNodeByName( const std::string node_name )
+{
+	for( auto n : nodes )
+		if( n->onnx_name == node_name )
+			return n;
+	return nullptr;
+}

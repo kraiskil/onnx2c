@@ -174,13 +174,13 @@ std::vector<int> ConvTranspose::calculate_output_size(void)
 
 void ConvTranspose::resolve(void)
 {
-	x = inputs[0]; // data
-	register_input(x,"x");
-	w = inputs[1]; // weights
-	register_input(w,"w");
-	if( inputs.size() == 3 ) {
-		b = inputs[2];
-		register_input(b,"bias"); // 'b' is the batch looping index
+	x = get_input_tensor(0); // data
+	name_input(0,"x");
+	w = get_input_tensor(1); // weights
+	name_input(1,"w");
+	if( get_number_of_inputs() == 3 ) {
+		b = get_input_tensor(2);
+		name_input(2,"bias"); // 'b' is the batch looping index
 	}
 	else
 		b = NULL;

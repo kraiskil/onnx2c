@@ -23,38 +23,42 @@ class Elementwise_variadic : public Node {
 		if( op == "Min" )
 			operation = [this](std::ostream &dst, const std::vector<std::string> &idxs)
 				{
+					const unsigned n_inp = get_number_of_inputs();
 					INDT_3 << "MIN(in_0" << idxs[0] << ", " << std::endl;
-					for(unsigned i=0; i<inputs.size()-1; i++)
+					for(unsigned i=0; i<n_inp-1; i++)
 						INDT_3 << "MIN(in_" << i << idxs[i] << ", " << std::endl;
-					INDT_4 << "in_" << inputs.size()-1 << idxs[inputs.size()-1];
-					for(unsigned i=0; i<inputs.size(); i++)
+					INDT_4 << "in_" << n_inp-1 << idxs[n_inp-1];
+					for(unsigned i=0; i<n_inp; i++)
 						dst << ")";
 					dst << ";" << std::endl;
 				};
 		else if( op == "Mean" )
 			operation = [this](std::ostream &dst, const std::vector<std::string> &idxs)
 				{
+					const unsigned n_inp = get_number_of_inputs();
 					INDT_3 << "(in_0" << idxs[0] << std::endl;
-					for(unsigned i=1; i<inputs.size(); i++)
+					for(unsigned i=1; i<n_inp; i++)
 						INDT_3 << " + in_" << i << idxs[i] << std::endl;
-					INDT_3 << ")/" << inputs.size() << ";" << std::endl;
+					INDT_3 << ")/" << n_inp << ";" << std::endl;
 				};
 		else if( op == "Max" )
 			operation = [this](std::ostream &dst, const std::vector<std::string> &idxs)
 				{
+					const unsigned n_inp = get_number_of_inputs();
 					INDT_3 << "MAX(in_0" << idxs[0] << ", " << std::endl;
-					for(unsigned i=0; i<inputs.size()-1; i++)
+					for(unsigned i=0; i<n_inp-1; i++)
 						INDT_3 << "MAX(in_" << i << idxs[i] << ", " << std::endl;
-					INDT_4 << "in_" << inputs.size()-1 << idxs[inputs.size()-1];
-					for(unsigned i=0; i<inputs.size(); i++)
+					INDT_4 << "in_" << n_inp-1 << idxs[n_inp-1];
+					for(unsigned i=0; i<n_inp; i++)
 						dst << ")";
 					dst << ";" << std::endl;
 				};
 		else if (op == "Sum" )
 			operation = [this](std::ostream &dst, const std::vector<std::string> &idxs)
 				{
+					const unsigned n_inp = get_number_of_inputs();
 					INDT_3 << "(in_0" << idxs[0] << std::endl;
-					for(unsigned i=1; i<inputs.size(); i++)
+					for(unsigned i=1; i<n_inp; i++)
 						INDT_3 << " + in_" << i << idxs[i] << std::endl;
 					INDT_3 << ");" << std::endl;
 				};
@@ -73,9 +77,9 @@ class Elementwise_variadic : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *out = outputs[0];
+		const Tensor *out = get_output_tensor(0);
 		std::string type = out->data_type_str();
-		std::vector<std::string> in_idx_strs(inputs.size());
+		std::vector<std::string> in_idx_strs(get_number_of_inputs());
 		std::string out_idx_str;
 		INDT_1 << "/* " << op_name  << std::endl;
 		INDT_1 << "   Implemented with Elementwise_variadic template." << std::endl;
@@ -92,8 +96,8 @@ class Elementwise_variadic : public Node {
 			// Generate indexing strings to be printed later on.
 			// TODO: this is a copy from earlier code. Feels like there might
 			// be a more elegant way of doing this.
-			for( unsigned i=0; i<inputs.size(); i++) {
-				std::vector<int> pads = inputs[i]->data_dim;
+			for( unsigned i=0; i<get_number_of_inputs(); i++) {
+				std::vector<int> pads = get_input_tensor(i)->data_dim;
 				std::string idx_str;
 				if (pads[r]==1)
 					idx_str += "[0]";
@@ -119,21 +123,21 @@ class Elementwise_variadic : public Node {
 	virtual void resolve(void) override
 	{
 		// There can be 1-N inputs.
-		int num_inputs = inputs.size();
+		int num_inputs = get_number_of_inputs();
 
-		std::vector<int> result_dim=inputs[0]->data_dim;
-		register_input(inputs[0], "in_0");
+		std::vector<int> result_dim=get_input_tensor(0)->data_dim;
+		name_input(0, "in_0");
 		for( int i=1; i<num_inputs; i++ ){
 			std::vector<int> tmp;
-			multidirectional_broadcast_size(result_dim, inputs[i]->data_dim, tmp);
+			multidirectional_broadcast_size(result_dim, get_input_tensor(i)->data_dim, tmp);
 			result_dim=tmp;
 			std::string input_name = "in_" + std::to_string(i);
-			register_input(inputs[i], input_name);
+			name_input(i, input_name);
 		}
 
 		Tensor *t = new Tensor;
 		t->data_dim = result_dim;
-		t->data_type = inputs[0]->data_type;
+		t->data_type = get_input_tensor(0)->data_type;
 		register_output(t, "output");
 	}
 };

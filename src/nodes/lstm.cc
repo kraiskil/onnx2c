@@ -348,7 +348,7 @@ void LSTM::calculate_data_dimensions()
 
 void LSTM::resolve(void)
 {
-	if( inputs.size() < 3 || inputs.size() > 8 )
+	if( get_number_of_inputs() < 3 || get_number_of_inputs() > 8 )
 		ERROR("wrong number of inputs to LSTM");
 
 
@@ -385,27 +385,27 @@ void LSTM::resolve(void)
 	if( hidden_size < 0 )
 		ERROR("Must provide hidden_size attribute!");
 
-	register_input(get_X(), "X");
-	register_input(get_W(), "W");
-	register_input(get_R(), "R");
+	name_input(0, "X");
+	name_input(1, "W");
+	name_input(2, "R");
 
 	//optional inputs. Trailing unprovided inputs can just be left out
 	//but non-trailing, unprovided inputs MUST have an empty string as name
 	// (guess that means tensors MAY NOT have an empty string as name?)
 	if( get_B() ) {
-		register_input(get_B(), "B");
+		name_input(3, "B");
 	}
 	if( get_sequence_lens() ) {
-		register_input(get_sequence_lens(), "sequence_lens");
+		name_input(4, "sequence_lens");
 	}
 	if( get_initial_h()) {
-		register_input(get_initial_h(), "initial_h");
+		name_input(5, "initial_h");
 	}
 	if( get_initial_c()) {
-		register_input(get_initial_c(), "initial_c");
+		name_input(6, "initial_c");
 	}
 	if( get_P() ) {
-		register_input(get_P(), "P");
+		name_input(7, "P");
 	}
 
 

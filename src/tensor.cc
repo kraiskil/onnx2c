@@ -339,6 +339,8 @@ void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs) cons
 
 void Tensor::print_tensor(std::ostream &dst, bool is_callsite, std::string alternate_name, bool as_const) const
 {
+	// TODO: dupe code. Call print_tesor(string, bool, bool)!
+
 	if( is_callsite == false ) {
 		if( isConst || as_const )
 			dst << "const ";

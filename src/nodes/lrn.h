@@ -45,8 +45,8 @@ class LRN : public Node {
 	/* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 	virtual void resolve(void) override
 	{
-		const Tensor *X = inputs[0];
-		register_input(X, "X");
+		const Tensor *X = get_input_tensor(0);
+		name_input(0, "X");
 
 		if( size == -1 )
 			ERROR("LRN: attribute 'size' was not given");
@@ -61,7 +61,7 @@ class LRN : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *X = inputs[0];
+		const Tensor *X = get_input_tensor(0);
 
 		INDT_1 << "/* LRN */" << std::endl;
 		INDT_1 << "/* attributes:" << std::endl;

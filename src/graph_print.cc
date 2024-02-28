@@ -49,7 +49,7 @@ void Graph::print_tensor(const Tensor *t, std::ostream &dst)
 {
 	if( t->generate == false )
 		return;
-	if( t->isIO == true )
+	if( t->name == "" )
 		return;
 	if( t->data_dim.size() == 0 )
 		ERROR("Tensor of no dimensions?");
@@ -75,12 +75,16 @@ void Graph::print_tensor(const Tensor *t, std::ostream &dst)
 void Graph::print_global_tensors(std::ostream &dst)
 {
 	// ununionized tensors
+	LOG(TRACE) << "printing global tensors - ununionized " << std::endl;
 	for( auto t : tensors )
 	{
-		if( t->union_no < 0 )
+		LOG(TRACE) << "\t" << t->print_trace_dump() << std::endl;
+		if( t->union_no < 0
+		 && t->generate)
 			print_tensor(t, dst);
 	}
 
+	LOG(TRACE) << "printing global tensors - unionized " << std::endl;
 	for( unsigned u=0; u<tensor_unions.size(); u++ )
 	{
 		dst << "union tensor_union_" << u << " {" << std::endl;
@@ -92,11 +96,19 @@ void Graph::print_global_tensors(std::ostream &dst)
 		dst << "};" <<std::endl;
 		dst << "static union tensor_union_" << u << " tu" << u << ";" << std::endl <<std::endl;
 	}
+	LOG(TRACE) << "(done printing global tensors)"<< std::endl;
 }
 
 void Graph::print_functions(std::ostream &dst)
 {
 	for( auto n : nodes ) {
+		// handle meta-nodes separately
+		if( n->op_name == "graph_io" )
+			continue;
+		dst << "/*" << std::endl;
+		dst << " * Operand:           " << n->op_name << std::endl;
+		dst << " * Name in ONNX file: " << n->onnx_name << std::endl;
+		dst << " */" << std::endl;
 		dst << "static inline void ";
 		dst << n->c_name() << "( ";
 		n->print_function_parameters_definition(dst);
@@ -148,16 +160,25 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 		}
 	}
 
-	for ( auto i : model.graph().output() ) {
-		/* TODO: when there are more than one output, see above for how
-		 * inputs are handled */
-		Tensor *t = findTensor(i.name());
+	// find the graph output node
+	// loop through the output nodes' inputs, printing them
+	Node *graph_out_node = findNodeByName("graph_output");
+	if( graph_out_node == nullptr )
+		ERROR("internal onnx2c error: no graph_output node");
+
+	for( unsigned o=0; o<graph_out_node->get_number_of_inputs(); o++)
+	{
+		Tensor *t = graph_out_node->get_input_tensor(o);
 
 		if( t ) {
 			if(!isfirst)
 				dst << ", ";
 			else
 				isfirst = false;
+
+			// kludge... in contrived cases (like unit tests), the graph can have a constant vector as its ouput.
+			// Since this is the last function we write anyway...
+			t->isConst = false;
 			t->print_tensor(dst);
 		}
 	}
@@ -176,6 +197,10 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 	// we don't need to check dependancies :)
 	for( auto n : nodes )
 	{
+		// handle meta-nodes separately
+		if( n->op_name == "graph_io" )
+			continue;
+
 		dst << "\t" << n->c_name() << "( ";
 		n->print_function_parameters_callsite(dst);
 		dst << ");" << std::endl;

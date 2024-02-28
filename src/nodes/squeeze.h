@@ -26,7 +26,7 @@ class Squeeze : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *data = inputs[0];
+		const Tensor *data = get_input_tensor(0);
 		std::string type = data->data_type_str();
 
 		dst << "\t/*Squeeze*/" << std::endl;
@@ -41,12 +41,12 @@ class Squeeze : public Node {
  
 	virtual void resolve(void) override
 	{
-		const Tensor *data = inputs[0];
-		register_input(data, "input");
-		if (inputs.size() == 2) {
-			const Tensor *axes_tensor = inputs[1];
-			register_input(axes_tensor, "axes_tensor");
-			if (axes_tensor->initialize == false)
+		const Tensor *data = get_input_tensor(0);
+		name_input(0, "input");
+		if (get_number_of_inputs() == 2) {
+			const Tensor *axes_tensor = get_input_tensor(1);
+			name_input(1, "axes_tensor");
+			if (axes_tensor->isConst == false)
 				ERROR("provided axes are dynamic, not implmeneted");
 			for( unsigned i=0; (int)i<axes_tensor->data_num_elem(); i++) {
 				int64_t *rd = (int64_t*)axes_tensor->data_buffer;  // axes data must be int64

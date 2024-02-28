@@ -15,10 +15,10 @@ class Upsample : public Resize {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *X = inputs[0];
-		const Tensor *scales = inputs[1];
-		register_input(X, "X");
-		register_input(scales, "scales");
+		const Tensor *X = get_input_tensor(0);
+		const Tensor *scales = get_input_tensor(1);
+		name_input(0, "X");
+		name_input(1, "scales");
 
 		if( scales->isConst == false )
 			ERROR("Unimplemented: Upsample 'sizes' input is not a compile-time constant: " + scales->name);

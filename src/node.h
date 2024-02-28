@@ -8,7 +8,7 @@
 namespace toC {
 
 class Tensor;
-typedef std::tuple<const Tensor *, std::string> function_parameter;
+typedef std::tuple<Tensor *, std::string> function_parameter;
 
 /* The ONNX node, or computation kernel. *
  * Node is a virtual parent class for each of the
@@ -22,13 +22,7 @@ class Node {
 	std::string onnx_name; //ONNX name of the individual node
 	std::string op_name;   //ONNX name of node type
 	static int64_t onnx_ir_version;
-	std::vector<Tensor*> inputs; // List of input tensors in the .onnx file
-
-	// NB: this is deprecated. Whenever a node is updated,
-	// any reference to this variable should be removed.
-	// instead of outputs.push_back(), use register_output()
-	// Eventually this variable should be made protected
-	std::vector<Tensor *> outputs;
+	virtual ~Node(){}
 private:
 	std::vector<function_parameter> input_params;
 	std::vector<function_parameter> output_params;
@@ -40,8 +34,21 @@ private:
 public:
 	void set_output_used(std::vector<bool>val){output_used = val; }
 
-	// when output is removed, get the vector of tensors from output_params.
-	std::vector<Tensor *> get_outputs(void) const {return outputs;}
+	// Get a pointer to the Nth input/output tensor for this node.
+	Tensor *get_output_tensor(unsigned N) const;
+	Tensor *get_input_tensor(unsigned N) const;
+	unsigned get_number_of_inputs(void) const;
+	unsigned get_number_of_outputs(void) const;
+
+	// Run caller provided lambda for each output Tensor.
+	void forEachOutput( std::function<void(Tensor*)> caller_lambda)
+	{
+		for( auto op : output_params )
+		{
+			Tensor* o = std::get<0>(op);
+			caller_lambda(o);
+		}
+	}
 
 	/* Create the C source name. Replace all non a-z,A-Z,0-9 or _
 	 * characters. Also prefix name since ONNX allows tensors and nodes
@@ -116,12 +123,15 @@ public:
 		const std::vector<int> B,
 		std::vector<int> &result) const;
 
-protected:
+public:  // TODO: split up into more protected functions
 	/* Record a tensor as the generated function's parameter.
 	 * - name: the name to be used locally for the tensor in the C-function
 	 */
-	void register_input(const Tensor *, std::string name);
+	void register_input(Tensor *, std::string name);
 	void register_output(Tensor *, std::string name);
+	void name_input(unsigned input_no, std::string name);
+	void register_output(unsigned output_no, std::string name);
 
 };
 }
+

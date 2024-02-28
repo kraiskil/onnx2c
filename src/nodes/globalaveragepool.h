@@ -15,7 +15,7 @@ class GlobalAveragePool : public Node {
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *X=inputs[0];
+		const Tensor *X=get_input_tensor(0);
 		int batch_size = X->data_dim[0];
 		int num_channels = X->data_dim[1];
 
@@ -58,8 +58,8 @@ class GlobalAveragePool : public Node {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *X = inputs[0];
-		register_input(X, "input");
+		const Tensor *X = get_input_tensor(0);
+		name_input(0, "input");
 		if(  typeConstraint_plainFloatingPoints(X) == false )
 			ERROR("Incorrect input for node"); 
 

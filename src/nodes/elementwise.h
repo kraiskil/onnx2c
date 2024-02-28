@@ -179,8 +179,9 @@ class Elementwise : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *Y = outputs[0];
+		const Tensor *Y = get_output_tensor(0);
 		INDT_1 << "/* " << op_name << std::endl;
+		INDT_1 << "   Implemented with Elementwise template." << std::endl;
 		INDT_1 << "   alpha = " << alpha << std::endl;
 		INDT_1 << "   beta = " << beta << std::endl;
 		INDT_1 << "*/" << std::endl;
@@ -207,8 +208,8 @@ class Elementwise : public Node {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *X = inputs[0];
-		register_input(X, "X");
+		const Tensor *X = get_input_tensor(0);
+		name_input(0, "X");
 
 		Tensor *t = new Tensor;
 		t->data_dim = X->data_dim;

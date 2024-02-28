@@ -67,9 +67,9 @@ class BatchNormalization : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		Tensor *input = inputs[0];
-		const Tensor *scale = inputs[1];
-		const Tensor *bias  = inputs[2];
+		const Tensor *input = get_input_tensor(0);
+		const Tensor *scale = get_input_tensor(1);
+		const Tensor *bias  = get_input_tensor(2);
 		int batch_size =input->data_dim[0]; 
 		int num_chan =input->data_dim[1]; 
 		std::string type = input->data_type_str();
@@ -140,7 +140,7 @@ class BatchNormalization : public Node {
 	// Updates variance tensor in-place to contain the entire denominator
 	// of the BatchNormalization formula.
 	// TODO: This breaks if var is used anywere else.
-	void calculateSqrtVarOffline(Tensor *var)
+	void calculateSqrtVarOffline(const Tensor *var)
 	{
 		float *v = (float*)var->data_buffer;
 		for( int i=0; i<var->data_num_elem(); i++)
@@ -149,23 +149,23 @@ class BatchNormalization : public Node {
 
 	virtual void resolve(void) override
 	{
-		if( inputs.size() != 5 )
+		if( get_number_of_inputs() != 5 )
 			ERROR("wrong number of inputs to BatchNormalization");
 
-		register_input(inputs[0], "X");
-		register_input(inputs[1], "scale");
-		register_input(inputs[2], "bias");
-		register_input(inputs[3], "mean");
-		register_input(inputs[4], "var");
+		name_input(0, "X");
+		name_input(1, "scale");
+		name_input(2, "bias");
+		name_input(3, "mean");
+		name_input(4, "var");
 
-		if( inputs[4]->isConst ) {
-			calculateSqrtVarOffline(inputs[4]);
+		if( get_input_tensor(4)->isConst ) {
+			calculateSqrtVarOffline(get_input_tensor(4));
 			sqrt_var_offline = true;
 		}
 
 		Tensor *rv = new Tensor;
-		rv->data_dim = inputs[0]->data_dim;
-		rv->data_type = inputs[0]->data_type;
+		rv->data_dim = get_input_tensor(0)->data_dim;
+		rv->data_type = get_input_tensor(0)->data_type;
 		register_output(rv, "output");
 	}
 };

@@ -28,14 +28,14 @@ class SpatialFilter : public Node {
 	std::vector<int64_t> pads;
 	std::vector<int64_t> strides;
 
-	const Tensor* get_X(void) const { return inputs[0]; }
+	const Tensor* get_X(void) const { return get_input_tensor(0); }
 	const Tensor* get_W(void) const {
-		if( inputs.size() > 1 )
-			return inputs[1];
+		if( get_number_of_inputs() > 1 )
+			return get_input_tensor(1);
 		else
 			return nullptr;
 	}
-	const Tensor* get_Y(void) const { return outputs[0]; }
+	const Tensor* get_Y(void) const { return get_output_tensor(0); }
 	uint32_t get_numDataDim(void) const {return get_X()->rank() - 2; }
 
 	virtual void parseAttributes( onnx::NodeProto &node ) override {

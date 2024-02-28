@@ -44,7 +44,7 @@ public:
 	Tensor* getIoTensor(onnx::ValueInfoProto &vi);
 
 	void replaceWithQuantized(std::vector<Tensor*> &inputs);
-	bool getNodeInputTensors(const onnx::NodeProto &node, std::vector<Tensor*> &inputs);
+	bool getNodeInputTensors(const onnx::NodeProto &node, toC::Node *inputs);
 
 	bool tryResolveNode(onnx::NodeProto &node);
 	bool hasUnresolvedNodes(void);
@@ -60,6 +60,8 @@ private:
 	std::vector<Tensor*> tensors;
 	// The kernels/nodes/operators of the network.
 	std::vector<Node*> nodes;
+	Node* findNodeByName( const std::string node_name );
+
 	// Should onnx2c print debug info while compiling
 	bool verbose_mode;
 
@@ -67,6 +69,10 @@ private:
 	 * If the tensor is not already known (checked by name),
 	 * the existing tensor is updated */
 	void addTensor(Tensor *t);
+
+	Node* addGraphInputMetanode(void);
+	Node* addGraphOutputMetanode(void);
+
 
 	void log_trace_all_tensors(void)
 	{
@@ -76,6 +82,7 @@ private:
 
 	Tensor *findTensor(const std::string &name) const;
 
+	// counter for naming anonymous nodes with a number
 	static int anonymous_nodes;
 
 	// For the unionize optimization.

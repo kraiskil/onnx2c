@@ -41,20 +41,20 @@ class Slice : public Node {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *data = inputs[0];
+		const Tensor *data = get_input_tensor(0);
 		const Tensor *starts = nullptr;
 		const Tensor *ends= nullptr;
 		const Tensor *axes= nullptr;
 		const Tensor *steps= nullptr;
-		register_input(data, "data");
+		name_input(0, "data");
 
-		if (inputs.size() > 1) {
-			starts = inputs[1];
-			register_input(starts, "starts");
+		if (get_number_of_inputs() > 1) {
+			starts = get_input_tensor(1);
+			name_input(1, "starts");
 		}
-		if (inputs.size() > 2) {
-			ends = inputs[2];
-			register_input(ends, "ends");
+		if (get_number_of_inputs() > 2) {
+			ends = get_input_tensor(2);
+			name_input(2, "ends");
 		}
 
 		if( starts && starts->isConst == false )
@@ -62,13 +62,13 @@ class Slice : public Node {
 		if( ends && ends->isConst == false )
 			ERROR("Non-const inputs to Slice not handled");
 
-		if (inputs.size() > 3) {
-			axes = inputs[3];
-			register_input(axes, "axes");
+		if (get_number_of_inputs() > 3) {
+			axes = get_input_tensor(3);
+			name_input(3, "axes");
 		}
-		if (inputs.size() > 4) {
-			steps = inputs[4];
-			register_input(steps, "steps");
+		if (get_number_of_inputs() > 4) {
+			steps = get_input_tensor(4);
+			name_input(4, "steps");
 		}
 
 		// the output tensor
@@ -203,10 +203,9 @@ class Slice : public Node {
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *data= inputs[0];
-		const Tensor *output = outputs[0];
+		const Tensor *data= get_input_tensor(0);
+		const Tensor *output = get_output_tensor(0);
 
-		INDT_1 << "/* Slice */" << std::endl;
 		std::string out_idx, in_idx;
 
 		// Loop over output dimensions & create the indexing arrays

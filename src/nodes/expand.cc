@@ -44,10 +44,10 @@ std::vector<int32_t> Expand::resolve_output_shape(void) const
 /* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 void Expand::resolve(void)
 {
-	input  = inputs[0];
-	register_input(input, "input");
-	shape = inputs[1];
-	register_input(shape, "shape");
+	input  = get_input_tensor(0);
+	name_input(0, "input");
+	shape = get_input_tensor(1);
+	name_input(1, "shape");
 
 	if( shape->isConst == false )
 		ERROR("Unimplemented: Expand operand with non-constant input (shape).");

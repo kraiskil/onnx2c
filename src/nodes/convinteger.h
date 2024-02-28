@@ -35,7 +35,7 @@ class ConvInteger : public SpatialFilter {
 		const std::string &y_idx) const override
 	{
 		std::string x_zero;
-		if( inputs.size() >= 3 ) // x_zero_point is optional, 3rd input
+		if( get_number_of_inputs() >= 3 ) // x_zero_point is optional, 3rd input
 			x_zero = constant_acces_code( "x_zero_point[0]");
 		else
 			x_zero = "0";
@@ -71,13 +71,13 @@ class ConvInteger : public SpatialFilter {
 
 	virtual void resolve(void) override
 	{
-		register_input(inputs[0], "x");
-		register_input(inputs[1], "w");
+		name_input(0, "x");
+		name_input(1, "w");
 
-		if( inputs.size() > 2 )
-			register_input(inputs[2], "x_zero_point");
-		if( inputs.size() > 3 ){
-			register_input(inputs[3], "w_zero_point");
+		if( get_number_of_inputs() > 2 )
+			name_input(2, "x_zero_point");
+		if( get_number_of_inputs() > 3 ){
+			name_input(3, "w_zero_point");
 			ERROR("unimplemented: weight zero points");
 		}
 

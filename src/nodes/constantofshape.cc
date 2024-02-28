@@ -19,8 +19,8 @@ void ConstantOfShape::parseAttributes( onnx::NodeProto &node )
 
 void ConstantOfShape::resolve(void)
 {
-	Tensor *input  = inputs[0];
-	register_input(input, "input");
+	Tensor *input  = get_input_tensor(0);
+	name_input(0, "input");
 
 	Tensor *t = new Tensor;
 	for( int i=0; i<input->data_num_elem(); i++) {
@@ -38,7 +38,7 @@ void ConstantOfShape::resolve(void)
 
 void ConstantOfShape::print(std::ostream &dst) const
 {
-	Tensor *output  = outputs[0];
+	Tensor *output  = get_output_tensor(0);
 	std::string type = output->data_type_str();
 
 	INDT_1 << "/* ConstantOfShape */" << std::endl;

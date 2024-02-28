@@ -60,7 +60,7 @@ class Softmax : public Node {
 
 	void print11(std::ostream &dst) const
 	{
-		const Tensor *input=inputs[0];
+		const Tensor *input=get_input_tensor(0);
 		std::string type = input->data_type_str();
 		unsigned n_dim = input->data_dim.size();
 		std::string expfunc = "expf";
@@ -131,7 +131,7 @@ class Softmax : public Node {
 
 	void print13(std::ostream &dst) const
 	{
-		const Tensor *input=inputs[0];
+		const Tensor *input=get_input_tensor(0);
 
 		std::string type = input->data_type_str();
 		unsigned num_dim = input->rank();
@@ -198,14 +198,14 @@ class Softmax : public Node {
 
 	virtual void resolve(void) override
 	{
-		if( inputs.size() != 1 )
+		if( get_number_of_inputs() != 1 )
 			ERROR("wrong number of inputs to Softmax");
 
-		register_input(inputs[0], "input");
+		name_input(0, "input");
 
 		Tensor *rv = new Tensor;
-		rv->data_dim = inputs[0]->data_dim;
-		rv->data_type = inputs[0]->data_type;
+		rv->data_dim = get_input_tensor(0)->data_dim;
+		rv->data_type = get_input_tensor(0)->data_type;
 		register_output(rv, "output");
 	}
 };

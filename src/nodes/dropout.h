@@ -32,7 +32,7 @@ class Dropout : public Node {
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *data = inputs[0];
+		const Tensor *data = get_input_tensor(0);
 		std::string datatype = data->data_type_str();
 		dst << "\t/* Dropout */" << std::endl;
 
@@ -54,22 +54,18 @@ class Dropout : public Node {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *data = inputs[0];
-		const Tensor *ratio = nullptr;
-		const Tensor *training_mode = nullptr;
-		register_input(data, "input");
+		const Tensor *data = get_input_tensor(0);
+		name_input(0, "input");
 		if(  typeConstraint_highPrecisionNumeric(data) == false )
 			ERROR("Incorrect input for node");
 
-		if( inputs.size() > 1 ) {
-			ratio = inputs[1];
-			register_input(ratio, "ratio");
+		if( get_number_of_inputs() > 1 ) {
+			name_input(1, "ratio");
 		}
 
-		if( inputs.size() > 2 ) {
+		if( get_number_of_inputs() > 2 ) {
 			ERROR("Unimplemented - training_mode input to Dropout");
-			training_mode = inputs[2];
-			register_input(training_mode, "training_mode");
+			name_input(2, "training_mode");
 		}
 
 		/* Create output tensor */

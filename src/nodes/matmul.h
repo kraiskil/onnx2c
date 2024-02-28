@@ -9,8 +9,8 @@ class MatMul : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		Tensor *A = inputs[0];
-		Tensor *B = inputs[1];
+		const Tensor *A = get_input_tensor(0);
+		const Tensor *B = get_input_tensor(1);
 		std::string type = A->data_type_str();
 
 		if( A->data_dim.size() != 2 )
@@ -39,18 +39,17 @@ class MatMul : public Node {
 	} 
 	virtual void resolve(void) override
 	{
-		Tensor *A = inputs[0];
-		Tensor *B = inputs[1];
-		register_input(A, "A");
-		register_input(B, "B");
+		const Tensor *A = get_input_tensor(0);
+		const Tensor *B = get_input_tensor(1);
+		name_input(0, "A");
+		name_input(1, "B");
 		if(  typeConstraint_highPrecisionNumeric(A) == false )
 			ERROR("Incorrect input for MatMul"); 
 		if(  typeConstraint_highPrecisionNumeric(B) == false )
 			ERROR("Incorrect input for MatMul"); 
 
 		int32_t rows, cols;
-		result_dim(inputs, rows, cols);
-	
+		result_dim(rows, cols);
 
 		Tensor *rv = new Tensor;
 		rv->data_dim.push_back(rows);
@@ -59,33 +58,33 @@ class MatMul : public Node {
 		register_output(rv, "Y");
 	}
 
-	void result_dim( const std::vector< Tensor*> &inputs, int32_t &rows, int32_t &cols) const
+	void result_dim( int32_t &rows, int32_t &cols) const
 	{
 		// TODO: this is the check for vectors. Check equivalent for N-dimensons: N>2
-		if( inputs[0]->data_dim[1] != 0 && inputs[1]->data_dim[1] != 0 )
+		if( get_input_tensor(0)->data_dim[1] != 0 && get_input_tensor(1)->data_dim[1] != 0 )
 		{
-			rows = inputs[0]->data_dim[0];
-			cols = inputs[1]->data_dim[1];
+			rows = get_input_tensor(0)->data_dim[0];
+			cols = get_input_tensor(1)->data_dim[1];
 		}
-		else if( inputs[0]->data_dim[1] == 0 && inputs[1]->data_dim[1] == 0 )
+		else if( get_input_tensor(0)->data_dim[1] == 0 && get_input_tensor(1)->data_dim[1] == 0 )
 		{
 			ERROR("Bad input/unhandled: 2 vectors to MatMul");
 		}
-		else if( inputs[0]->data_dim[1] == 0 )
+		else if( get_input_tensor(0)->data_dim[1] == 0 )
 		{
-			cols = inputs[1]->data_dim[1];
-			if( inputs[0]->data_dim[0] == inputs[1]->data_dim[0] )
+			cols = get_input_tensor(1)->data_dim[1];
+			if( get_input_tensor(0)->data_dim[0] == get_input_tensor(1)->data_dim[0] )
 				rows = 1;
 			else
-				rows = inputs[0]->data_dim[0];
+				rows = get_input_tensor(0)->data_dim[0];
 		}
 		else
 		{
-			rows = inputs[0]->data_dim[0];
-			if( inputs[0]->data_dim[1] == inputs[1]->data_dim[0] )
+			rows = get_input_tensor(0)->data_dim[0];
+			if( get_input_tensor(0)->data_dim[1] == get_input_tensor(1)->data_dim[0] )
 				cols = 1;
 			else
-				cols = inputs[1]->data_dim[0];
+				cols = get_input_tensor(1)->data_dim[0];
 		}
 	}
 };

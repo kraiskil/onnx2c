@@ -22,16 +22,14 @@ void ScatterND::parseAttributes( onnx::NodeProto &node )
 
 void ScatterND::resolve(void)
 {
-	if (inputs.size() != 3) {
+	if (get_number_of_inputs() != 3) {
 		ERROR("Wrong number of inputs to ScatterND");
 	}
-	const Tensor *data = inputs[0];
-	const Tensor *indices = inputs[1];
-	const Tensor *updates = inputs[2];
-	register_input(data, "data");
-	register_input(indices, "indices");
-	register_input(updates, "updates");
+	name_input(0, "data");
+	name_input(1, "indices");
+	name_input(2, "updates");
 
+	const Tensor *data = get_input_tensor(0);
 	Tensor *t = new Tensor;
 	t->data_dim = data->data_dim;
 	t->data_type = data->data_type;
@@ -41,9 +39,9 @@ void ScatterND::resolve(void)
 
 void ScatterND::print(std::ostream &dst) const
 {
-	const Tensor *data = inputs[0];
-	const Tensor *indices = inputs[1];
-	const Tensor *output = outputs[0];
+	const Tensor *data = get_input_tensor(0);
+	const Tensor *indices = get_input_tensor(1);
+	const Tensor *output = get_output_tensor(0);
 
 	unsigned k = indices->data_dim[indices->rank()-1];
 	std::string data_op="=";

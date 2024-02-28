@@ -30,7 +30,7 @@ class Unsqueeze : public Node {
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *data = inputs[0];
+		const Tensor *data = get_input_tensor(0);
 		std::string type = data->data_type_str();
 
 		dst << "\t/* Unsqueeze */" << std::endl;
@@ -49,8 +49,8 @@ class Unsqueeze : public Node {
 	/* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 	virtual void resolve(void) override
 	{
-		const Tensor *data = inputs[0];
-		register_input(data, "input");
+		const Tensor *data = get_input_tensor(0);
+		name_input(0, "input");
 
 		// ONNX13 changed how axes were passed (but not the contents).
 		// if axes_attr is set, then the padding axes are passed as attribute
@@ -59,11 +59,11 @@ class Unsqueeze : public Node {
 		// After this, the axes_attr contains the (raw) axes data in either case.
 		// TODO: since axes is now an input tensor - can the contents be dynamic??
 		if (axes_attr.size() == 0 ) {
-			if( inputs.size() != 2 )
+			if( get_number_of_inputs() != 2 )
 				ERROR("axes not provided. Malformatted ONNX?");
-			const Tensor *axes_tensor = inputs[1];
-			register_input(axes_tensor, "axes_tensor");
-			if (axes_tensor->initialize == false)
+			const Tensor *axes_tensor = get_input_tensor(1);
+			name_input(1, "axes_tensor");
+			if (axes_tensor->isConst == false)
 				ERROR("provided axes are dynamic, not implmeneted");
 			for( unsigned i=0; (int)i<axes_tensor->data_num_elem(); i++) {
 				int64_t *rd = (int64_t*)axes_tensor->data_buffer;  // axes data must be int64

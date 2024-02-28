@@ -26,10 +26,10 @@ class Gather : public Node {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *data = inputs[0];
-		const Tensor *indices = inputs[1];
-		register_input(data, "X");
-		register_input(indices, "indices");
+		const Tensor *data = get_input_tensor(0);
+		const Tensor *indices = get_input_tensor(1);
+		name_input(0, "X");
+		name_input(1, "indices");
 
 		unsigned a = axis >= 0 ? axis : data->rank()+axis;
 
@@ -58,9 +58,9 @@ class Gather : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *data = inputs[0];
-		const Tensor *indices = inputs[1];
-		const Tensor *output= outputs[0];
+		const Tensor *data = get_input_tensor(0);
+		const Tensor *indices = get_input_tensor(1);
+		const Tensor *output= get_output_tensor(0);
 		INDT_1 << "/* Gather" << std::endl;
 		INDT_1 << "   axis = " << axis << std::endl;
 		INDT_1 << " */" << std::endl;

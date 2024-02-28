@@ -34,12 +34,12 @@ class Clip : public Node {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *input = inputs[0];
-		register_input(inputs[0], "input");
-		if (inputs.size() > 1 && inputs[1]->is_used())
-			register_input(inputs[1], "min_tensor");
-		if (inputs.size() > 2 && inputs[2]->is_used())
-			register_input(inputs[2], "max_tensor");
+		const Tensor *input = get_input_tensor(0);
+		name_input(0, "input");
+		if (get_number_of_inputs() > 1 && get_input_tensor(1)->is_used())
+			name_input(1, "min_tensor");
+		if (get_number_of_inputs() > 2 && get_input_tensor(2)->is_used())
+			name_input(2, "max_tensor");
 
 		Tensor *t = new Tensor;
 		t->data_dim = input->data_dim;
@@ -50,14 +50,14 @@ class Clip : public Node {
 	virtual void print(std::ostream &dst) const override
 	{
 
-		const Tensor *input = inputs[0];
+		const Tensor *input = get_input_tensor(0);
 		const Tensor *min_tensor = nullptr;
 		const Tensor *max_tensor = nullptr;
 
-		if (inputs.size() > 1 && inputs[1]->is_used())
-			min_tensor = inputs[1];
-		if (inputs.size() > 2 && inputs[2]->is_used())
-			max_tensor = inputs[2];
+		if (get_number_of_inputs() > 1 && get_input_tensor(1)->is_used())
+			min_tensor = get_input_tensor(1);
+		if (get_number_of_inputs() > 2 && get_input_tensor(2)->is_used())
+			max_tensor = get_input_tensor(2);
 
 		INDT_1 << "/* Clip */" << std::endl;
 

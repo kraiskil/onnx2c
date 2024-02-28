@@ -52,7 +52,7 @@ class AveragePool : public Pooling {
  
 	virtual void resolve(void) override
 	{
-		register_input(inputs[0], "x");
+		name_input(0, "x");
 
 		resolve_strides();
 		resolve_dilations();

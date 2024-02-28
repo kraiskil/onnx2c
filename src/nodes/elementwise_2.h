@@ -125,9 +125,9 @@ class Elementwise_2 : public Node {
 		INDT_1 << " */" << std::endl;
 
 		// C = A ? B
-		Tensor *A = inputs[0];
-		Tensor *B = inputs[1];
-		Tensor *C = outputs[0];
+		const Tensor *A = get_input_tensor(0);
+		const Tensor *B = get_input_tensor(1);
+		const Tensor *C = get_output_tensor(0);
 
 		// if either A or B does not have enough dimensions, prepend
 		// dimensions of 1 to match rank of C
@@ -178,10 +178,10 @@ class Elementwise_2 : public Node {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *A = inputs[0];
-		const Tensor *B = inputs[1];
-		register_input(A, "A");
-		register_input(B, "B");
+		const Tensor *A = get_input_tensor(0);
+		const Tensor *B = get_input_tensor(1);
+		name_input(0, "A");
+		name_input(1, "B");
 
 		std::vector<int> result_dim;
 		multidirectional_broadcast_size(A->data_dim, B->data_dim, result_dim);

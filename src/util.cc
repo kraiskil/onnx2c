@@ -155,3 +155,23 @@ bool isInt(onnx::TensorProto_DataType data_type)
 	     ||data_type == onnx::TensorProto_DataType_INT64;
 }
 
+
+void print_loops_over_dims(std::ostream &dst, const toC::Tensor *t, std::string prefix, unsigned indents)
+{
+	for( unsigned dim=0; dim<t->rank(); dim++) {
+		std::string loopvar = prefix + std::to_string(dim);
+		for(unsigned i=0; i<indents; i++)
+			dst << "\t";
+		dst << "for( uint32_t " << loopvar << "=0; ";
+		dst <<       loopvar << " < " << t->data_dim[dim] << "; ";
+		dst <<       loopvar << "++) {"<< std::endl;
+	}
+}
+void print_loop_closes_over_dims(std::ostream &dst, const toC::Tensor *t, unsigned indents)
+{
+	for( unsigned dim=0; dim<t->rank(); dim++) {
+		for(unsigned i=0; i<indents; i++)
+			dst << "\t";
+		dst << "}"<< std::endl;
+	}
+}

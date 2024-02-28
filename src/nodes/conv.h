@@ -19,7 +19,7 @@ class Conv : public SpatialFilter {
 		for(unsigned i=0; i<get_numDataDim(); i++)
 			outidx += "[o" + std::to_string(i) + "]";
 		INDT_3 << "y[b][m]" << outidx << " = ";
-		if( inputs.size() < 3 ) // bias is the 3rd input, optional
+		if( get_number_of_inputs() < 3 ) // bias is the 3rd input, optional
 			dst << "0;" << std::endl;
 		else
 			dst << "bias[m];" << std::endl;
@@ -55,10 +55,10 @@ class Conv : public SpatialFilter {
  
 	virtual void resolve(void) override
 	{
-		register_input(inputs[0],"x");
-		register_input(inputs[1],"w");
-		if( inputs.size() == 3 ) {
-			register_input(inputs[2],"bias");
+		name_input(0,"x");
+		name_input(1,"w");
+		if( get_number_of_inputs() == 3 ) {
+			name_input(2,"bias");
 		}
 
 		resolve_strides();

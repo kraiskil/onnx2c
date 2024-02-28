@@ -42,13 +42,12 @@ class Gemm : public Node {
 	}
 
 
-
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *A  = inputs[0];
-		const Tensor *B  = inputs[1];
-		const Tensor *C  = inputs.size() > 2 ? inputs[2]:nullptr;
+		const Tensor *A  = get_input_tensor(0);
+		const Tensor *B  = get_input_tensor(1);
+		const Tensor *C  = get_number_of_inputs() > 2 ? get_input_tensor(2):nullptr;
 		//int A1 = A->data_dim[1];
 		int C0,C1; C0=C1=0;
 		if( C ) {
@@ -173,16 +172,16 @@ class Gemm : public Node {
 	/* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 	virtual void resolve(void) override
 	{
-		if (inputs.size() < 2)
+		if (get_number_of_inputs() < 2)
 			ERROR("Not enough inputs");
 
-		const Tensor *A  = inputs[0];
-		const Tensor *B  = inputs[1];
-		register_input(A, "A");
-		register_input(B, "B");
+		const Tensor *A  = get_input_tensor(0);
+		const Tensor *B  = get_input_tensor(1);
+		name_input(0, "A");
+		name_input(1, "B");
 
-		if (inputs.size() == 3) {
-			register_input(inputs[2], "C");
+		if (get_number_of_inputs() == 3) {
+			name_input(2, "C");
 		}
 
 		// output dimensions - see the specification

@@ -92,7 +92,7 @@ class MaxPool : public Pooling {
 
 	virtual void resolve(void) override
 	{
-		register_input(inputs[0], "x");
+		name_input(0, "x");
 
 		resolve_strides();
 		resolve_dilations();
@@ -117,8 +117,8 @@ class MaxPool : public Pooling {
 		register_output(indices_out, "Indices");
 	}
 	const Tensor* get_Indices(void) const {
-		if( outputs[1]->name != "" )
-			return outputs[1];
+		if( get_output_tensor(1)->name != "" )
+			return get_output_tensor(1);
 		else
 			return nullptr;
 	}

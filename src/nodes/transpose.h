@@ -29,7 +29,7 @@ class Transpose : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *data = inputs[0];
+		const Tensor *data = get_input_tensor(0);
 		std::string type = data->data_type_str();
 		unsigned n_dim = data->data_dim.size();
 
@@ -68,11 +68,11 @@ class Transpose : public Node {
 
 	virtual void resolve(void) override
 	{
-		if( inputs.size() != 1 )
+		if( get_number_of_inputs() != 1 )
 			ERROR("wrong number of inputs to Transpose");
 
-		const Tensor *data = inputs[0];
-		register_input(data, "input");
+		const Tensor *data = get_input_tensor(0);
+		name_input(0, "input");
 		unsigned n_dim = data->data_dim.size();
 
 		// "By default, reverse the dimensions, otherwise permute the axes according to the values given."

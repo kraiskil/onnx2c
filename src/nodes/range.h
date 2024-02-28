@@ -27,9 +27,9 @@ class Range : public Node {
 	void resolve_limits()
 	{
 		data_type v_start, v_limit, v_delta;
-		const Tensor *start = inputs[0];
-		const Tensor *limit = inputs[1];
-		const Tensor *delta = inputs[2];
+		const Tensor *start = get_input_tensor(0);
+		const Tensor *limit = get_input_tensor(1);
+		const Tensor *delta = get_input_tensor(2);
 
 		v_start = resolve_input_var<data_type>(start);
 		v_limit = resolve_input_var<data_type>(limit);
@@ -42,15 +42,14 @@ class Range : public Node {
 	/* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 	virtual void resolve(void) override
 	{
-
-		if (inputs.size() != 3)
+		if (get_number_of_inputs() != 3)
 			ERROR("Range node does not have 3 inputs");
-		const Tensor *start = inputs[0];
-		const Tensor *limit = inputs[1];
-		const Tensor *delta = inputs[2];
-		register_input(start, "start_arg");
-		register_input(limit, "limit_arg");
-		register_input(delta, "delta_arg");
+		const Tensor *start = get_input_tensor(0);
+		const Tensor *limit = get_input_tensor(1);
+		const Tensor *delta = get_input_tensor(2);
+		name_input(0, "start_arg");
+		name_input(1, "limit_arg");
+		name_input(2, "delta_arg");
 
 		if( start->isConst == false )
 			ERROR("Unimplemented: non-constant input (start) to Range node");
@@ -84,12 +83,8 @@ class Range : public Node {
 	/* Body of the node implementing function */
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *start = inputs[0];
+		const Tensor *start = get_input_tensor(0);
 		std::string dt = start->data_type_str();
-
-		INDT_1 << "/* Range" << std::endl;
-		INDT_1 << " */" << std::endl;
-
 
 		INDT_1 << dt <<" start = start_arg[0];" << std::endl;
 		INDT_1 << dt <<" delta = delta_arg[0];" << std::endl;

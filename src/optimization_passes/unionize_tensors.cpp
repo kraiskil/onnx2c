@@ -28,35 +28,49 @@ uint32_t Graph::add_to_free_union(Tensor *t)
 }
 void Graph::mark_union_unoccupied(uint32_t u)
 {
+	LOG(TRACE) << "\tunion " << u << " is unoccupied" << std::endl;
 	tensor_unions[u]=NULL;
 }
-// tag intermediate (graph internal) tensors
+
+// Entry to the Unionize Tensors optimization pass.
+// This tags intermediate (graph internal) tensors
 // with union numbers so they can share memory
 // in a temporal fashion
 void Graph::unionize_tensors(void)
 {
+	LOG(INFO) << "Running Unionize optimization pass" << std::endl;
 	for( auto n : nodes ) {
 		n->isResolved = false;
 	}
 
 	for( auto n : nodes ) {
 
-		// for each output tensor of node
-		for( auto o : n->outputs ) {
-			// assign tensor to next free union
-			// if it is an internal tensor that gets
-			// calculated by a node.
-			if( o->is_used() == false )
-				continue;
-			if( o->isIO == true )
-				continue;
-			// the Constant node is a bit weird - this check must be in
-			if( o->isConst == true )
-				continue;
-			if( o->initialize == true )
-				continue;
-			add_to_free_union(o);
-		}
+		LOG(TRACE) << "\tunionizing outputs of node: " << n->onnx_name << std::endl;
+		// TODO: research out a nice code layout rule for calling lambdas.
+		//       Leaving this suggestion here to be analyzed next time I read this code
+		n->forEachOutput(
+			[this](Tensor *o)
+			{
+				LOG(TRACE) << "\t\tconsidering output: " << o->name << std::endl;
+				LOG(TRACE) << "\t\t\t" << o->print_trace_dump() << std::endl;
+				// assign tensor to next free union
+				// if it is an internal tensor that gets
+				// calculated by a node.
+				if( o->is_used() == false )
+					return;
+				if( o->isIO == true )
+					return;
+				// the Constant node is a bit weird - this check must be in
+				if( o->isConst == true )
+					return;
+				if( o->initialize == true )
+					return;
+				LOG(TRACE) << "\t\t\tunionizing it!" << std::endl;
+				this->add_to_free_union(o);
+				return;
+			}
+		);
+
 		// mark node as resolved
 		n->isResolved = true;
 
@@ -77,5 +91,7 @@ void Graph::unionize_tensors(void)
 				mark_union_unoccupied(ui);
 		}
 	}
+
+	LOG(TRACE) << "Unionize optimization pass finished" << std::endl;
 }
 

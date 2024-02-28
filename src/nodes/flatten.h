@@ -26,7 +26,7 @@ class Flatten : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *input = inputs[0];
+		const Tensor *input = get_input_tensor(0);
 		std::string type = input->data_type_str();
 
 		dst << "\t/* Flatten*/" << std::endl;
@@ -40,14 +40,13 @@ class Flatten : public Node {
 	}
 
 
-
 	virtual void resolve(void) override
 	{
-		if( inputs.size() != 1 )
+		if( get_number_of_inputs() != 1 )
 			ERROR("wrong number of inputs to Flatten");
 
-		const Tensor *input = inputs[0];
-		register_input(input, "input");
+		const Tensor *input = get_input_tensor(0);
+		name_input(0, "input");
 
 		// output:
 		// A 2D tensor with the contents of the input tensor, with input dimensions up to axis

@@ -24,7 +24,7 @@ class Reshape : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		const Tensor *data = inputs[0];
+		const Tensor *data = get_input_tensor(0);
 		std::string type = data->data_type_str();
 
 		/* TODO: is there ANY case where a reshape needs to re-order the internal data layout ? */
@@ -44,10 +44,10 @@ class Reshape : public Node {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *data= inputs[0];
-		register_input(data, "data");
-		const Tensor *shape = inputs[1];
-		register_input(shape, "shape");
+		const Tensor *data= get_input_tensor(0);
+		name_input(0, "data");
+		const Tensor *shape = get_input_tensor(1);
+		name_input(1, "shape");
 
 		/* Reshape should allow only int64_t here,
 		 * but that is a pointless restriction at this stage and does not play well
@@ -57,7 +57,7 @@ class Reshape : public Node {
 			ERROR("Incorrect input for node");
 
 
-		if( shape->initialize == false ) {
+		if( shape->isConst == false ) {
 			ERROR("Reshaping to a run-time defined shape is not supported");
 		}
 
