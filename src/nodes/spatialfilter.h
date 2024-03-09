@@ -61,6 +61,11 @@ class SpatialFilter : public Node {
 		if( strides.size() == 0 )
 			for( unsigned i=0; i<get_numDataDim(); i++)
 				strides.push_back(1);
+		if( get_numDataDim() != strides.size() )
+			ERROR("Dimension of the stride do not match data dimensions");
+		for( uint64_t s : strides )
+			if( s == 0 )
+				ERROR("Stride of 0");
 	}
 
 	void resolve_kernel_shape(void)
