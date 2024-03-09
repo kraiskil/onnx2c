@@ -90,6 +90,13 @@ Onnx2c has a few optimization passes that modify the generated output:
 
 `./onnx2c -h` prints out all available command line options.
 
+onnx2c prints a log on stdout. Log level can be given with the `-l N` command line option.
+Logging levels are
+ - 0 Fatal errors only
+ - 1 Warnings where onnx2c might not be correctly implemented
+ - 2 Generic info (default level in the Release build)
+ - 3 Debug: high level trace of what onnx2c does useful debugging the model
+ - 4 Trace: detailed info useful for debugging onnx2c
 
 There is a [helper script](scripts/) to initially run any `.onnx` on a MCU development board. This is intended
 as a tool when designing the network to see if it will fit the target, before starting training the network.

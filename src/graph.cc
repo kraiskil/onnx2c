@@ -275,11 +275,11 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 		if( new_node == "MatMul" )
 			new_node = "MatMulInteger";
 	}
-	LOG(DEBUG) << "Creating new node: " << onnx_node.name() << std::endl;
-	LOG(DEBUG) << "     Operand type: " << new_node << std::endl;
+	LOG(TRACE) << "Creating new node: " << onnx_node.name() << std::endl;
+	LOG(TRACE) << "     Operand type: " << new_node << std::endl;
 	Node *n = createNode(new_node);
 	if( getNodeInputTensors(onnx_node, n) == false ) {
-		LOG(DEBUG) << "getNodeInputTensors() failed. Not adding node!"<< std::endl;
+		LOG(TRACE) << "getNodeInputTensors() failed. Not adding node!"<< std::endl;
 		delete n;
 		return false;
 	}
@@ -296,13 +296,13 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 	else
 		n->onnx_name = onnx_node.name();
 
-	LOG(DEBUG) << "    Node name in C sources " << n->c_name() << std::endl;
-	LOG(DEBUG) << "    inputs: " << std::endl;
+	LOG(TRACE) << "    Node name in C sources " << n->c_name() << std::endl;
+	LOG(TRACE) << "    inputs: " << std::endl;
 
 	// Record this node as the consumer of the the input tensors
 	for(unsigned iidx=0; iidx<(n->get_number_of_inputs()); iidx++) {
 		Tensor *i = n->get_input_tensor(iidx);
-		LOG(DEBUG) << "         " << i->name << " - "<< i->data_type_str() << " { " << i->str_dimensions() << "}" << std::endl;
+		LOG(TRACE) << "         " << i->name << " - "<< i->data_type_str() << " { " << i->str_dimensions() << "}" << std::endl;
 		const_cast<Tensor*>(i)->consumers.push_back(n);
 		i->print_trace_dump();
 	}
@@ -310,7 +310,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 	n->isResolved = false;
 	n->op_name = new_node;
 
-	LOG(DEBUG) << "  Parsing node attributes" << std::endl;
+	LOG(TRACE) << "  Parsing node attributes" << std::endl;
 	if( onnx_node.attribute_size() != 0 )
 		n->parseAttributes( onnx_node );
 	LOG(TRACE) << "    (done parsing attributes)" << std::endl;
@@ -318,7 +318,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 	// Now loop over the node inputs, check that they are all added
 	// into the graph's known tensors - seems the ONNX graph does not keep track of
 	// vectors provided as nodes' attributes.
-	LOG(DEBUG) << "  Making sure node attributes are in the graph" << std::endl;
+	LOG(TRACE) << "  Making sure node attributes are in the graph" << std::endl;
 	for(unsigned nn = 0; nn<n->get_number_of_inputs(); nn++)
 		addTensor(n->get_input_tensor(nn));
 	LOG(TRACE) << "   (end of attribute-input-vectors)" << std::endl;
@@ -354,7 +354,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 	// the ONNX model.
 	// This will now contain all of the node's outputs, also such optional ones
 	// that are not used in the model.
-	LOG(DEBUG) << "Adding resolved node's output to graph's tensors" << std::endl;
+	LOG(TRACE) << "Adding resolved node's output to graph's tensors" << std::endl;
 	for( unsigned o=0; o<n->get_number_of_outputs(); o++) {
 		Tensor *t = n->get_output_tensor(o);
 
@@ -378,10 +378,10 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 
 		addTensor(t);
 	}
-	LOG(DEBUG) << "   (done) all outputs now:" << std::endl;
+	LOG(TRACE) << "   (done) all outputs now:" << std::endl;
 	for( unsigned o=0; o<n->get_number_of_outputs(); o++) {
 		Tensor *t = n->get_output_tensor(o);
-		LOG(DEBUG) << "         " << t->name << " - "<< t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
+		LOG(TRACE) << "         " << t->name << " - "<< t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
 	}
 	LOG(TRACE) << "      (no more outputs)" << std::endl;
 
@@ -579,7 +579,7 @@ void Graph::addTensor(Tensor *t)
 		// TODO return & remove else {}
 	}
 	else {
-		LOG(DEBUG) << "Updating existing tensor: " << t->name << std::endl;
+		LOG(TRACE) << "Updating existing tensor: " << t->name << std::endl;
 		LOG(TRACE) << "  was: " << prev->print_trace_dump() << std::endl;
 		LOG(TRACE) << "  new: " << t->print_trace_dump() << std::endl;
 
