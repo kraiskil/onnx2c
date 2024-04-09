@@ -6,6 +6,7 @@
 #pragma once
 #include <map>
 #include <string>
+#include <stdint.h>
 
 struct onnx2c_opts
 {
