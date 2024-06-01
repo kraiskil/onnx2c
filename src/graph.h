@@ -51,7 +51,7 @@ public:
 
 	bool tryResolveNode(onnx::NodeProto &node);
 	bool hasUnresolvedNodes(void);
-	Node* createNode(std::string opName);
+	Node* createNode(const onnx::NodeProto &node);
 
 	int64_t onnx_ir_version(void);
 private:

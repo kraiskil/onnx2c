@@ -253,7 +253,6 @@ bool Graph::getNodeInputTensors(const onnx::NodeProto &node, toC::Node *onnx2c_n
  */
 bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 {
-	std::vector<Tensor*> inputs;
 	LOG(DEBUG) << "Resolving ONNX node: '" << onnx_node.name() << "'" <<std::endl;
 
 	// This check is needed in case the caller needs to iterate over the nodes more than once.
@@ -263,21 +262,9 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 			return true;
 		}
 
-	// ONNX has a few nodes that have quantized alternatives.
-	// Switch to those here.
-	// For the rest, rely on optional quantization in the
-	// onnx2c implementation.
-	std::string new_node = onnx_node.op_type();
-	if( options.quantize ) {
-		replaceWithQuantized(inputs);
-		if( new_node == "Conv" )
-			new_node = "ConvInteger";
-		if( new_node == "MatMul" )
-			new_node = "MatMulInteger";
-	}
-	LOG(TRACE) << "Creating new node: " << onnx_node.name() << std::endl;
-	LOG(TRACE) << "     Operand type: " << new_node << std::endl;
-	Node *n = createNode(new_node);
+	Node *n = createNode(onnx_node);
+
+	// TODO: add comment explaining what is going on here...
 	if( getNodeInputTensors(onnx_node, n) == false ) {
 		LOG(TRACE) << "getNodeInputTensors() failed. Not adding node!"<< std::endl;
 		delete n;
@@ -308,7 +295,6 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 	}
 	LOG(TRACE) << "     (no more inputs)" << std::endl;
 	n->isResolved = false;
-	n->op_name = new_node;
 
 	LOG(TRACE) << "  Parsing node attributes" << std::endl;
 	if( onnx_node.attribute_size() != 0 )
@@ -318,6 +304,8 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 	// Now loop over the node inputs, check that they are all added
 	// into the graph's known tensors - seems the ONNX graph does not keep track of
 	// vectors provided as nodes' attributes.
+	// TODO: how does this work? attribute tensors are added as node inputs?
+	//       Are they a part of the arguments to a function call in C?
 	LOG(TRACE) << "  Making sure node attributes are in the graph" << std::endl;
 	for(unsigned nn = 0; nn<n->get_number_of_inputs(); nn++)
 		addTensor(n->get_input_tensor(nn));
@@ -452,8 +440,26 @@ int64_t Graph::onnx_ir_version(void)
 
 // Create a new onnx2c Node from an operand name of an ONNX Graph node.
 // NB: the onnx2c-special graph input and graph output nodes are not created here
-Node* Graph::createNode(std::string opName)
+Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 {
+	std::string opName = onnx_node.op_type();
+	LOG(TRACE) << "Creating new node: " << onnx_node.name() << std::endl;
+	LOG(TRACE) << "     Operand type: " << opName << std::endl;
+
+	// ONNX has a few nodes that have quantized alternatives.
+	// Switch to those here.
+	// For the rest, rely on optional quantization in the
+	// onnx2c implementation.
+	if( options.quantize ) {
+		LOG(WARNING) << "Quantization is deprecated, and probably broken" << std::endl;
+		std::vector<Tensor*> inputs;
+		replaceWithQuantized(inputs);
+		if( opName == "Conv" )
+			opName = "ConvInteger";
+		if( opName == "MatMul" )
+			opName = "MatMulInteger";
+	}
+
 	if( opName == "Abs" )return new Elementwise("Abs");
 	if( opName == "Acos" )return new Elementwise("Acos");
 	if( opName == "Acosh" )return new Elementwise("Acosh");
