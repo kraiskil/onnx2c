@@ -52,17 +52,17 @@ void TEMPLATE::parseAttributes( onnx::NodeProto &node )
 /* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 void TEMPLATE::resolve(void)
 {
-	Tensor *input_1  = inputs[0];
-	// Remember the parameters to the generated function,
-	// along with a descriptive name that is used locally in the generated source.
+	Tensor *input_1  = get_input_tensor(0);
+	// Name the parameters to the generated C function that implements this Node.
 	// The most "descriptive name" usually is the one this tensor has in the ONNX documentation.
-	register_input(input_1, "A");
+	// First one is typically named 'input', 'X', or 'A'
+	// In the onnx file the tensors have compilicated names that make sense only in the graph context.
+	name_input(0, "A");
 
-	if (inputs.size() == 2) {
-		Tensor *input_2_optional = inputs[1];
-		register_input(input_2_optional, "descriptive_name");
+	if (get_number_of_inputs() == 2) {
+		Tensor *input_2_optional = get_input_tensor(1);
+		name_input(1, "descriptive_name");
 	}
-	// else leave input_2_optional as null so other functions here know to ignore it
 
 
 	/* Create output tensors.
