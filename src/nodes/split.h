@@ -28,18 +28,110 @@ class Split : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
-		// TODO
-		dst << "\t/*Split*/" << std::endl;
-		dst << std::endl;
-		ERROR("Print for 'Split' node is not yet implemented :(");
+		const Tensor *input = get_input_tensor(0);
+		const Tensor *split = get_input_tensor(1);
+		int64_t num_outputs = split->data_dim[0];
+		int64_t num_dims = input->data_dim.size();
+		auto io_type_str = input->data_type_str();
 
+		dst << "\t/*Split*/" << std::endl;
+		dst << "\tconst size_t axis = " << std::to_string(axis) << ";" << std::endl;
+		dst << "\tconst size_t dims[" << std::to_string(num_dims) << "] = {";
+
+		for(int64_t i = 0; i < num_dims; i++)
+		{
+			int64_t dim = 1;
+			for(int64_t j = i + 1; j < num_dims; j++)
+			{
+				dim *= input->data_dim[j];
+			}
+			dst << std::to_string(dim);
+
+			if(i < num_dims - 1)
+			{
+				dst << ", ";
+			}
+		}
+
+		dst << "};" << std::endl;
+		dst << "\tsize_t idx[" << std::to_string(num_dims) << "];" << std::endl
+			<< std::endl;
+
+		dst << "\tfor (size_t i = 0; i < (";
+		for (int64_t i = 0; i < num_dims; i++)
+		{
+			dst << std::to_string(input->data_dim[i]);
+			if (i < num_dims - 1)
+			{
+				dst << " * ";
+			}
+		}
+
+		dst << "); i++)" << std::endl;
+
+		dst << "\t{" << std::endl;
+		dst << "\t\tsize_t t = i;" << std::endl << std::endl;
+
+		dst << "\t\tfor (size_t j = 0; j < " << std::to_string(num_dims) << "; j++)" << std::endl;
+		dst << "\t\t{" << std::endl;
+		dst << "\t\t\tidx[j] = t / dims[j];" << std::endl;
+		dst << "\t\t\tt %= dims[j];" << std::endl;
+
+		dst << "\t\t}" << std::endl << std::endl;
+		dst << "\t\t"<< io_type_str << " x = ((" << io_type_str << " *)input)[i];" << std::endl;
+
+		dst << "\t\tsize_t split_idx = idx[axis];" << std::endl;
+		dst << "\t\tsize_t split_sum = 0;" << std::endl;
+		dst << "\t\tsize_t out_idx;" << std::endl << std::endl;
+
+		dst << "\t\tint64_t offset = 0;" << std::endl;
+		dst << "\t\tfor (out_idx = 0; out_idx < " << num_outputs << "; out_idx++)" << std::endl;
+		dst << "\t\t{" << std::endl;
+		dst << "\t\t\tsplit_sum += split[out_idx];" << std::endl;
+		dst << "\t\t\tif (split_idx < split_sum)" << std::endl;
+		dst << "\t\t\t{" << std::endl;
+		dst << "\t\t\t\tbreak;" << std::endl;
+		dst << "\t\t\t}" << std::endl;
+		dst << "\t\t\toffset += split[out_idx];" << std::endl;
+		dst << "\t\t}" << std::endl << std::endl;
+
+		dst << "\t\tswitch (out_idx)" << std::endl;
+		dst << "\t\t{" << std::endl;
+
+		for (int64_t i = 0; i < num_outputs; i++)
+		{
+			dst << "\t\t\tcase " << std::to_string(i) << ":" << std::endl;
+			dst << "\t\t\t\toutput_" << std::to_string(i);
+			for(int64_t j = 0; j < num_dims; j++)
+			{
+				dst << "[";
+				if(j == axis)
+				{
+					dst << "idx[" << std::to_string(j) << "] - offset";
+				} else {
+					dst << "idx[" << std::to_string(j) << "]";
+				}
+				dst << "]";
+			}
+			dst << " = x;" << std::endl;
+			dst << "\t\t\t\tbreak;" << std::endl << std::endl;
+		}
+
+		dst << "\t\t\tdefault:" << std::endl;
+		dst << "\t\t\t\tbreak;" << std::endl;
+
+		dst << "\t\t}" << std::endl << std::endl;
+
+		dst << "\t}" << std::endl;
+
+		dst << std::endl;
 	}
 
 	virtual void resolve(void) override
 	{
 		auto split_sum = 0;
 
-		const Tensor *data = get_input_tensor(0);
+		const Tensor *input = get_input_tensor(0);
 		const Tensor *split = get_input_tensor(1);
 		name_input(0, "input");
 		name_input(1, "split");
@@ -57,34 +149,29 @@ class Split : public Node {
 			split_sum += split->get_data_element(i);
 		}
 
-		size_t ax_idx;
-		if (ax_idx < 0)
+		if (axis < 0)
 		{
-			ax_idx = data->data_dim.size() + ax_idx - 1;
-		}
-		else
-		{
-			ax_idx = axis;
+			axis = input->data_dim.size() + axis;
 		}
 
-		if (data->data_dim[ax_idx] != split_sum)
+		if (input->data_dim[axis] != split_sum)
 		{
 			ERROR("Sum of 'split' values must be equal to the dim value at 'axis' parameter ("
-				  << data->data_dim[ax_idx] << ")");
+				  << input->data_dim[axis] << ")");
 		}
 
 		for (int64_t i = 0; i < num_outputs; i++)
 		{
 			Tensor *rv = new Tensor;
 
-			rv->data_type = data->data_type;
-			for(uint64_t j = 0; j < data->data_dim.size(); j++)
+			rv->data_type = input->data_type;
+			for(uint64_t j = 0; j < input->data_dim.size(); j++)
 			{
-				if(j == ax_idx)
+				if(j == (uint64_t)axis)
 				{
 					rv->data_dim.push_back(split->get_data_element(i));
 				} else {
-					rv->data_dim.push_back(data->data_dim[j]);
+					rv->data_dim.push_back(input->data_dim[j]);
 				}
 			}	
 			register_output(rv, "output_" + std::to_string(i));
