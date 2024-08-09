@@ -34,9 +34,9 @@ class Split : public Node {
 		int64_t num_dims = input->data_dim.size();
 		auto io_type_str = input->data_type_str();
 
-		dst << "\t/*Split*/" << std::endl;
-		dst << "\tconst size_t axis = " << std::to_string(axis) << ";" << std::endl;
-		dst << "\tconst size_t dims[" << std::to_string(num_dims) << "] = {";
+		INDT_1 "/*" << op_name << "*/" << std::endl;
+		INDT_1 "const size_t axis = " << std::to_string(axis) << ";" << std::endl;
+		INDT_1 "const size_t dims[" << std::to_string(num_dims) << "] = {";
 
 		for(int64_t i = 0; i < num_dims; i++)
 		{
@@ -54,10 +54,10 @@ class Split : public Node {
 		}
 
 		dst << "};" << std::endl;
-		dst << "\tsize_t idx[" << std::to_string(num_dims) << "];" << std::endl
+		INDT_1 << "size_t idx[" << std::to_string(num_dims) << "];" << std::endl
 			<< std::endl;
 
-		dst << "\tfor (size_t i = 0; i < (";
+		INDT_1 << "for (size_t i = 0; i < (";
 		for (int64_t i = 0; i < num_dims; i++)
 		{
 			dst << std::to_string(input->data_dim[i]);
@@ -69,39 +69,39 @@ class Split : public Node {
 
 		dst << "); i++)" << std::endl;
 
-		dst << "\t{" << std::endl;
-		dst << "\t\tsize_t t = i;" << std::endl << std::endl;
+		INDT_1 << "{" << std::endl;
+		INDT_2 << "size_t t = i;" << std::endl << std::endl;
 
-		dst << "\t\tfor (size_t j = 0; j < " << std::to_string(num_dims) << "; j++)" << std::endl;
-		dst << "\t\t{" << std::endl;
-		dst << "\t\t\tidx[j] = t / dims[j];" << std::endl;
-		dst << "\t\t\tt %= dims[j];" << std::endl;
+		INDT_2 << "for (size_t j = 0; j < " << std::to_string(num_dims) << "; j++)" << std::endl;
+		INDT_2 << "{" << std::endl;
+		INDT_3 << "idx[j] = t / dims[j];" << std::endl;
+		INDT_3 << "t %= dims[j];" << std::endl;
 
-		dst << "\t\t}" << std::endl << std::endl;
-		dst << "\t\t"<< io_type_str << " x = ((" << io_type_str << " *)input)[i];" << std::endl;
+		INDT_2 << "}" << std::endl << std::endl;
+		INDT_2 << ""<< io_type_str << " x = ((" << io_type_str << " *)input)[i];" << std::endl;
 
-		dst << "\t\tsize_t split_idx = idx[axis];" << std::endl;
-		dst << "\t\tsize_t split_sum = 0;" << std::endl;
-		dst << "\t\tsize_t out_idx;" << std::endl << std::endl;
+		INDT_2 << "size_t split_idx = idx[axis];" << std::endl;
+		INDT_2 << "size_t split_sum = 0;" << std::endl;
+		INDT_2 << "size_t out_idx;" << std::endl << std::endl;
 
-		dst << "\t\tint64_t offset = 0;" << std::endl;
-		dst << "\t\tfor (out_idx = 0; out_idx < " << num_outputs << "; out_idx++)" << std::endl;
-		dst << "\t\t{" << std::endl;
-		dst << "\t\t\tsplit_sum += split[out_idx];" << std::endl;
-		dst << "\t\t\tif (split_idx < split_sum)" << std::endl;
-		dst << "\t\t\t{" << std::endl;
-		dst << "\t\t\t\tbreak;" << std::endl;
-		dst << "\t\t\t}" << std::endl;
-		dst << "\t\t\toffset += split[out_idx];" << std::endl;
-		dst << "\t\t}" << std::endl << std::endl;
+		INDT_2 << "int64_t offset = 0;" << std::endl;
+		INDT_2 << "for (out_idx = 0; out_idx < " << num_outputs << "; out_idx++)" << std::endl;
+		INDT_2 << "{" << std::endl;
+		INDT_3 << "split_sum += split[out_idx];" << std::endl;
+		INDT_3 << "if (split_idx < split_sum)" << std::endl;
+		INDT_3 << "{" << std::endl;
+		INDT_4 << "break;" << std::endl;
+		INDT_3 << "}" << std::endl;
+		INDT_3 << "offset += split[out_idx];" << std::endl;
+		INDT_2 << "}" << std::endl << std::endl;
 
-		dst << "\t\tswitch (out_idx)" << std::endl;
-		dst << "\t\t{" << std::endl;
+		INDT_2 << "switch (out_idx)" << std::endl;
+		INDT_2 << "{" << std::endl;
 
 		for (int64_t i = 0; i < num_outputs; i++)
 		{
-			dst << "\t\t\tcase " << std::to_string(i) << ":" << std::endl;
-			dst << "\t\t\t\toutput_" << std::to_string(i);
+			INDT_3 << "case " << std::to_string(i) << ":" << std::endl;
+			INDT_4 << "output_" << std::to_string(i);
 			for(int64_t j = 0; j < num_dims; j++)
 			{
 				dst << "[";
@@ -114,15 +114,15 @@ class Split : public Node {
 				dst << "]";
 			}
 			dst << " = x;" << std::endl;
-			dst << "\t\t\t\tbreak;" << std::endl << std::endl;
+			INDT_4 << "break;" << std::endl << std::endl;
 		}
 
-		dst << "\t\t\tdefault:" << std::endl;
-		dst << "\t\t\t\tbreak;" << std::endl;
+		INDT_3 << "default:" << std::endl;
+		INDT_4 << "break;" << std::endl;
 
-		dst << "\t\t}" << std::endl << std::endl;
+		INDT_2 << "}" << std::endl << std::endl;
 
-		dst << "\t}" << std::endl;
+		INDT_1 << "}" << std::endl;
 
 		dst << std::endl;
 	}
@@ -151,7 +151,7 @@ class Split : public Node {
 
 		if (axis < 0)
 		{
-			axis = input->data_dim.size() + axis;
+			axis = input->rank() + axis;
 		}
 
 		if (input->data_dim[axis] != split_sum)

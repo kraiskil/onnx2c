@@ -541,6 +541,7 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "Softplus" )return new Elementwise("Softplus");
 	if( opName == "Softsign" )return new Elementwise("Softsign");
 	if( opName == "Softmax" )return new Softmax;
+	if( opName == "Split" )return new Split;
 	if( opName == "Squeeze" )return new Squeeze;
 	if( opName == "Sqrt" )return new Elementwise("Sqrt");
 	if( opName == "Sub" )return new Elementwise_2("Sub");
@@ -552,7 +553,6 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "Unsqueeze" )return new Unsqueeze;
 	if( opName == "Upsample" )return new Upsample;
 	if( opName == "Xor" )return new Elementwise_2("Xor");
-	if( opName == "Split" )return new Split;
 
 
 	ERROR("Unimplemented: node operation " << opName);
