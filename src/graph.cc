@@ -437,6 +437,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/transpose.h"
 #include "nodes/unsqueeze.h"
 #include "nodes/upsample.h"
+#include "nodes/where.h"
 
 // Create a new onnx2c Node from an operand name of an ONNX Graph node.
 // NB: the onnx2c-special graph input and graph output nodes are not created here
@@ -550,6 +551,7 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "ThresholdedRelu" )return new Elementwise("ThresholdedRelu");
 	if( opName == "Unsqueeze" )return new Unsqueeze;
 	if( opName == "Upsample" )return new Upsample;
+	if( opName == "Where" )return new Where;
 	if( opName == "Xor" )return new Elementwise_2("Xor");
 
 	ERROR("Unimplemented: node operation " << opName);

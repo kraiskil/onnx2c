@@ -766,6 +766,9 @@ ONNX_backend_node_test_singlefile(unsqueeze_unsorted_axes)
 
 ONNX_backend_node_test_singlefile(upsample_nearest)
 
+ONNX_backend_node_test(where_example)
+ONNX_backend_node_test(where_long_example)
+
 ONNX_backend_node_test(xor2d)
 ONNX_backend_node_test(xor4d)
 ONNX_backend_node_test(xor_bcast3v2d)
