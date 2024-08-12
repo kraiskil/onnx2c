@@ -21,6 +21,10 @@ class Split : public Node {
 		for( const auto& a : node.attribute() ) {
 			if( a.name() == "axis" )
 				axis = parse_attribute_int(a);
+			else if ( a.name() == "num_outputs" )
+			    ERROR("Attribute " << a.name() << " not supported yet");
+			else if ( a.name() == "split" )
+			    ERROR("Attribute " << a.name() << " deprecated and not supported");
 			else
 				ERROR("Bad attribute " << a.name() << " to split");
 		}
@@ -131,8 +135,17 @@ class Split : public Node {
 	{
 		auto split_sum = 0;
 
+		auto num_inputs = get_number_of_inputs();
+
+		if(num_inputs < 2)
+			ERROR("Split nodes without 'split' input not implemented yet");
+
 		const Tensor *input = get_input_tensor(0);
 		const Tensor *split = get_input_tensor(1);
+
+		if(!split->isConst)
+			ERROR("Only constant split input in Split nodes supported");
+
 		name_input(0, "input");
 		name_input(1, "split");
 
