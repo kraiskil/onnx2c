@@ -57,10 +57,15 @@ public:
 private:
 	// The top-level onnx object.
 	onnx::ModelProto &model;
+
 	// The tensors of the network. Pointers are added to this
 	// vector as walking the graph resolves node outputs.
 	// Each node keeps pointers internally also to its own inputs&outputs
 	std::vector<Tensor*> tensors;
+	// Return the requested tensor.
+	// nullptr if the tensor is unknown.
+	Tensor* findTensorByName(std::string name);
+
 	// The kernels/nodes/operators of the network.
 	std::vector<Node*> nodes;
 	Node* findNodeByName( const std::string node_name );

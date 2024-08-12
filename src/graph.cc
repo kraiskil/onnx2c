@@ -51,9 +51,13 @@ void Graph::processGraph(
 	addGraphInputMetanode();
 	LOG(DEBUG) << "Marking graph input tensors as IO." <<std::endl;
 	for ( auto i : onnx_graph.input() ) {
-		Tensor *n = getIoTensor( i );
-		n->isConst = true;
-		addTensor( n );
+		// NB: onnx:Graph:input() gives graph inputs AND initialized tensors
+		// filter out the initizlized (i.e. const) tensors.
+		// They are not graph inputs in the sense of onnx2c::Tensor::isIO
+		if( findTensorByName( i.name()) == nullptr ) {
+			Tensor *n = getIoTensor( i );
+			addTensor( n );
+		}
 	}
 	LOG(TRACE) << "  (done marking input tensors)." <<std::endl;
 
@@ -571,14 +575,13 @@ void Graph::addTensor(Tensor *t)
 	 * This updating is needed to mark graph input tensors.
 	 * So most of the below is pretty unnecessary?
 	 * TODO: clean up
+	 * update: graph input tensors are handled better now in processGraph()...
+	 *         check where the 'else' branch below triggers.
 	 */
 
-	Tensor *prev = NULL;  // pointer to the previously existing tensor. This gets updated
-	for( auto o : tensors)
-		if( t->name == o->name ) {
-			prev = o;
-			break;
-		}
+	// pointer to the previously existing tensor. This gets updated
+	assert(t != nullptr);
+	Tensor *prev = findTensorByName(t->name);
 
 	if( prev == NULL ) {
 		tensors.push_back(t);
@@ -671,3 +674,14 @@ Node* Graph::findNodeByName( const std::string node_name )
 			return n;
 	return nullptr;
 }
+
+Tensor* Graph::findTensorByName(std::string name)
+{
+	for( auto t : tensors)
+		if( name == t->name ) {
+			return t;
+			break;
+		}
+	return nullptr;
+}
+
