@@ -721,6 +721,16 @@ ONNX_backend_node_test(softplus_example)
 ONNX_backend_node_test(softsign)
 ONNX_backend_node_test(softsign_example)
 
+# TODO these three tests fail now because there is no
+# TODO way to infer the number of outputs from graph in 'resolve'
+#ONNX_backend_node_test_singlefile(split_equal_parts_1d)
+#ONNX_backend_node_test_singlefile(split_equal_parts_2d)
+#ONNX_backend_node_test_singlefile(split_equal_parts_default_axis)
+
+ONNX_backend_node_test_singlefile(split_variable_parts_1d)
+ONNX_backend_node_test_singlefile(split_variable_parts_2d)
+ONNX_backend_node_test_singlefile(split_variable_parts_default_axis)
+
 ONNX_backend_node_test(sqrt)
 ONNX_backend_node_test(sqrt_example)
 

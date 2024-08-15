@@ -438,6 +438,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/slice.h"
 #include "nodes/squeeze.h"
 #include "nodes/softmax.h"
+#include "nodes/split.h"
 #include "nodes/transpose.h"
 #include "nodes/unsqueeze.h"
 #include "nodes/upsample.h"
@@ -545,6 +546,7 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "Softplus" )return new Elementwise("Softplus");
 	if( opName == "Softsign" )return new Elementwise("Softsign");
 	if( opName == "Softmax" )return new Softmax;
+	if( opName == "Split" )return new Split;
 	if( opName == "Squeeze" )return new Squeeze;
 	if( opName == "Sqrt" )return new Elementwise("Sqrt");
 	if( opName == "Sub" )return new Elementwise_2("Sub");
@@ -557,6 +559,7 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "Upsample" )return new Upsample;
 	if( opName == "Where" )return new Where;
 	if( opName == "Xor" )return new Elementwise_2("Xor");
+
 
 	ERROR("Unimplemented: node operation " << opName);
 	return NULL;
