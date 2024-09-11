@@ -14,11 +14,11 @@ class Relu : public Node {
 		std::string type = X->data_type_str();
 
 		dst << "\t/*Relu*/" << std::endl;
-		
 		dst << "\t" << type << " *X_ptr = (" << type << "*)X;" << std::endl;
 		dst << "\t" << type << " *Y_ptr = (" << type << "*)Y;" << std::endl;
+		dst << "\tuint32_t i;" << std::endl;
 
-		dst << "\t" << "for( uint32_t i=0; i<" << X->data_num_elem() << "; i++ )" << std::endl;
+		dst << "\t" << "for( i=0; i<" << X->data_num_elem() << "; i++ )" << std::endl;
 		dst << "\t\tY_ptr[i] = X_ptr[i] > 0 ? X_ptr[i] : 0;" << std::endl;
 		dst << std::endl;
 	} 
