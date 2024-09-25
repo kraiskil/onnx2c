@@ -135,7 +135,8 @@ void Graph::print_includes(std::ostream &dst)
 	dst << "#define CLIP(X,L) ( MAX(MIN(X,L), -L) )" << std::endl;
 	dst << std::endl;
 
-	dst << "#ifdef _MSC_VER" << std::endl;
+ 	// 'inline' functions are a C99 addition.
+	dst << "#if __STDC_VERSION__ < 199901L" << std::endl;
 	dst << "#define FUNC_PREFIX" << std::endl;
 	dst << "#else" << std::endl;
 	dst << "#define FUNC_PREFIX static inline" << std::endl;
