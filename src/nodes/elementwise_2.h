@@ -143,9 +143,20 @@ class Elementwise_2 : public Node {
 		std::string Aidx = "A";
 		std::string Bidx = "B";
 		std::string Cidx = "C";
+
+		std::string line = "unsigned ";
 		for( unsigned r=0; r<C->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
-			INDT_1 << "for (unsigned " << lv << "=0; " << lv << "<" << C->data_dim[r] << "; " << lv << "++) {" << std::endl;
+			if (r > 0) {
+				line += ", ";
+			}
+			line += lv;
+		}
+		INDT_1 << line << ";" << std::endl;
+
+		for( unsigned r=0; r<C->rank(); r++) {
+			std::string lv = "i" + std::to_string(r);
+			INDT_1 << "for (" << lv << "=0; " << lv << "<" << C->data_dim[r] << "; " << lv << "++) {" << std::endl;
 
 			if (padA[r]==1)
 				Aidx += "[0]";

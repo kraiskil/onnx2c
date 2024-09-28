@@ -50,10 +50,11 @@ class MatMul : public Node {
 		if ( A_is_2d && B_is_2d )
 		{
 			INDT_1 << "/* MatMul */" << std::endl;
-			INDT_1 << "for( uint32_t r=0; r<" << rows << "; r++ )" << std::endl;
-			INDT_2 << "for( uint32_t c=0; c<" << cols << "; c++ ) {" << std::endl;
+			INDT_1 << "uint32_t r, c, i;" << std::endl;
+			INDT_1 << "for( r=0; r<" << rows << "; r++ )" << std::endl;
+			INDT_2 << "for( c=0; c<" << cols << "; c++ ) {" << std::endl;
 			INDT_3 << "Y[r][c] = 0;" << std::endl;
-			INDT_3 << "for( uint32_t i=0; i<" << inner << "; i++ )" << std::endl;
+			INDT_3 << "for( i=0; i<" << inner << "; i++ )" << std::endl;
 			INDT_4 << "Y[r][c] += A[r][i] * B[i][c];" << std::endl;
 			INDT_2 << "}" << std::endl;
 		}

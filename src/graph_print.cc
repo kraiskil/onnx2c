@@ -109,7 +109,7 @@ void Graph::print_functions(std::ostream &dst)
 		dst << " * Operand:           " << n->op_name << std::endl;
 		dst << " * Name in ONNX file: " << n->onnx_name << std::endl;
 		dst << " */" << std::endl;
-		dst << "static inline void ";
+		dst << "FUNC_PREFIX void ";
 		dst << n->c_name() << "( ";
 		n->print_function_parameters_definition(dst);
 		dst << " )";
@@ -128,10 +128,19 @@ void Graph::print_includes(std::ostream &dst)
 	dst << "#include <stdbool.h>" << std::endl;
 	dst << "#include <stdint.h>" << std::endl;
 	dst << "#include <string.h>" << std::endl;
+	dst << std::endl;
 
 	dst << "#define MAX(X,Y) ( X > Y ? X : Y)" << std::endl;
 	dst << "#define MIN(X,Y) ( X < Y ? X : Y)" << std::endl;
 	dst << "#define CLIP(X,L) ( MAX(MIN(X,L), -L) )" << std::endl;
+	dst << std::endl;
+
+ 	// 'inline' functions are a C99 addition.
+	dst << "#if __STDC_VERSION__ < 199901L" << std::endl;
+	dst << "#define FUNC_PREFIX" << std::endl;
+	dst << "#else" << std::endl;
+	dst << "#define FUNC_PREFIX static inline" << std::endl;
+	dst << "#endif" << std::endl;
 
 	if( options.target_avr ) {
 		dst << "#include <avr/pgmspace.h>" << std::endl;
