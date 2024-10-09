@@ -39,7 +39,7 @@ class ReduceMean : public Node {
 	virtual void resolve(void) override;
 	virtual void print(std::ostream &dst) const override;
 	private:
-	void printLoc(std::ostream &dst, int indent, int axis, int dims, const char* flatIndexVariable) const;
+	void printLocationArray(std::ostream &dst, int indent, int axis, int dims, const char* flatIndexVariable) const;
 };
 
 
@@ -183,7 +183,7 @@ void ReduceMean::print(std::ostream &dst) const
 	INDT_1 << "for (int j = 0; j < " << totalOutputElements << "; ++j) {" << std::endl;
 		
 	// Tracking sum index
-	printLoc(dst, 2, axes[axes.size() - 1], output->data_dim.size(), "j");
+	printLocationArray(dst, 2, axes[axes.size() - 1], output->data_dim.size(), "j");
 
 	// Set to 0
 	INDT_2 << kOutputName;
@@ -216,7 +216,7 @@ void ReduceMean::print(std::ostream &dst) const
 		INDT_2 << "for (int j = 0; j < " << totalElements << "; ++j) {" << std::endl;
 
 		// Tracking sum index
-		printLoc(dst, 3, axis, currentAxisDims.size(), "j");
+		printLocationArray(dst, 3, axis, currentAxisDims.size(), "j");
 
 		// Add to sum
 		INDT_3 << outputTensor;
@@ -257,7 +257,7 @@ void ReduceMean::print(std::ostream &dst) const
 		INDT_1 << "for (int j = 0; j < " << totalElements << "; ++j) {" << std::endl;
 
 		// Tracking sum index
-		printLoc(dst, 2, axis, currentAxisDims.size(), "j");
+		printLocationArray(dst, 2, axis, currentAxisDims.size(), "j");
 
 		// Convert sum to mean
 		INDT_2 << outputTensor;
@@ -274,7 +274,7 @@ void ReduceMean::print(std::ostream &dst) const
 }
 
 // Creates an array called loc that stores the location in the tensor converted from a flat index
-void ReduceMean::printLoc(std::ostream &dst, int indent, int axis, int dims, const char* flatIndexVariable) const
+void ReduceMean::printLocationArray(std::ostream &dst, int indent, int axis, int dims, const char* flatIndexVariable) const
 {
 	INDT(indent) << "int loc[" << dims << "] = {";
 	for (int i = 0; i < dims; ++i)
