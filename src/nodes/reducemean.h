@@ -52,6 +52,17 @@ void ReduceMean::parseAttributes( onnx::NodeProto &node )
 		ERROR("ReduceMean only supported for opset <=13 not " + std::to_string(onnx_ir_version));
 	}
 
+	Tensor* input = get_input_tensor(0);
+
+	// Default to reducing all dimensions
+	for (int i = 0; i < input->data_dim.size(); ++i)
+	{
+		axes.push_back(i);
+	}
+
+	// Default to keeping all dimensions
+	keepdims = 1;
+
 	for( const auto& a : node.attribute() ) {
 		LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
 		if( a.name() == "axes" )
@@ -214,15 +225,22 @@ void ReduceMean::print(std::ostream &dst) const
 			dst << "[loc[" << i << "]]";
 		}
 		dst << " += " << prevTensorName;
-		for (int i = 0; i < currentAxisDims.size(); ++i)
+		// Get dimensions of tensor before reduction
+		const std::vector<int>& beforeReductionDims = (i == 0) ? input->data_dim : axisDims[axes[i - 1]];
+		for (int i = 0, locIndex = 0; i < beforeReductionDims.size(); ++i)
 		{
 			if (i == axis)
 			{
 				dst << "[i]";
+
+				if (keepdims)
+				{
+					locIndex++;
+				}
 			}
 			else
 			{
-				dst << "[loc[" << i << "]]";
+				dst << "[loc[" << locIndex++ << "]]";
 			}
 		}
 		if (axis == currentAxisDims.size())
