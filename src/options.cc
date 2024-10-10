@@ -116,6 +116,7 @@ void parse_cmdline_options(int argc, const char *argv[])
 {
 	args::ArgumentParser parser("Generate C code from an ONNX graph file.");
 	args::Flag avr(parser, "avr", "Target AVR-GCC", {'a', "avr"});
+	args::Flag noGlobal(parser, "no-global", "Do not generate global tensors", {'n', "no-global"});
 	args::ValueFlagList<std::string> define(parser, "dim:size", "Define graph input dimension. Can be given multiple times", {'d', "define"});
 	args::ValueFlag<int> loglevel(parser, "level", "Logging verbosity. 0(none)-4(all)", {'l',"log"});
 	args::ValueFlag<std::string> optimizations(parser, "opt[,opt]...", "Specify optimization passes to run. ('help' to list available)", {'p', "optimizations"});
@@ -153,6 +154,7 @@ void parse_cmdline_options(int argc, const char *argv[])
 
 	if (quantize) { options.quantize = true; }
 	if (avr) { options.target_avr = true; }
+	if (noGlobal) { options.no_global = true; }
 	if (define) {
 		for (const auto &d: args::get(define)) {
 			store_define_option(d);
