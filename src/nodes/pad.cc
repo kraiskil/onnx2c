@@ -131,7 +131,10 @@ void Pad::print(std::ostream &dst) const
 		INDT(i+1) << "for( uint32_t " << oidx << "=0, " << ilidx << "=0; ";
 		dst <<            oidx << "<" << output->data_dim[i] << "; ";
 		dst <<            oidx <<"++ ) {" << std::endl;
-		INDT(i+2) << "bool " << dopad << "=false;" << std::endl;
+		if ( mode == "constant" )
+		{
+			INDT(i+2) << "bool " << dopad << "=false;" << std::endl;
+		}
 
 		// Handle padding at the 'start' end
 		INDT(i+2) << "if( " << oidx << " < " << paddings_start[i] << "){" << std::endl;
