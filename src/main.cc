@@ -28,7 +28,7 @@ int main(int argc, const char *argv[])
 		toCgraph.fold_casts();
 	if( options.opt_unionize )
 		toCgraph.unionize_tensors();
-	toCgraph.set_no_globals(options.no_global);
+	toCgraph.set_no_globals(options.no_globals);
 
 	toCgraph.print_source(std::cout);
 }
