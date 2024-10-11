@@ -289,13 +289,13 @@ void LSTM::print(std::ostream &dst) const
 	// TODO: these temporary variables are BIG. Make them global to minimize
 	// stack usage? Probably needs to be an onnx2c flag for user to select
 	INDT_1<<  "/* Forget gate */" << std::endl;
-	INDT_1<<  data_type << " ft[bs][hs];" << std::endl;
+	INDT_1<<  data_type << " ft[" << bs << "][" << hs << "];" << std::endl;
 	INDT_1<<  "/* Input gate */" << std::endl;
-	INDT_1<<  data_type << " it[bs][hs];" << std::endl;
+	INDT_1<<  data_type << " it[" << bs << "][" << hs << "];" << std::endl;
 	INDT_1<<  "/* Cell gate */" << std::endl;
-	INDT_1<<  data_type << " ct[bs][hs];" << std::endl;
+	INDT_1<<  data_type << " ct[" << bs << "][" << hs << "];" << std::endl;
 	INDT_1<<  "/* Output gate */" << std::endl;
-	INDT_1<<  data_type << " ot[bs][hs];" << std::endl;
+	INDT_1<<  data_type << " ot[" << bs << "][" << hs << "];" << std::endl;
 	dst << std::endl;
 
 	/* Initialize cell and hidden state at the start of a run.
