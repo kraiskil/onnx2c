@@ -12,3 +12,4 @@ Kalle Raiskila
 Robin van Emden
 Youngsun Kong
 AUTOMATIC1111
+Thomas Lane
