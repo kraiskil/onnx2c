@@ -12,6 +12,7 @@ struct onnx2c_opts
 {
 	bool quantize=false;
 	bool target_avr=false;
+	bool no_globals = false;
 	bool opt_unionize=true;
 	bool opt_fold_casts=true;
 	/*

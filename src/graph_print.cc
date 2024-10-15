@@ -94,7 +94,10 @@ void Graph::print_global_tensors(std::ostream &dst)
 				print_tensor(t, dst);
 		}
 		dst << "};" <<std::endl;
-		dst << "static union tensor_union_" << u << " tu" << u << ";" << std::endl <<std::endl;
+		if (!no_globals)
+		{
+			dst << "static union tensor_union_" << u << " tu" << u << ";" << std::endl <<std::endl;
+		}
 	}
 	LOG(TRACE) << "(done printing global tensors)"<< std::endl;
 }
@@ -200,6 +203,16 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 
 	// else: definition - print the rest
 	dst << "{" << std::endl;
+
+	// Print tensors here if no globals
+	if( no_globals )
+	{
+		for( unsigned u=0; u<tensor_unions.size(); u++ )
+		{
+			INDT_1 << "union tensor_union_" << u << " tu" << u << ";" << std::endl;
+		}
+		dst << std::endl;
+	}
 
 	// since nodes were resolved from graph inputs in the order there were
 	// node inputs resolved, the nodes vector is now sorted in order so that
