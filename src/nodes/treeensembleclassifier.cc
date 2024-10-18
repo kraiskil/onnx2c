@@ -11,6 +11,11 @@ void TreeEnsembleClassifier::parseAttributes( onnx::NodeProto &node )
         nameToAttributeMap[a.name()] = a;
     }
 
+    if( parse_attribute_string(nameToAttributeMap["post_transform"]) != "LOGISTIC" )
+    {
+        ERROR("Only LOGISTIC post_transform is supported for TreeEnsembleClassifier");
+    }
+
     node_tree_ids = parse_attribute_ints(nameToAttributeMap["nodes_treeids"]);
     node_node_ids = parse_attribute_ints(nameToAttributeMap["nodes_nodeids"]);
     leaf_tree_ids = parse_attribute_ints(nameToAttributeMap["class_treeids"]);
