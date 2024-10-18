@@ -440,6 +440,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/softmax.h"
 #include "nodes/split.h"
 #include "nodes/transpose.h"
+#include "nodes/treeensembleclassifier.h"
 #include "nodes/unsqueeze.h"
 #include "nodes/upsample.h"
 #include "nodes/where.h"
@@ -554,6 +555,7 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "Tan" )return new Elementwise("Tan");
 	if( opName == "Tanh" )return new Elementwise("Tanh");
 	if( opName == "Transpose" )return new Transpose;
+	if( opName == "TreeEnsembleClassifier" )return new TreeEnsembleClassifier();
 	if( opName == "ThresholdedRelu" )return new Elementwise("ThresholdedRelu");
 	if( opName == "Unsqueeze" )return new Unsqueeze;
 	if( opName == "Upsample" )return new Upsample;
