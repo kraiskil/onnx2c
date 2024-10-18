@@ -1,18 +1,7 @@
 /* This file is part of onnx2c.
  *
- * TEMPLATE node.
- * When implementing a new node, use this template
- * as a starting point.
+ * ReduceMean node.
  *
- * This file can be kept as a single .h file with an
- * in-header implementation, or it can be split into
- * a .h and a .cc file.
- *
- * Replace all occurances of TEMPLATE in this file.
- * Some representative dummy implementation provided.
- *
- * The functions here are callbacks from the onnx2c
- * framework. See node.h for more documentation.
  */
 #include "node.h"
 #include "util.h"
@@ -96,30 +85,18 @@ void ReduceMean::resolve(void)
 	Tensor *t = new Tensor;
 	t->data_dim = {};
 
-	if (keepdims)
+	for (int i = 0; i < input->data_dim.size(); ++i)
 	{
-		for (int i = 0; i < input->data_dim.size(); ++i)
+		if(std::find(axes.begin(), axes.end(), i) != axes.end())
 		{
-			if(std::find(axes.begin(), axes.end(), i) != axes.end())
+			if (keepdims)
 			{
 				t->data_dim.push_back(1);
-				continue;
 			}
-
-			t->data_dim.push_back(input->data_dim[i]);
+			continue;
 		}
-	}
-	else
-	{
-		for (int i = 0; i < input->data_dim.size(); ++i)
-		{
-			if(std::find(axes.begin(), axes.end(), i) != axes.end())
-			{
-				continue;
-			}
 
-			t->data_dim.push_back(input->data_dim[i]);
-		}
+		t->data_dim.push_back(input->data_dim[i]);
 	}
 
 	t->data_type = input->data_type;
