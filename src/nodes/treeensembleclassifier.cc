@@ -11,9 +11,15 @@ void TreeEnsembleClassifier::parseAttributes( onnx::NodeProto &node )
 		nameToAttributeMap[a.name()] = a;
 	}
 
-	if( parse_attribute_string(nameToAttributeMap["post_transform"]) != "LOGISTIC" )
+	post_transform = parse_attribute_string(nameToAttributeMap["post_transform"]);
+	if( post_transform != "NONE" && post_transform != "LOGISTIC" )
 	{
-		ERROR("Only LOGISTIC post_transform is supported for TreeEnsembleClassifier");
+		ERROR("Only NONE and LOGISTIC post_transform are supported for TreeEnsembleClassifier");
+	}
+
+	if( !nameToAttributeMap.contains("classlabels_int64s") )
+	{
+		ERROR("classlabels_int64 attribute is required, classlabels_strings is not supported");
 	}
 
 	node_tree_ids = parse_attribute_ints(nameToAttributeMap["nodes_treeids"]);
@@ -27,10 +33,19 @@ void TreeEnsembleClassifier::parseAttributes( onnx::NodeProto &node )
 	node_feature_ids = parse_attribute_ints(nameToAttributeMap["nodes_featureids"]);
 	node_thresholds = parse_attribute_floats(nameToAttributeMap["nodes_values"]);
 	node_modes = parse_attribute_strings(nameToAttributeMap["nodes_modes"]);
+	class_ids = parse_attribute_ints(nameToAttributeMap["classlabels_int64s"]);
 
-	for( int i = 0; i < leaf_tree_ids.size(); ++i )
+	// Check if there exists a class unused by a leaf
+	unused_class_id = -1; // Assume no class ID will be -1 (unconfirmed)
+	std::set<int64_t> class_ids_set(leaf_class_ids.begin(), leaf_class_ids.end());
+	for( int64_t class_id : class_ids )
 	{
-		class_ids.insert(leaf_class_ids[i]);
+		// Assume only one class can be unused
+		if( !class_ids_set.contains(class_id) )
+		{
+			unused_class_id = class_id;
+			break;
+		}
 	}
 }
 
@@ -92,8 +107,8 @@ std::unordered_map<int64_t, TreeEnsembleClassifier::Tree> TreeEnsembleClassifier
 		int64_t treeId = leaf_tree_ids[i];
 		int64_t leafId = leaf_node_ids[i];
 		trees[treeId][leafId]->is_leaf = true;
-		trees[treeId][leafId]->class_id = leaf_class_ids[i];
-		trees[treeId][leafId]->weight = leaf_node_weights[i];
+		trees[treeId][leafId]->class_ids.push_back(leaf_class_ids[i]);
+		trees[treeId][leafId]->weights.push_back(leaf_node_weights[i]);
 	}
 
 	// This part must be done separate from creating the TreeNodes
@@ -139,7 +154,10 @@ void TreeEnsembleClassifier::print(std::ostream &dst) const
 
 			if( current_node->is_leaf )
 			{
-				INDT(node_stack.size()) << "result_class_" << current_node->class_id << " += " << current_node->weight << ";" << std::endl;
+				for( size_t i = 0; i < current_node->class_ids.size(); ++i)
+				{
+					INDT(node_stack.size()) << "result_class_" << current_node->class_ids[i] << " += " << current_node->weights[i] << ";" << std::endl;
+				}
 				current_node.reset();
 			}
 			else
@@ -174,18 +192,37 @@ void TreeEnsembleClassifier::print(std::ostream &dst) const
 		while( !node_stack.empty() );
 	}
 
-	for( int64_t classId : class_ids )
+	for( int64_t class_id : class_ids )
 	{
-		INDT_1 << "probabilities[" << classId << "] = 1.0f / (1.0f + exp(result_class_" << classId << "));" << std::endl;
+		if( unused_class_id == class_id )
+		{
+			continue;
+		}
+		INDT_1 << "probabilities[" << class_id << "] = ";
+		
+		if(post_transform == "NONE")
+		{
+			dst << "result_class_" << class_id << ";" << std::endl;
+		}
+		else if(post_transform == "LOGISTIC")
+		{
+			dst << "1.0f / (1.0f + exp(result_class_" << class_id << "));" << std::endl;
+		}
 	}
 
-	INDT_1 << "probabilities[" << class_ids.size() << "] = 1.0f - (";
-	size_t classIndex = 0;
-	for( int64_t classId : class_ids )
+	if( unused_class_id != -1 )
 	{
-		dst << "probabilities[" << classId << std::string("]") + (classIndex++ < class_ids.size() - 1 ? " + " : "");
+		INDT_1 << "probabilities[" << unused_class_id << "] = 1.0f - (";
+		for( int i = 0; i < class_ids.size(); ++i )
+		{
+			if( class_ids[i] == unused_class_id )
+			{
+				continue;
+			}
+			dst << "probabilities[" << class_ids[i] << std::string("]") + (i < class_ids.size() - 1 && unused_class_id != i + 1 ? " + " : "");
+		}
+		dst << ");" << std::endl;
 	}
-	dst << ");" << std::endl;
 
 	INDT_1 << "int64_t max_class = 0;" << std::endl;
 	INDT_1 << "for( int64_t i = 0; i < " << class_ids.size() << "; i++ ) {" << std::endl;

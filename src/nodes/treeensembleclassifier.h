@@ -19,6 +19,7 @@ class TreeEnsembleClassifier : public Node {
 		op_name = "TreeEnsembleClassifier";
 	}
 
+	std::string post_transform;
 	std::vector<int64_t> node_tree_ids;
 	std::vector<int64_t> node_node_ids;
 	std::vector<int64_t> leaf_tree_ids;
@@ -30,13 +31,14 @@ class TreeEnsembleClassifier : public Node {
 	std::vector<int64_t> node_feature_ids;
 	std::vector<float> node_thresholds;
 	std::vector<std::string> node_modes;
-	std::set<int64_t> class_ids;
+	std::vector<int64_t> class_ids;
+	int64_t unused_class_id;
 
 	struct TreeNode {
 		int64_t id;
 		bool is_leaf;
-		int64_t class_id;
-		float weight;
+		std::vector<int64_t> class_ids;
+		std::vector<float> weights;
 		std::shared_ptr<TreeNode> child_true;
 		std::shared_ptr<TreeNode> child_false;
 		int64_t feature;
