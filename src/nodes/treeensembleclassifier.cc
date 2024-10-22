@@ -95,14 +95,14 @@ std::unordered_map<int64_t, TreeEnsembleClassifier::Tree> TreeEnsembleClassifier
 {
 	std::unordered_map<int64_t, Tree> trees;
 
-	for( int i = 0; i < node_tree_ids.size(); ++i )
+	for( size_t i = 0; i < node_tree_ids.size(); ++i )
 	{
 		int64_t treeId = node_tree_ids[i];
 		int64_t nodeId = node_node_ids[i];
 		trees[treeId][nodeId] = std::make_shared<TreeNode>();
 	}
 
-	for( int i = 0; i < leaf_tree_ids.size(); ++i )
+	for( size_t i = 0; i < leaf_tree_ids.size(); ++i )
 	{
 		int64_t treeId = leaf_tree_ids[i];
 		int64_t leafId = leaf_node_ids[i];
@@ -113,7 +113,7 @@ std::unordered_map<int64_t, TreeEnsembleClassifier::Tree> TreeEnsembleClassifier
 
 	// This part must be done separate from creating the TreeNodes
 	// so they all exist before connections start being made.
-	for( int i = 0; i < node_tree_ids.size(); ++i )
+	for( size_t i = 0; i < node_tree_ids.size(); ++i )
 	{
 		int64_t treeId = node_tree_ids[i];
 		int64_t nodeId = node_node_ids[i];
@@ -213,7 +213,7 @@ void TreeEnsembleClassifier::print(std::ostream &dst) const
 	if( unused_class_id != -1 )
 	{
 		INDT_1 << "probabilities[" << unused_class_id << "] = 1.0f - (";
-		for( int i = 0; i < class_ids.size(); ++i )
+		for( size_t i = 0; i < class_ids.size(); ++i )
 		{
 			if( class_ids[i] == unused_class_id )
 			{
