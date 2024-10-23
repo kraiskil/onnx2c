@@ -219,7 +219,7 @@ void TreeEnsembleClassifier::print(std::ostream &dst) const
 			{
 				continue;
 			}
-			dst << "probabilities[" << class_ids[i] << std::string("]") + (i < class_ids.size() - 1 && unused_class_id != i + 1 ? " + " : "");
+			dst << "probabilities[" << class_ids[i] << std::string("]") + (i < class_ids.size() - 1 && unused_class_id != static_cast<int64_t>(i) + 1 ? " + " : "");
 		}
 		dst << ");" << std::endl;
 	}
