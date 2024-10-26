@@ -43,6 +43,7 @@ add_library(onnx2c_lib STATIC
 	src/nodes/lstm.cc
 	src/nodes/pad.cc
 	src/nodes/scatternd.cc
+	src/nodes/treeensembleclassifier.cc
 )
 target_compile_options(onnx2c_lib
 	PUBLIC

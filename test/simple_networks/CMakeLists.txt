@@ -46,3 +46,17 @@ function( lstm_test test_name)
 endfunction()
 lstm_test( lstm_k1_b1_r1 )
 lstm_test( lstm_k1_b1_r1_relu )
+
+function( simple_test_treeensembleclassifier test_name output_size num_chan)
+	compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/${test_name}.onnx ${test_name}_generated.c)
+	add_executable(${test_name} ${test_name}_generated.c ${test_name}.c  main_treeensembleclassifier.c)
+	target_link_libraries(${test_name} onnx2c_lib ${Protobuf_LIBRARIES})
+	target_compile_options(${test_name}
+		PRIVATE
+			-Wall -Werror
+			-DOUTPUT_SIZE=${output_size}
+			-DNUM_CHAN=${num_chan})
+	add_test(small_${test_name} ${test_name})
+endfunction()
+
+simple_test_treeensembleclassifier( treeensembleclassifier 3 1 )
