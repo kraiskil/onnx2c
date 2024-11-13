@@ -93,7 +93,7 @@ void ReduceMean::print(std::ostream &dst) const
 	std::unordered_map<int64_t, std::vector<int>> axisDims; // dimensions at each reduction
 	for (size_t i = 0; i < axes.size() - 1; ++i)
 	{
-		int64_t axis = axes[i];
+		uint64_t axis = axes[i];
 		INDT_1 << input->data_type_str() << " sum_axis_" << axis;
 		sumDims[axis] = keepdims ? 1 : 0;
 		for (size_t i = 0; i < sumDims.size(); ++i)
@@ -154,7 +154,7 @@ void ReduceMean::print(std::ostream &dst) const
 		INDT_1 << "// Reduce axis " << axes[i] << std::endl;
 
 		// Step 1: Get sum
-		int64_t axis = axes[i];
+		uint64_t axis = axes[i];
 		std::string outputTensor = (i == axes.size() - 1) ? kOutputName : ("sum_axis_" + std::to_string(axis));
 		INDT_1 << "for (int i = 0; i < " << input->data_dim[axis] << "; ++i) {" << std::endl;
 
@@ -225,7 +225,7 @@ void ReduceMean::print(std::ostream &dst) const
 }
 
 // Creates an array called loc that stores the location in the tensor converted from a flat index
-void ReduceMean::printLocationArray(std::ostream &dst, int indent, int axis, int dims, const char* flatIndexVariable) const
+void ReduceMean::printLocationArray(std::ostream &dst, unsigned indent, int axis, int dims, const char* flatIndexVariable) const
 {
 	INDT(indent) << "int loc[" << dims << "] = {";
 	for (int i = 0; i < dims; ++i)

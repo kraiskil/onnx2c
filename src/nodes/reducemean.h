@@ -26,7 +26,7 @@ class ReduceMean : public Node {
 	virtual void resolve(void) override;
 	virtual void print(std::ostream &dst) const override;
 	private:
-	void printLocationArray(std::ostream &dst, int indent, int axis, int dims, const char* flatIndexVariable) const;
+	void printLocationArray(std::ostream &dst, unsigned indent, int axis, int dims, const char* flatIndexVariable) const;
 };
 
 } // namespace
