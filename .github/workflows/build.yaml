@@ -6,6 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        submodules: true
       - name: Install dependencies
         run: sudo apt-get install libprotobuf-dev protobuf-compiler
       - name: Create build directory
