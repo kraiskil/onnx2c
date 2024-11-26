@@ -29,8 +29,6 @@ void DequantizeLinear::parseAttributes( onnx::NodeProto &node ) {
 		LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
 		if( a.name() == "axis" )
 			axis = parse_attribute_int(a);
-		else if( a.name() == "block_size" )
-			block_size = parse_attribute_int(a);
 		else
 			LOG(ERROR) << "Ignoring attribute " << a.name() << " for node DequantizeLinear/" << onnx_name << std::endl;
 	}
