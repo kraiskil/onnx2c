@@ -6,4 +6,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: ls
+      - name: Create build directory
+        run: |
+          mkdir build
+          cd build
+      - name: Run CMake
+        run: cmake -DCMAKE_BUILD_TYPE=Release ..
+      - name: Build onnx2c and tests
+        run: make
+      - name: Run tests
+        run: make test
