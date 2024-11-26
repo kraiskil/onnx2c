@@ -3,6 +3,7 @@
  * DequantizeLinear node.
  * 
  */
+
 #include "node.h"
 
 namespace toC {
@@ -12,21 +13,18 @@ class DequantizeLinear : public Node {
 	DequantizeLinear() {
 		op_name = "DequantizeLinear";
 		axis = 1;
-		block_size = 0;
 	}
 
 	// Attributes
 	int axis;
-	int block_size;
 
-	virtual void parseAttributes( onnx::NodeProto &node ) override;
+	virtual void parseAttributes(onnx::NodeProto &node) override;
 	virtual void resolve(void) override;
 	virtual void print(std::ostream &dst) const override;
 };
 
 
-void DequantizeLinear::parseAttributes( onnx::NodeProto &node )
-{
+void DequantizeLinear::parseAttributes( onnx::NodeProto &node ) {
 	for( const auto& a : node.attribute() ) {
 		LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
 		if( a.name() == "axis" )
@@ -38,10 +36,9 @@ void DequantizeLinear::parseAttributes( onnx::NodeProto &node )
 	}
 }
 
-void DequantizeLinear::resolve(void)
-{
-	Tensor *x  = get_input_tensor(0);
-	Tensor *x_scale  = get_input_tensor(1);
+void DequantizeLinear::resolve(void) {
+	Tensor *x = get_input_tensor(0);
+	Tensor *x_scale = get_input_tensor(1);
 	name_input(0, "x");
 	name_input(1, "x_scale");
 
@@ -50,7 +47,6 @@ void DequantizeLinear::resolve(void)
 	}
 
 	if (get_number_of_inputs() == 3) {
-		//Tensor *x_zero_point = get_input_tensor(2);
 		name_input(2, "x_zero_point");
 	}
 
@@ -60,12 +56,11 @@ void DequantizeLinear::resolve(void)
 	register_output(t, "y");
 }
 
-void DequantizeLinear::print(std::ostream &dst) const
-{
+void DequantizeLinear::print(std::ostream &dst) const {
 	INDT_1 << "/* DequantizeLinear */" << std::endl;
 
-	Tensor *x  = get_input_tensor(0);
-	Tensor *x_scale  = get_input_tensor(1);
+	Tensor *x = get_input_tensor(0);
+	Tensor *x_scale = get_input_tensor(1);
 
 	std::string index;
 	for (unsigned loop_axis = 0; loop_axis < x->rank(); loop_axis++) {
