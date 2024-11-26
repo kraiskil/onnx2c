@@ -4,6 +4,9 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_type: [Debug, Release]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -13,7 +16,7 @@ jobs:
       - name: Create build directory
         run: mkdir build
       - name: Run CMake
-        run: cmake -DCMAKE_BUILD_TYPE=Release ..
+        run: cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
         working-directory: build
       - name: Build onnx2c and tests
         run: make
