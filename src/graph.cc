@@ -429,6 +429,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/matmulinteger.h"
 #include "nodes/maxpool.h"
 #include "nodes/pad.h"
+#include "nodes/quantizelinear.h"
 #include "nodes/range.h"
 #include "nodes/reducemean.h"
 #include "nodes/relu.h"
@@ -530,6 +531,7 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "Pad" )return new Pad;
 	if( opName == "Pow" )return new Elementwise_2("Pow");
 	if( opName == "PRelu" )return new Elementwise_2("PRelu");
+	if( opName == "QuantizeLinear" )return new QuantizeLinear;
 	if( opName == "Range" )return new Range;
 	if( opName == "ReduceMean" )return new ReduceMean;
 	if( opName == "Reciprocal" )return new Elementwise("Reciprocal");

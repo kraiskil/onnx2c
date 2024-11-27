@@ -672,6 +672,9 @@ ONNX_backend_node_test_singlefile(resize_upsample_sizes_nearest_round_prefer_cei
 local_node_test(resize_downsample_sizes_linear_1D)
 local_node_test(resize_downsample_sizes_linear_1D_align)
 
+ONNX_backend_node_test_singlefile(quantizelinear)
+ONNX_backend_node_test_singlefile(quantizelinear_axis)
+
 # Does not pass: ONNX rounding mode is towards even integer, which does not
 # exist (I think) in C
 #ONNX_backend_node_test(round)
