@@ -340,6 +340,9 @@ ONNX_backend_node_test(convtranspose_pads)
 ONNX_backend_pytorch_converted_test(ConvTranspose2d)
 ONNX_backend_pytorch_converted_test(ConvTranspose2d_no_bias)
 
+ONNX_backend_node_test_singlefile(dequantizelinear)
+ONNX_backend_node_test_singlefile(dequantizelinear_axis)
+
 ONNX_backend_node_test(div)
 ONNX_backend_node_test(div_bcast)
 ONNX_backend_node_test(div_example)
