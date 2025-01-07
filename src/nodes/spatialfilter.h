@@ -135,6 +135,8 @@ class SpatialFilter : public Node {
 				// last output=7
 				int last_out = input_size - filter_size;
 				outdim = last_out / strides[dim] + 1;
+			} else {
+				ERROR("Invalid option for auto_pad attribute");
 			}
 
 			rv.push_back(outdim);
