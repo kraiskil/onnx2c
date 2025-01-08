@@ -17,9 +17,13 @@ public:
 		std::vector<Tensor*> inputs={}
 	);
 
+	const std::vector<Tensor*>& get_tensors() const { return tensors; }
+	const std::vector<Node*>& get_nodes() const { return nodes; }
+
 	/* print the entire .h and .cc file contents */
 	void print_header(std::ostream &destination);
 	void print_source(std::ostream &destination);
+	void print_initialization(std::ostream &destination);
 
 	/* print individual parts of the file */
 	void print_file_frontmatter(std::ostream &destination);

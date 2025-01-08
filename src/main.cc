@@ -30,6 +30,10 @@ int main(int argc, const char *argv[])
 		toCgraph.unionize_tensors();
 	toCgraph.set_no_globals(options.no_globals);
 
-	toCgraph.print_source(std::cout);
+	if (options.only_init) {
+		toCgraph.print_initialization(std::cout);
+	} else {
+		toCgraph.print_source(std::cout);
+	}
 }
 
