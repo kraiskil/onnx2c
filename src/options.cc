@@ -117,8 +117,8 @@ void parse_cmdline_options(int argc, const char *argv[])
 	args::ArgumentParser parser("Generate C code from an ONNX graph file.");
 	args::Flag avr(parser, "avr", "Target AVR-GCC", {'a', "avr"});
 	args::Flag noGlobals(parser, "no-globals", "Do not generate global tensors", {'n', "no-globals"});
-	args::Flag externInit(parser, "extern-init", "extern", {'e', "extern-init"});
-	args::Flag onlyInit(parser, "only-init", "Only generate initialized tensors", {'i', "only-init"});
+	args::Flag externInit(parser, "extern-init", "Declare initialized tensors as extern globals", {'e', "extern-init"});
+	args::Flag onlyInit(parser, "only-init", "Only generate initialized tensors (for use with --extern-init)", {'i', "only-init"});
 	args::ValueFlagList<std::string> define(parser, "dim:size", "Define graph input dimension. Can be given multiple times", {'d', "define"});
 	args::ValueFlag<int> loglevel(parser, "level", "Logging verbosity. 0(none)-4(all)", {'l',"log"});
 	args::ValueFlag<std::string> optimizations(parser, "opt[,opt]...", "Specify optimization passes to run. ('help' to list available)", {'p', "optimizations"});
