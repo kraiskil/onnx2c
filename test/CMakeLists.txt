@@ -29,11 +29,11 @@ function( compile_onnx onnx_file c_file )
 		OUTPUT
 			${c_file}
 		COMMAND
-			onnx2c -l 0 ${onnx_file} > ${c_file}
+			onnx2c ${ARGN} -l 0 ${onnx_file} > ${c_file}
 		DEPENDS 
 			${onnx_file}
 			onnx2c
-	) 
+	)
 endfunction()
 
 

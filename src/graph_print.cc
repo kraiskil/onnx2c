@@ -32,6 +32,8 @@ void Graph::print_initialization(std::ostream &dst)
 {
 	print_file_frontmatter(dst);
 	dst << std::endl;
+	print_includes(dst);
+	dst << std::endl;
 
 	LOG(TRACE) << "printing initializers" << std::endl;
 	for( auto t : tensors )
