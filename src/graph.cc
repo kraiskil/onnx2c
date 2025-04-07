@@ -395,8 +395,10 @@ bool Graph::hasUnresolvedNodes(void)
 int64_t Graph::onnx_ir_version(void)
 {
 	int opset_import_size = model.opset_import_size();
-	if( opset_import_size != 1 )
-		LOG(INFO) << "Model has multiple opset versions.";
+	if( opset_import_size == 0 )
+		ERROR("Model has no opset version");
+	if (opset_import_size > 1)
+		LOG(INFO) << "Model has multiple opset versions." << std::endl;
 	auto foo = model.opset_import(0);
 	int64_t version = foo.version();
 	return version;
