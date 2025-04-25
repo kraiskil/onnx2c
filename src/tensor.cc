@@ -216,14 +216,21 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 	{
 		case onnx::TensorProto_DataType_FLOAT:
 		{
+			/*
+			some tests require large number e.g. 479001600
+			using std::showpoint prints 4.79002e+08f
+			The test passes if std::fixed is used printing 479001600.000000
+			*/
 			float *f = static_cast<float*>(data_buffer);
-			dst << std::showpoint << f[element]<< "f";
+			// dst << std::showpoint << f[element]<< "f";
+			dst << std::fixed << f[element]<< "f";
 			break;
 		}
 		case onnx::TensorProto_DataType_DOUBLE:
 		{
 			double *f = static_cast<double*>(data_buffer);
-			dst << std::showpoint << f[element]<< "f";
+			//dst << std::showpoint << f[element]<< "f";
+			dst << std::fixed << f[element]<< "f";
 			break;
 		}
 		case onnx::TensorProto_DataType_INT8:
