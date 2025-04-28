@@ -228,7 +228,6 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 		case onnx::TensorProto_DataType_DOUBLE:
 		{
 			double *f = static_cast<double*>(data_buffer);
-			//dst << std::showpoint << f[element]<< "f";
 			dst << std::fixed << f[element]<< "f";
 			break;
 		}
