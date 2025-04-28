@@ -222,7 +222,6 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 			The test passes if std::fixed is used printing 479001600.000000
 			*/
 			float *f = static_cast<float*>(data_buffer);
-			// dst << std::showpoint << f[element]<< "f";
 			dst << std::fixed << f[element]<< "f";
 			break;
 		}
