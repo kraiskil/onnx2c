@@ -543,6 +543,10 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "ReduceMax" )return new Reduce("Max");
 	if( opName == "ReduceMin" )return new Reduce("Min");
 	if( opName == "ReduceSum" )return new Reduce("Sum");
+	if( opName == "ReduceL1" )return new Reduce("L1");
+	if( opName == "ReduceL2" )return new Reduce("L2");
+	if( opName == "ReduceLogSum" )return new Reduce("LogSum");
+	if( opName == "ReduceLogSumExp" )return new Reduce("LogSumExp");
 	if( opName == "Reciprocal" )return new Elementwise("Reciprocal");
 	if( opName == "Relu" )return new Relu;
 	if( opName == "Reshape" )return new Reshape;

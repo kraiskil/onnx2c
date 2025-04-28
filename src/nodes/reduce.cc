@@ -30,15 +30,15 @@ int Reduce::get_number_of_reduced_elements(void) const
 
 void Reduce::parseAttributes( onnx::NodeProto &node )
 {
+    keepdims = true; // default is 1
     for( const auto& a : node.attribute() ) {
         LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
         if( a.name() == "axes" ) // optinal (might be empty)
             axes = parse_attribute_ints(a);
 		else if( a.name() == "keepdims" ) // default is 1
             keepdims = (bool) parse_attribute_int(a);
-
         else
-            LOG(ERROR) << "Ignoring attribute " << a.name() << " for node Reduce/" << onnx_name << std::endl;
+            ERROR("Ignoring attribute " + a.name() + " for node Reduce/" + onnx_name);
     }
 }
 
@@ -102,8 +102,8 @@ std::vector<size_t> Reduce::normalized_axes(const Tensor *t) const
             axis += t->rank();
         }
         if (axis < 0 || static_cast<size_t>(axis) >= t->data_dim.size()) {
-            LOG(ERROR) << "Invalid axis " << axis << " for input tensor with " 
-            << t->data_dim.size() << " dimensions." << std::endl;
+            ERROR("Invalid axis " + std::to_string(axis) + " for input tensor with " 
+            + std::to_string(t->data_dim.size()) + " dimensions.");
         }
         normalized_axes.push_back(static_cast<size_t>(axis));
     }
@@ -174,6 +174,26 @@ void Reduce::resolve(void)
         { return a + "+=" + b;};
         initial_value = type_0_value;
     }
+    else if (op_name == "ReduceL1"){
+        elemet_operation = [](const std::string& a, const std::string& b)
+        { return a + "+= fabs(" + b + ")";};
+        initial_value = type_0_value;
+    }
+    else if (op_name == "ReduceL2"){
+        elemet_operation = [](const std::string& a, const std::string& b)
+        { return a + "+= (" + b + "*" + b + ")";};
+        initial_value = type_0_value;
+    }
+    else if (op_name == "ReduceLogSum"){
+        elemet_operation = [](const std::string& a, const std::string& b)
+        { return a + "+=" + b;};
+        initial_value = type_0_value;
+    }
+    else if (op_name == "ReduceLogSumExp"){
+        elemet_operation = [](const std::string& a, const std::string& b)
+        { return a + "+= expf(" + b + ")";};
+        initial_value = type_0_value;
+    }
     else if (op_name == "ReduceMean"){
         elemet_operation = [](const std::string& a, const std::string& b)
         { return a + "+=" + b;};
@@ -210,14 +230,14 @@ void Reduce::resolve(void)
     } else {
         t->data_dim = input->data_dim;
         norm_axes = normalized_axes(t);
-
         for (size_t axis: norm_axes) {
 			// Set the specified normalized axis to 1 in the output shape
 			t->data_dim[axis] = 1;
 		}
-
+        
         // If keepdims is 0, remove the dimensions set to 1 from the shape
         if (!keepdims) {
+            // ERROR("Reduce with keepdims=0 not implemented yet");
             std::vector<int> new_shape;
             for (int dim_size : t->data_dim) {
                 if (dim_size != 1) {
@@ -231,7 +251,6 @@ void Reduce::resolve(void)
             t->data_dim = new_shape;
         }
     }
-
     // Set the data type for the output tensor
     t->data_type = input->data_type;
 	output = t;
@@ -270,6 +289,18 @@ void Reduce::print(std::ostream &dst) const
         int out_size = get_number_of_reduced_elements();
         std::string out_idx = print_and_return_o_iterator(dst);
         INDT(output->rank()+1) << "y" << out_idx << " /= " << out_size << ";" << std::endl;
+        print_loop_closes_over_dims(dst, output->rank());
+    }
+    if (op_name=="ReduceL2") {
+        INDT_1 << "/* ReduceL2: Sqrt of summed sqares*/" << std::endl;
+        std::string out_idx = print_and_return_o_iterator(dst);
+        INDT(output->rank()+1) << "y" << out_idx << " = sqrt(y" << out_idx << ");" << std::endl;
+        print_loop_closes_over_dims(dst, output->rank());
+    }
+    if (op_name=="ReduceLogSum" || op_name=="ReduceLogSumExp") {
+        INDT_1 << "/* ReduceLogSum : log of reduced sum*/" << std::endl;
+        std::string out_idx = print_and_return_o_iterator(dst);
+        INDT(output->rank()+1) << "y" << out_idx << " = log(y" << out_idx << ");" << std::endl;
         print_loop_closes_over_dims(dst, output->rank());
     }
 }

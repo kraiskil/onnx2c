@@ -1,6 +1,6 @@
 /* This file is part of onnx2c.
  *
- * ReduceProd node.
+ * Reduce Operations
  */
 #include "node.h"
 
