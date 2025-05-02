@@ -30,13 +30,14 @@ int Reduce::get_number_of_reduced_elements(void) const
 
 void Reduce::parseAttributes( onnx::NodeProto &node )
 {
-    keepdims = true; // default is 1
     for( const auto& a : node.attribute() ) {
         LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
         if( a.name() == "axes" ) // optinal (might be empty)
             axes = parse_attribute_ints(a);
-		else if( a.name() == "keepdims" ) // default is 1
+		else if( a.name() == "keepdims" ) { 
             keepdims = (bool) parse_attribute_int(a);
+            keepdims = keepdims != 0 ? 1:0; // default is 1
+        }
         else
             ERROR("Ignoring attribute " + a.name() + " for node Reduce/" + onnx_name);
     }

@@ -18,9 +18,9 @@ class Reduce : public Node {
 		op_name = "Reduce" + op;
 
 	}
-	std::vector<int64_t>axes;		// can be negative
-	std::vector<size_t> norm_axes;	// will be constructed to be between 0 and axis-size
-	bool keepdims;
+	std::vector<int64_t> axes = {};		// can be negative
+	std::vector<size_t> norm_axes= {};	// will be constructed to be between 0 and axis-size
+	bool keepdims = 1;
 	std::string initial_value;
 
 	const Tensor *input;
