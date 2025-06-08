@@ -425,6 +425,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/gather.h"
 #include "nodes/gemm.h"
 #include "nodes/globalaveragepool.h"
+#include "nodes/globalmaxpool.h"
 #include "nodes/instancenorm.h"
 #include "nodes/lrn.h"
 #include "nodes/lstm.h"
@@ -510,6 +511,7 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "Gather" )return new Gather;
 	if( opName == "Gemm" )return new Gemm;
 	if( opName == "GlobalAveragePool" )return new GlobalAveragePool;
+	if( opName == "GlobalMaxPool" )return new GlobalMaxPool;
 	if( opName == "Greater")return new Elementwise_2("Greater");
 	if( opName == "GreaterOrEqual")return new Elementwise_2("GreaterOrEqual");
 	if( opName == "HardSigmoid" )return new Elementwise("HardSigmoid");
