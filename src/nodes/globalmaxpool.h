@@ -17,7 +17,7 @@ class GlobalMaxPool : public Node {
 		dst << "\tfor( int32_t c=0; c<" << num_channels << "; c++ ) {" << std::endl;
 
 		// Initialize max_value to a very small value
-		dst << "\t\tfloat max_value = -std::numeric_limits<float>::infinity();" << std::endl;
+		dst << "\t\tfloat max_value = -FLT_MIN;" << std::endl;
 
 		std::string in_idx_string = "input[b][c]";  // Start of input element access
 		std::string out_idx_string = "output[b][c]"; // Output tensor index
@@ -35,7 +35,7 @@ class GlobalMaxPool : public Node {
 		}
 
 		// Update max_value with the max of the current input element
-		dst << "\t\t\tmax_value = std::max(max_value, " << in_idx_string << ");" << std::endl;
+		dst << "\t\t\tmax_value = MAX(max_value, " << in_idx_string << ");" << std::endl;
 
 		// Close loops for spatial dimensions
 		for( unsigned dim = 2; dim < X->data_dim.size(); dim ++ ) {
