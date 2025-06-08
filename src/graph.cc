@@ -434,7 +434,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/pad.h"
 #include "nodes/quantizelinear.h"
 #include "nodes/range.h"
-#include "nodes/reducemean.h"
+#include "nodes/reduce.h"
 #include "nodes/relu.h"
 #include "nodes/reshape.h"
 #include "nodes/resize.h"
@@ -537,7 +537,16 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "PRelu" )return new Elementwise_2("PRelu");
 	if( opName == "QuantizeLinear" )return new QuantizeLinear;
 	if( opName == "Range" )return new Range;
-	if( opName == "ReduceMean" )return new ReduceMean;
+	if( opName == "ReduceProd" )return new Reduce("Prod");
+	if( opName == "ReduceMean" )return new Reduce("Mean");
+	if( opName == "ReduceSumSquare" )return new Reduce("SumSquare");
+	if( opName == "ReduceMax" )return new Reduce("Max");
+	if( opName == "ReduceMin" )return new Reduce("Min");
+	if( opName == "ReduceSum" )return new Reduce("Sum");
+	if( opName == "ReduceL1" )return new Reduce("L1");
+	if( opName == "ReduceL2" )return new Reduce("L2");
+	if( opName == "ReduceLogSum" )return new Reduce("LogSum");
+	if( opName == "ReduceLogSumExp" )return new Reduce("LogSumExp");
 	if( opName == "Reciprocal" )return new Elementwise("Reciprocal");
 	if( opName == "Relu" )return new Relu;
 	if( opName == "Reshape" )return new Reshape;

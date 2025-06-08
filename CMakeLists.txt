@@ -42,7 +42,7 @@ add_library(onnx2c_lib STATIC
 	src/nodes/instancenorm.cc
 	src/nodes/lstm.cc
 	src/nodes/pad.cc
-	src/nodes/reducemean.cc
+	src/nodes/reduce.cc
 	src/nodes/scatternd.cc
 	src/nodes/treeensembleclassifier.cc
 )

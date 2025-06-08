@@ -14,3 +14,4 @@ Youngsun Kong
 AUTOMATIC1111
 Thomas Lane
 Can Joshua Lehmann (emmtrix Technologies GmbH)
+Felix Kreutz (Infineon Technologies AG)
