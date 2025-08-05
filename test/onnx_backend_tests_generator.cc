@@ -32,10 +32,13 @@ bool load_input_data(const std::string &filename, onnx::TensorProto &result)
 	if( f == NULL )
 		return false;
 	fseek(f, 0, SEEK_END);
-	int size = ftell(f);
+	ssize_t size = ftell(f);
 	fseek(f, 0, SEEK_SET);
 
-	char data[size];
+	// TODO: check if data is copied in the protobuf object.
+	// If not, we leak memory here, but that's not a problem for the test suite.
+	// Probably not, since this worked, and data used to be a VLA on the stack.
+	char *data =new char[size];
 	int nread = fread(data, 1, size, f);
 	fclose(f);
 
