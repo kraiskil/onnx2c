@@ -72,20 +72,12 @@ class Tensor {
 	 * This is intended to print the tensors in a function declaration, definition and callsites.
 	 * If callsite is true, skip the "float" and "[N][N]" parts.
 	 */
-	void print_tensor(std::ostream &destination, bool callsite=false, std::string alternate_name = "", bool asConst=false) const;
-	/* Shortcut to previous */
-	void print_tensor_as_const(std::ostream &destination, bool callsite=false, std::string alternate_name = "") const
-	{
-		print_tensor(destination, callsite, alternate_name, true);
-	}
-
-	/* Same as above, but return as string */
-	std::string print_tensor(std::string alternate_name, bool is_callsite=false, bool as_const=false) const;
+	std::string print_tensor(std::string alternate_name="", bool is_callsite=false, bool as_const=false) const;
 	std::string print_tensor_callsite(void) const
 	{
 		return print_tensor( "", true, false );
 	}
-	std::string print_tensor_as_const(std::string alternate_name) const
+	std::string print_tensor_as_const(std::string alternate_name="") const
 	{
 		return print_tensor( alternate_name, false, true );
 	}

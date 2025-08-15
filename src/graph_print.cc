@@ -62,7 +62,7 @@ void Graph::print_tensor(const Tensor *t, std::ostream &dst)
 	if( t->union_no < 0 )
 		dst << "static ";
 
-	t->print_tensor(dst);
+	dst << t->print_tensor();
 	if( t->initialize ) {
 		if( options.target_avr && t->isConst )
 			dst << " PROGMEM";
@@ -168,7 +168,7 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 			else
 				isfirst = false;
 
-			t->print_tensor_as_const(dst);
+			dst << t->print_tensor_as_const();
 		}
 	}
 
@@ -191,7 +191,7 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 			// kludge... in contrived cases (like unit tests), the graph can have a constant vector as its ouput.
 			// Since this is the last function we write anyway...
 			t->isConst = false;
-			t->print_tensor(dst);
+			dst << t->print_tensor();
 		}
 	}
 

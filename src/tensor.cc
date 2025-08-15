@@ -294,6 +294,9 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 }
 
 /* Print the tensor initialization values.
+ * This is the values between '=' and ';'.
+ * The function recurses into itself to print multidimensional initializers.
+ *
  * dim: the dimension from which to print.
  * offs: the offset into this dimension from where to print.
  * This function recurses back into itself to print all more inner dimenstions there are.
@@ -342,26 +345,6 @@ void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs) cons
 	dst << "}";
 }
 
-void Tensor::print_tensor(std::ostream &dst, bool is_callsite, std::string alternate_name, bool as_const) const
-{
-	// TODO: dupe code. Call print_tesor(string, bool, bool)!
-
-	if( is_callsite == false ) {
-		if( isConst || as_const )
-			dst << "const ";
-		dst << data_type_str() << " ";
-	}
-	else if( union_no >= 0 ) {
-		dst << "tu" << union_no << ".";
-	}
-	if( alternate_name == "" )
-		dst << cname();
-	else
-		dst << alternate_name;
-	if( is_callsite == false )
-		for( unsigned i : data_dim )
-			dst << "[" << i << "]";
-}
 
 std::string Tensor::print_tensor(std::string alternate_name, bool is_callsite, bool as_const) const
 {

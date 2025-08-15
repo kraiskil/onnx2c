@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 	for( auto i : inputs) {
 		std::string refname = "graphin_" + i->cname();
 		std::cout << "static ";
-		i->print_tensor(std::cout, false, refname);
+		std::cout << i->print_tensor(refname);
 		std::cout << " = ";
 		i->print_tensor_initializer(std::cout);
 		std::cout << ";" << std::endl;
@@ -193,14 +193,14 @@ int main(int argc, char *argv[])
 	for( auto o : outputs) {
 		std::string refname = "graphout_" + o->cname();
 		std::cout << "static ";
-		o->print_tensor(std::cout, false, refname);
+		std::cout << o->print_tensor(refname);
 		std::cout << ";" << std::endl;
 	}
 	// print the reference tensors
 	for( auto o : references ) {
 		std::string refname = "reference_" + o->cname();
 		std::cout << "static ";
-		o->print_tensor(std::cout, false, refname);
+		std::cout << o->print_tensor(refname);
 		std::cout << " = ";
 		o->print_tensor_initializer(std::cout);
 		std::cout << ";" << std::endl;
