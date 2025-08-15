@@ -68,12 +68,6 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 			ERROR("Error: data size does not match dimensions, and no raw data");
 	}
 
-	// Panic-fix: if data is external, and scalar, dimensions are 0 at this point.
-	// Because that is how ONNX and/or protobuf do it :|
-	// TODO: can we do assertions here to verify this?
-	if( tensor.dims().size() == 0 )
-		data_dim.push_back(1);
-
 	data_buffer = malloc(data_num_elem() * data_elem_size());
 	if( data_buffer == NULL )
 		ERROR("memory allocation failed for tensor " << tensor.name());
@@ -305,6 +299,12 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
  */
 void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs) const
 {
+	if( is_scalar() )
+	{
+		print_element(dst, offs);
+		return;
+	}
+
 	if( data_dim[dim] == 0 )
 		return;
 
@@ -346,17 +346,43 @@ void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs) cons
 }
 
 
-std::string Tensor::print_tensor(std::string alternate_name, bool is_callsite, bool as_const) const
+/* Print the 'float foo[N][N]' part of the tensor.
+ * This is used for declaring of the tensor and as parameters to function definitions and calls.
+ *
+ * Outcomes for the result are:
+ * - foo (callsite: i.e. for a function argument when function is called)
+ * - const float foo[N] (definition - i.e. not a callsite)
+ * And for scalars, it's a bit more complex:
+ * - foo (definition)
+ * - &foo (callsite, and the tensor is an scalar)
+ * - *foo (as a parameter in a function definition)
+ * */
+std::string Tensor::print_tensor(
+		std::string alternate_name,
+		bool is_callsite,
+		bool as_const,
+		bool is_definition) const
 {
 	std::string rv = "";
 	if( is_callsite == false ) {
-		if( isConst || as_const )
+		bool print_const = as_const || isConst;
+		if( print_const )
 			rv += "const ";
 		rv += data_type_str() + " ";
 	}
 	else if( union_no >= 0 ) {
 		rv += "tu" + std::to_string(union_no) + ".";
 	}
+
+	if( is_scalar() ) {
+		if (is_definition )
+			;
+		else if( is_callsite)
+			;
+		else
+			rv += "*";
+	}
+
 	if( alternate_name == "" )
 		rv += cname();
 	else

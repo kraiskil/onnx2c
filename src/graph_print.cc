@@ -51,6 +51,7 @@ void Graph::print_tensor(const Tensor *t, std::ostream &dst)
 		return;
 	if( t->name == "" )
 		return;
+	// TODO: This is a scalar. Not an Error
 	if( t->data_dim.size() == 0 )
 		ERROR("Tensor of no dimensions?");
 	// This case has been seen in the wild. Not sure why it happens

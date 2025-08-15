@@ -131,6 +131,8 @@ class Elementwise_2 : public Node {
 
 		// if either A or B does not have enough dimensions, prepend
 		// dimensions of 1 to match rank of C
+		// TODO: explain why. This makes no sense. Can't index into A or B with
+		//       more dimensions than they have??
 		std::vector<int> padA = A->data_dim;
 		std::vector<int> padB = B->data_dim;
 		for( unsigned i=0; i< (C->rank() - A->rank()); i++)
@@ -162,7 +164,7 @@ class Elementwise_2 : public Node {
 				Aidx += "[0]";
 			else if(padA[r]!=0)
 				Aidx += "[" + lv + "]";
-			if (padB[r]==1)
+			if (padB[r]==1 || B->is_scalar())
 				Bidx += "[0]";
 			else if(padB[r]!=0)
 				Bidx += "[" + lv + "]";

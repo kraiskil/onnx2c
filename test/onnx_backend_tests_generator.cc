@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 	for( auto i : inputs) {
 		std::string refname = "graphin_" + i->cname();
 		std::cout << "static ";
-		std::cout << i->print_tensor(refname);
+		std::cout << i->print_tensor_definition(refname);
 		std::cout << " = ";
 		i->print_tensor_initializer(std::cout);
 		std::cout << ";" << std::endl;
@@ -193,14 +193,14 @@ int main(int argc, char *argv[])
 	for( auto o : outputs) {
 		std::string refname = "graphout_" + o->cname();
 		std::cout << "static ";
-		std::cout << o->print_tensor(refname);
+		std::cout << o->print_tensor_definition(refname);
 		std::cout << ";" << std::endl;
 	}
 	// print the reference tensors
 	for( auto o : references ) {
 		std::string refname = "reference_" + o->cname();
 		std::cout << "static ";
-		std::cout << o->print_tensor(refname);
+		std::cout << o->print_tensor_definition(refname);
 		std::cout << " = ";
 		o->print_tensor_initializer(std::cout);
 		std::cout << ";" << std::endl;
@@ -215,11 +215,15 @@ int main(int argc, char *argv[])
 	for( auto i : inputs) {
 		if( isfirst ) isfirst=false;
 		else          std::cout << ", ";
+		if( i->is_scalar() )
+			std::cout << "&";
 		std::cout << "graphin_" + i->cname();
 	}
 	for( auto r : outputs ) {
 		if( isfirst ) isfirst=false;
 		else          std::cout << ", ";
+		if( r->is_scalar() )
+			std::cout << "&";
 		std::cout << "graphout_"+r->cname();
 	}
 	std::cout << ");" << std::endl;
@@ -231,13 +235,21 @@ int main(int argc, char *argv[])
 	std::cout << "\t{" << std::endl;
 		Tensor *r = references[i];
 		Tensor *o = outputs[i];
-		//std::string outname = o->isAliasOf? o->isAliasOf->cname() : o->cname();
-		std::string outname = "graphout_" + o->cname();
-		std::string refname = "reference_" + r->cname();
 		std::string type = r->data_type_str();
 
-		std::cout << "\t\t" << type << " *result = (" << type << "*)" << outname << ";" << std::endl;
-		std::cout << "\t\t" << type << " *reference = (" << type << "*)" << refname << ";" << std::endl;
+		// variable for the result
+		std::string outname = "graphout_" + o->cname();
+		std::cout << "\t\t" << type << " *result = (" << type << "*)";
+		if( o->is_scalar() )
+			std::cout << "&";
+		std::cout << outname << ";" << std::endl;
+
+		// variable for the reference
+		std::string refname = "reference_" + r->cname();
+		std::cout << "\t\t" << type << " *reference = (" << type << "*)";
+		if( r->is_scalar() )
+			std::cout << "&";
+		std::cout << refname << ";" << std::endl;
 
 		// Check result and reference, elementvise
 		std::cout << "\t\t" << "for(uint64_t i = 0; i< (sizeof(" << refname << ") / sizeof("<<type<<")); i++) {" << std::endl;
