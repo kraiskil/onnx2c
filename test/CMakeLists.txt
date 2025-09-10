@@ -453,6 +453,8 @@ ONNX_backend_node_test(hardsigmoid_example)
 ONNX_backend_node_test(hardswish)
 ONNX_backend_node_test(hardswish_expanded) #doesn't test hardswish
 
+ONNX_backend_node_test(identity)
+
 ONNX_backend_node_test(instancenorm_epsilon)
 ONNX_backend_node_test(instancenorm_example)
 
