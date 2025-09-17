@@ -523,6 +523,7 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "Less")return new Elementwise_2("Less");
 	if( opName == "LessOrEqual")return new Elementwise_2("LessOrEqual");
 	if( opName == "Log" )return new Elementwise("Log");
+	if( opName == "LogSoftmax" )return new Softmax("LogSoftmax");
 	if( opName == "LRN" )return new LRN;
 	if( opName == "LSTM" )return new LSTM;
 	if( opName == "MatMul" )return new MatMul;
@@ -567,7 +568,7 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "Slice" )return new Slice;
 	if( opName == "Softplus" )return new Elementwise("Softplus");
 	if( opName == "Softsign" )return new Elementwise("Softsign");
-	if( opName == "Softmax" )return new Softmax;
+	if( opName == "Softmax" )return new Softmax("Softmax");
 	if( opName == "Split" )return new Split;
 	if( opName == "Squeeze" )return new Squeeze;
 	if( opName == "Sqrt" )return new Elementwise("Sqrt");
