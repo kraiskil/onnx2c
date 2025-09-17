@@ -25,13 +25,24 @@ namespace toC {
 
 class Softmax : public Node {
 	public:
-	Softmax() {
-		op_name = "Softmax";
+	Softmax(std::string op) {
+		op_name = op;
+		
+		if (op == "LogSoftmax") {
+			log = true;
+		} else {
+			assert(op == "Softmax");
+			log = false;
+		}
+		
 		if( onnx_ir_version < 13 )
 			axis = 1;
 		else
 			axis = -1;
 	}
+
+	bool log;
+
 	// Axis to do the softmax on
 	int axis;
 
@@ -58,15 +69,37 @@ class Softmax : public Node {
 			print11(dst);
 	}
 
+	std::string expfunc() const {
+		switch (get_input_tensor(0)->data_type) {
+			case onnx::TensorProto_DataType_FLOAT:
+				return "expf";
+			case onnx::TensorProto_DataType_DOUBLE:
+				return "exp";
+			case onnx::TensorProto_DataType_FLOAT16:
+				return "expf"; // TODO
+			default:
+				ERROR("exp function is not available for type " << get_input_tensor(0)->data_type_str());
+		}
+	}
+
+	std::string logfunc() const {
+		switch (get_input_tensor(0)->data_type) {
+			case onnx::TensorProto_DataType_FLOAT:
+				return "logf";
+			case onnx::TensorProto_DataType_DOUBLE:
+				return "log";
+			case onnx::TensorProto_DataType_FLOAT16:
+				return "logf"; // TODO
+			default:
+				ERROR("log function is not available for type " << get_input_tensor(0)->data_type_str());
+		}
+	}
+
 	void print11(std::ostream &dst) const
 	{
 		const Tensor *input=get_input_tensor(0);
 		std::string type = input->data_type_str();
 		unsigned n_dim = input->data_dim.size();
-		std::string expfunc = "expf";
-		if( type == "double" )
-			expfunc = "exp";
-		//TODO fp16?
 
 		unsigned flatten_axis;
 		if( axis < 0 ) 
@@ -74,7 +107,8 @@ class Softmax : public Node {
 		else
 			flatten_axis = axis;
 
-		dst << "\t/* Softmax 11 (caffe2-style)" << std::endl;
+		dst << "\t/* " << op_name << " 11 (caffe2-style)" << std::endl;
+		dst << "\t * Implemented with Softmax template." << std::endl;
 		dst << "\t * axis = " << axis << std::endl;
 		dst << "\t */" << std::endl; 
 		dst << "\t" << type << " sum = 0.0;" << std::endl;
@@ -105,7 +139,7 @@ class Softmax : public Node {
 			dst <<               idx <<"++ ) {" << std::endl;
 		}
 		INDT_2 << "output"<< idxs << " = ";
-		dst           << expfunc << "(input" << idxs << "-max);" << std::endl;
+		dst           << expfunc() << "(input" << idxs << "-max);" << std::endl;
 		INDT_2 << "sum += output" << idxs << ";" << std::endl;
 		for( unsigned i = flatten_axis; i<n_dim; i++)
 			dst << "\t}" << std::endl;
@@ -118,6 +152,10 @@ class Softmax : public Node {
 			dst <<               idx <<"++ ) {" << std::endl;
 		}
 		INDT_2 << "output" << idxs <<" /= sum;" << std::endl;
+		if (log) {
+			INDT_2 << "output" << idxs <<" = " << logfunc() << "(output" << idxs << ");" << std::endl;
+		}
+
 		for( unsigned i = flatten_axis; i<n_dim; i++)
 			dst << "\t}" << std::endl;
 
@@ -135,10 +173,6 @@ class Softmax : public Node {
 
 		std::string type = input->data_type_str();
 		unsigned num_dim = input->rank();
-		std::string expfunc = "expf";
-		if( type == "double" )
-			expfunc = "exp";
-		//TODO fp16?
 
 		unsigned reduce_axis;
 		if( axis < 0 )
@@ -150,6 +184,7 @@ class Softmax : public Node {
 
 
 		INDT_1 << "/* Softmax 13 (TF, pytorch style)" << std::endl;
+		INDT_1 << " * Implemented with Softmax template." << std::endl;
 		INDT_1 << " * axis = " << axis << std::endl;
 		INDT_1 << " */" << std::endl;
 
@@ -180,7 +215,7 @@ class Softmax : public Node {
 		INDT_2 << "for( uint32_t " << ridx << "=0; ";
 		   dst <<       ridx << "<" << reduce_axis_size << "; ";
 		   dst <<       ridx <<"++ ) {" << std::endl;
-		INDT_3 << "sum += " << expfunc << "(input" << idxs << " - max);" << std::endl;
+		INDT_3 << "sum += " << expfunc() << "(input" << idxs << " - max);" << std::endl;
 		INDT_2 << "};" << std::endl;
 
 		// And last the elementwise softmax
@@ -188,7 +223,10 @@ class Softmax : public Node {
 		   dst <<       ridx << "<" << reduce_axis_size << "; ";
 		   dst <<       ridx <<"++ ) {" << std::endl;
 		INDT_3 << "output" << idxs << " = ";
-		   dst << expfunc << "(input" << idxs << " - max)/sum;" << std::endl;
+		if (log) dst << "logf(";
+		   dst << expfunc() << "(input" << idxs << " - max)/sum";
+		if (log) dst << ")";
+		   dst << ";" << std::endl;
 		INDT_2 << "};" << std::endl;
 
 		for( unsigned i = 0; i<num_dim-1; i++ )
