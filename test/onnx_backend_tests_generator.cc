@@ -254,11 +254,14 @@ int main(int argc, char *argv[])
 		// Check result and reference, elementvise
 		std::cout << "\t\t" << "for(uint64_t i = 0; i< (sizeof(" << refname << ") / sizeof("<<type<<")); i++) {" << std::endl;
 		if( type == "float" || type == "double" ) {
-			std::cout << "\t\t\t" << "if( fabs(result[i]-reference[i]) > " << test_accuracy << " )" <<std::endl;
+			std::cout << "\t\t\t" << "if (isnan(result[i]) != isnan(reference[i]) || isinf(result[i]) != isinf(reference[i])) {" << std::endl;
 			std::cout << "\t\t\t\t" << "return 1;" << std::endl;
-			// fabs(nan) > 0.1 always false - and out-of-bounds indexing is a likely bug and source of nans
-			std::cout << "\t\t\t" << "if(isnan(result[i]) || isnan(reference[i]))" << std::endl;
+			std::cout << "\t\t\t" << "} else if (isinf(reference[i])) {" << std::endl;
+			std::cout << "\t\t\t\t" << "if (result[i] != reference[i])" << std::endl;
+			std::cout << "\t\t\t\t\t" << "return 1;" << std::endl;
+			std::cout << "\t\t\t" << "} else if (!isnan(reference[i]) && fabs(result[i] - reference[i]) > " << test_accuracy << ") {" <<std::endl;
 			std::cout << "\t\t\t\t" << "return 1;" << std::endl;
+			std::cout << "\t\t\t" << "}" << std::endl;
 		}
 		else if(   type == "int8_t"
 		        || type == "uint8_t"
@@ -275,7 +278,7 @@ int main(int argc, char *argv[])
 		}
 		else
 			ERROR("unimplemented type");
-		std::cout << "\t}" << std::endl;
+		std::cout << "\t\t}" << std::endl;
 	std::cout << "\t}" << std::endl;
 	}
 
