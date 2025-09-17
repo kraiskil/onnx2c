@@ -75,8 +75,6 @@ class Softmax : public Node {
 				return "expf";
 			case onnx::TensorProto_DataType_DOUBLE:
 				return "exp";
-			case onnx::TensorProto_DataType_FLOAT16:
-				return "expf"; // TODO
 			default:
 				ERROR("exp function is not available for type " << get_input_tensor(0)->data_type_str());
 		}
@@ -88,8 +86,6 @@ class Softmax : public Node {
 				return "logf";
 			case onnx::TensorProto_DataType_DOUBLE:
 				return "log";
-			case onnx::TensorProto_DataType_FLOAT16:
-				return "logf"; // TODO
 			default:
 				ERROR("log function is not available for type " << get_input_tensor(0)->data_type_str());
 		}
@@ -223,7 +219,7 @@ class Softmax : public Node {
 		   dst <<       ridx << "<" << reduce_axis_size << "; ";
 		   dst <<       ridx <<"++ ) {" << std::endl;
 		INDT_3 << "output" << idxs << " = ";
-		if (is_log_softmax) dst << "logf(";
+		if (is_log_softmax) dst << logfunc() << "(";
 		   dst << expfunc() << "(input" << idxs << " - max)/sum";
 		if (is_log_softmax) dst << ")";
 		   dst << ";" << std::endl;
