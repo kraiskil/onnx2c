@@ -29,10 +29,10 @@ class Softmax : public Node {
 		op_name = op;
 		
 		if (op == "LogSoftmax") {
-			log = true;
+			is_log_softmax = true;
 		} else {
 			assert(op == "Softmax");
-			log = false;
+			is_log_softmax = false;
 		}
 		
 		if( onnx_ir_version < 13 )
@@ -41,7 +41,7 @@ class Softmax : public Node {
 			axis = -1;
 	}
 
-	bool log;
+	bool is_log_softmax;
 
 	// Axis to do the softmax on
 	int axis;
@@ -152,7 +152,7 @@ class Softmax : public Node {
 			dst <<               idx <<"++ ) {" << std::endl;
 		}
 		INDT_2 << "output" << idxs <<" /= sum;" << std::endl;
-		if (log) {
+		if (is_log_softmax) {
 			INDT_2 << "output" << idxs <<" = " << logfunc() << "(output" << idxs << ");" << std::endl;
 		}
 
@@ -223,9 +223,9 @@ class Softmax : public Node {
 		   dst <<       ridx << "<" << reduce_axis_size << "; ";
 		   dst <<       ridx <<"++ ) {" << std::endl;
 		INDT_3 << "output" << idxs << " = ";
-		if (log) dst << "logf(";
+		if (is_log_softmax) dst << "logf(";
 		   dst << expfunc() << "(input" << idxs << " - max)/sum";
-		if (log) dst << ")";
+		if (is_log_softmax) dst << ")";
 		   dst << ";" << std::endl;
 		INDT_2 << "};" << std::endl;
 
