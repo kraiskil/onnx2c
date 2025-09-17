@@ -29,6 +29,8 @@ void Identity::resolve(void) {
 }
 
 void Identity::print(std::ostream &dst) const {
+	LOG(INFO) << "Emitting unnecessary code for Identity node " << onnx_name << "." << std::endl;
+
 	INDT_1 << "/* Identity */" << std::endl;
 
 	Tensor *input = get_input_tensor(0);
