@@ -810,10 +810,6 @@ ONNX_backend_node_test(softsign_example)
 #ONNX_backend_node_test_singlefile(split_equal_parts_2d)
 #ONNX_backend_node_test_singlefile(split_equal_parts_default_axis)
 
-#Does not exist: ONNX_backend_node_test_singlefile(split_variable_parts_1d)
-#Does not exist: ONNX_backend_node_test_singlefile(split_variable_parts_2d)
-#Probably Does not exist: ONNX_backend_node_test_singlefile(split_variable_parts_default_axis)
-
 ONNX_backend_node_test(sqrt)
 ONNX_backend_node_test(sqrt_example)
 
