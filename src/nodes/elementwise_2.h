@@ -162,6 +162,8 @@ class Elementwise_2 : public Node {
 				else if(padB[r]!=0)
 					Bidx += "[" + lv + "]";
 			}
+			// TODO: "if C->is_scalar()"?
+			// but then again, can the result ever be a scalar?
 			Cidx +="[" + lv + "]";
 		}
 

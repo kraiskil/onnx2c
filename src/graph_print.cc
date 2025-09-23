@@ -79,7 +79,7 @@ void Graph::print_global_tensors(std::ostream &dst)
 		LOG(TRACE) << "\t" << t->print_trace_dump() << std::endl;
 		if( t->union_no < 0
 		 && t->generate)
-			print_tensor(t, dst);
+			this->print_tensor(t, dst);
 	}
 
 	LOG(TRACE) << "printing global tensors - unionized " << std::endl;
@@ -89,7 +89,7 @@ void Graph::print_global_tensors(std::ostream &dst)
 		for( auto t : tensors )
 		{
 			if( t->union_no == static_cast<int32_t>(u))
-				print_tensor(t, dst);
+				this->print_tensor(t, dst);
 		}
 		dst << "};" <<std::endl;
 		if (!no_globals)
@@ -166,6 +166,9 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 			else
 				isfirst = false;
 
+			// this makes scalars be printed as pointers
+			// (since we don't differentiate between graph input and output
+			// tensors, all scalars are passed as pointers.
 			dst << t->print_tensor_as_const();
 		}
 	}
