@@ -146,6 +146,7 @@ class Elementwise_2 : public Node {
 		std::string Bidx = "B";
 		std::string Cidx = "C";
 
+		// declare the result, C
 		std::string line = "unsigned ";
 		for( unsigned r=0; r<C->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
@@ -156,6 +157,11 @@ class Elementwise_2 : public Node {
 		}
 		INDT_1 << line << ";" << std::endl;
 
+		// For scalars, print out only "*B", no array references are printed
+		if (B->is_scalar())
+			Bidx = "*B";
+
+		// print out the array references
 		for( unsigned r=0; r<C->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
 			INDT_1 << "for (" << lv << "=0; " << lv << "<" << C->data_dim[r] << "; " << lv << "++) {" << std::endl;
@@ -164,7 +170,10 @@ class Elementwise_2 : public Node {
 				Aidx += "[0]";
 			else if(padA[r]!=0)
 				Aidx += "[" + lv + "]";
-			if (padB[r]==1 || B->is_scalar())
+
+			if (B->is_scalar() )
+				;
+			if (padB[r]==1)
 				Bidx += "[0]";
 			else if(padB[r]!=0)
 				Bidx += "[" + lv + "]";
