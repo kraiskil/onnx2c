@@ -898,5 +898,6 @@ add_subdirectory(onnx_model_zoo)
 # Misc. onnx2c unit tests
 local_node_test(matmul_precision)
 local_node_test(nodes_out_of_order)
+local_node_test(scalar_input_to_node)
 
 add_subdirectory(benchmarks)

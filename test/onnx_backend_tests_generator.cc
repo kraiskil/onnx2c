@@ -209,6 +209,7 @@ int main(int argc, char *argv[])
 
 	std::cout <<         "int main(void) {" << std::endl;
 
+	// print the call to the "entry()" function that
 	// run inference on the network
 	std::cout << "\t"<<  "entry(";
 	bool isfirst = true;

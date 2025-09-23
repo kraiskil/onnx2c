@@ -375,11 +375,15 @@ std::string Tensor::print_tensor(
 	}
 
 	if( is_scalar() ) {
-		if (is_definition )
+		// Scalars tensors are defined as scalars,
+		// but passed between functions as pointers.
+		if (is_definition)
 			;
-		else if( is_callsite)
+		else if( is_callsite && isIO )
 			;
-		else
+		else if( is_callsite) //use of a generated scalar
+			rv +="&";
+		else // as function parameter
 			rv += "*";
 	}
 
