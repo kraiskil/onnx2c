@@ -148,6 +148,13 @@ void Reduce::resolve(void)
         type_0_value = "0.0";
         type_1_value = "1.0";
     }
+    else if( type == "double" )
+    {
+        type_min_value = "-DBL_MAX";
+        type_max_value = "DBL_MAX";
+        type_0_value = "0.0";
+        type_1_value = "1.0";
+    }
         
     else if( type == "int8_t" )
     {
