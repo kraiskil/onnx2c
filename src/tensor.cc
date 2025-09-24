@@ -323,9 +323,6 @@ void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs) cons
 		return;
 	}
 
-	if( data_dim[dim] == 0 )
-		return;
-
 	for( int i=0; i<dim; i++)
 		dst << "  ";
 
