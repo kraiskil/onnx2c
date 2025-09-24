@@ -1,6 +1,7 @@
 #include "tensor.h"
 #include "util.h"
 #include <limits>
+#include <cmath>
 
 using namespace toC;
 void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
@@ -203,6 +204,23 @@ std::string Tensor::data_type_str(void) const
 	};
 }
 
+template <typename T>
+inline void print_float(std::ostream &dst, T value) {
+	if (std::isnan(value)) {
+		dst << "NAN";
+	} else if (std::isinf(value)) {
+		if (value > 0) {
+			dst << "INFINITY";
+		} else {
+			dst << "-INFINITY";
+		}
+	} else {
+		dst << std::fixed << value;
+		if (sizeof(T) == sizeof(float)) {
+			dst << "f";
+		}
+	}
+}
 
 void Tensor::print_element(std::ostream &dst, uint64_t element) const
 {
@@ -216,13 +234,13 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 			The test passes if std::fixed is used printing 479001600.000000
 			*/
 			float *f = static_cast<float*>(data_buffer);
-			dst << std::fixed << f[element]<< "f";
+			print_float(dst, f[element]);
 			break;
 		}
 		case onnx::TensorProto_DataType_DOUBLE:
 		{
 			double *f = static_cast<double*>(data_buffer);
-			dst << std::fixed << f[element]<< "f";
+			print_float(dst, f[element]);
 			break;
 		}
 		case onnx::TensorProto_DataType_INT8:
@@ -304,9 +322,6 @@ void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs) cons
 		print_element(dst, offs);
 		return;
 	}
-
-	if( data_dim[dim] == 0 )
-		return;
 
 	for( int i=0; i<dim; i++)
 		dst << "  ";
