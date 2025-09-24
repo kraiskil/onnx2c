@@ -428,6 +428,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/globalmaxpool.h"
 #include "nodes/identity.h"
 #include "nodes/instancenorm.h"
+#include "nodes/layernorm.h"
 #include "nodes/lrn.h"
 #include "nodes/lstm.h"
 #include "nodes/matmul.h"
@@ -519,6 +520,7 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "HardSwish" )return new Elementwise("HardSwish");
 	if( opName == "Identity" )return new Identity;
 	if( opName == "InstanceNormalization" )return new InstanceNormalization;
+	if( opName == "LayerNormalization" )return new LayerNormalization;
 	if( opName == "LeakyRelu" )return new Elementwise("LeakyRelu");
 	if( opName == "Less")return new Elementwise_2("Less");
 	if( opName == "LessOrEqual")return new Elementwise_2("LessOrEqual");
