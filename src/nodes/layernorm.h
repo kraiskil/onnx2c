@@ -64,7 +64,9 @@ void LayerNormalization::resolve(void) {
 
 	Tensor *mean = new Tensor;
 	mean->data_dim = std::vector<int>(x->data_dim.begin(), x->data_dim.begin() + axis);
-	mean->data_dim.push_back(1);
+	for (int i = axis; i < (int)x->data_dim.size(); i++) {
+		mean->data_dim.push_back(1);
+	}
 	mean->data_type = onnx::TensorProto_DataType_FLOAT;
 	register_output(mean, "mean");
 
@@ -139,8 +141,12 @@ void LayerNormalization::print(std::ostream &dst) const {
 	dst << ";" << std::endl;
 
 	// Store mean and inv_std_dev
-	INDT_2 << "mean" << outer_idx << "[0] = mean_value;" << std::endl;
-	INDT_2 << "inv_std_dev" << outer_idx << "[0] = inv_std_dev_value;" << std::endl;
+	std::string keepdims_idx = outer_idx;
+	for (int i = axis; i < (int)x->data_dim.size(); i++) {
+		keepdims_idx += "[0]";
+	}
+	INDT_2 << "mean" << keepdims_idx << " = mean_value;" << std::endl;
+	INDT_2 << "inv_std_dev" << keepdims_idx << " = inv_std_dev_value;" << std::endl;
 
 	INDT_1 << "}" << std::endl;
 }
