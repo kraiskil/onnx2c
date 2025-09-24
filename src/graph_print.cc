@@ -51,9 +51,6 @@ void Graph::print_tensor(const Tensor *t, std::ostream &dst)
 		return;
 	if( t->name == "" )
 		return;
-	// TODO: This is a scalar. Not an Error
-	if( t->data_dim.size() == 0 )
-		ERROR("Tensor of no dimensions?");
 	// This case has been seen in the wild. Not sure why it happens
 	if( t->data_dim.size() == 1 && t->data_dim[0]==0 ){
 		LOG(WARNING) << "Tensor " << t->name << " has size of 0. Skipping it" << std::endl;
@@ -63,7 +60,7 @@ void Graph::print_tensor(const Tensor *t, std::ostream &dst)
 	if( t->union_no < 0 )
 		dst << "static ";
 
-	dst << t->print_tensor();
+	dst << t->print_tensor_definition();
 	if( t->initialize ) {
 		if( options.target_avr && t->isConst )
 			dst << " PROGMEM";

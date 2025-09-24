@@ -179,7 +179,9 @@ class Elementwise : public Node {
 
 	virtual void print(std::ostream &dst) const override
 	{
+		const Tensor *X = get_input_tensor(0);
 		const Tensor *Y = get_output_tensor(0);
+
 		INDT_1 << "/* " << op_name << std::endl;
 		INDT_1 << "   Implemented with Elementwise template." << std::endl;
 		INDT_1 << "   alpha = " << alpha << std::endl;
@@ -188,8 +190,8 @@ class Elementwise : public Node {
 
 		// print out the loops over all C dimensions.
 		// at the same time, create the indexing strings into X and Y
-		std::string Xidx = "X";
-		std::string Yidx = "Y";
+		std::string Xidx = X->is_scalar() ? "*X" : "X";
+		std::string Yidx = Y->is_scalar() ? "*Y" : "Y";
 		for( unsigned r=0; r< Y->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
 			INDT_1 << "for (unsigned " << lv << "=0; " << lv << "<" << Y->data_dim[r] << "; " << lv << "++) {" << std::endl;
