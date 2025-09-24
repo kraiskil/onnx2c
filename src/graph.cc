@@ -426,6 +426,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/gemm.h"
 #include "nodes/globalaveragepool.h"
 #include "nodes/globalmaxpool.h"
+#include "nodes/identity.h"
 #include "nodes/instancenorm.h"
 #include "nodes/lrn.h"
 #include "nodes/lstm.h"
@@ -516,11 +517,13 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "GreaterOrEqual")return new Elementwise_2("GreaterOrEqual");
 	if( opName == "HardSigmoid" )return new Elementwise("HardSigmoid");
 	if( opName == "HardSwish" )return new Elementwise("HardSwish");
+	if( opName == "Identity" )return new Identity;
 	if( opName == "InstanceNormalization" )return new InstanceNormalization;
 	if( opName == "LeakyRelu" )return new Elementwise("LeakyRelu");
 	if( opName == "Less")return new Elementwise_2("Less");
 	if( opName == "LessOrEqual")return new Elementwise_2("LessOrEqual");
 	if( opName == "Log" )return new Elementwise("Log");
+	if( opName == "LogSoftmax" )return new Softmax("LogSoftmax");
 	if( opName == "LRN" )return new LRN;
 	if( opName == "LSTM" )return new LSTM;
 	if( opName == "MatMul" )return new MatMul;
@@ -565,7 +568,7 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "Slice" )return new Slice;
 	if( opName == "Softplus" )return new Elementwise("Softplus");
 	if( opName == "Softsign" )return new Elementwise("Softsign");
-	if( opName == "Softmax" )return new Softmax;
+	if( opName == "Softmax" )return new Softmax("Softmax");
 	if( opName == "Split" )return new Split;
 	if( opName == "Squeeze" )return new Squeeze;
 	if( opName == "Sqrt" )return new Elementwise("Sqrt");

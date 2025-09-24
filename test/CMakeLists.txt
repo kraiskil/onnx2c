@@ -452,6 +452,8 @@ ONNX_backend_node_test(hardsigmoid_example)
 ONNX_backend_node_test(hardswish)
 ONNX_backend_node_test(hardswish_expanded) #doesn't test hardswish
 
+ONNX_backend_node_test(identity)
+
 ONNX_backend_node_test(instancenorm_epsilon)
 ONNX_backend_node_test(instancenorm_example)
 
@@ -796,6 +798,14 @@ ONNX_backend_node_test(softmax_default_axis)
 ONNX_backend_node_test(softmax_example)
 ONNX_backend_node_test(softmax_large_number)
 ONNX_backend_node_test(softmax_negative_axis)
+
+ONNX_backend_node_test(logsoftmax_axis_0)
+ONNX_backend_node_test(logsoftmax_axis_1)
+ONNX_backend_node_test(logsoftmax_axis_2)
+ONNX_backend_node_test(logsoftmax_default_axis)
+ONNX_backend_node_test(logsoftmax_example_1)
+ONNX_backend_node_test(logsoftmax_large_number)
+ONNX_backend_node_test(logsoftmax_negative_axis)
 
 ONNX_backend_node_test(softplus)
 ONNX_backend_node_test(softplus_example)
