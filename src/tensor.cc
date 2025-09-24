@@ -378,7 +378,7 @@ std::string Tensor::print_tensor(
 		if (is_definition )
 			;
 		else if( is_callsite)
-			;
+			rv += "&";
 		else
 			rv += "*";
 	}
