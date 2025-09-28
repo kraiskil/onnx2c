@@ -375,12 +375,13 @@ std::string Tensor::print_tensor(
 	}
 
 	if( is_scalar() ) {
-		if (is_definition )
-			;
-		else if( is_callsite)
-			;
-		else
+		if( is_callsite ) {
+			if ( !isIO ) {
+				rv += "&";
+			}
+		} else if ( !is_definition ) {
 			rv += "*";
+		}
 	}
 
 	if( alternate_name == "" )
