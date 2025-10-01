@@ -112,7 +112,7 @@ function( ONNXtype_test_singlefile node_name data_dir test_ctest_name accuracy t
 			#TODO: space for output tensor is generated, but not used.
 			-Wno-unused-variable
 			#False positive when passing a zero size array as a parameter
-			#-Wno-stringop-overread
+			-Wno-stringop-overread
 		)
 	target_link_libraries( ${testbin} m )
 
