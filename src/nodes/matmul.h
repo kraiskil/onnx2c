@@ -68,8 +68,7 @@ void MatMul::resolve(void) {
 }
 
 static std::string matmul_broadcast(std::string name, const Tensor *t, int to_rank) {
-	assert(t->rank() >= 2);
-
+	assert(t->rank() > 0);
 	std::ostringstream dst;
 	dst << name;
 	for (int i = 0; i < (int)t->data_dim.size() - 2; i++) {
