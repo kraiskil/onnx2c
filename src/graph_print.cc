@@ -51,9 +51,6 @@ void Graph::print_tensor(const Tensor *t, std::ostream &dst)
 		return;
 	if( t->name == "" )
 		return;
-	// TODO: This is a scalar. Not an Error
-	if( t->data_dim.size() == 0 )
-		ERROR("Tensor of no dimensions?");
 	// This case has been seen in the wild. Not sure why it happens
 	if( t->data_dim.size() == 1 && t->data_dim[0]==0 ){
 		LOG(WARNING) << "Tensor " << t->name << " has size of 0. Skipping it" << std::endl;
@@ -63,7 +60,7 @@ void Graph::print_tensor(const Tensor *t, std::ostream &dst)
 	if( t->union_no < 0 )
 		dst << "static ";
 
-	dst << t->print_tensor();
+	dst << t->print_tensor_definition();
 	if( t->initialize ) {
 		if( options.target_avr && t->isConst )
 			dst << " PROGMEM";
@@ -82,7 +79,7 @@ void Graph::print_global_tensors(std::ostream &dst)
 		LOG(TRACE) << "\t" << t->print_trace_dump() << std::endl;
 		if( t->union_no < 0
 		 && t->generate)
-			print_tensor(t, dst);
+			this->print_tensor(t, dst);
 	}
 
 	LOG(TRACE) << "printing global tensors - unionized " << std::endl;
@@ -92,7 +89,7 @@ void Graph::print_global_tensors(std::ostream &dst)
 		for( auto t : tensors )
 		{
 			if( t->union_no == static_cast<int32_t>(u))
-				print_tensor(t, dst);
+				this->print_tensor(t, dst);
 		}
 		dst << "};" <<std::endl;
 		if (!no_globals)
@@ -169,6 +166,9 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 			else
 				isfirst = false;
 
+			// this makes scalars be printed as pointers
+			// (since we don't differentiate between graph input and output
+			// tensors, all scalars are passed as pointers.
 			dst << t->print_tensor_as_const();
 		}
 	}
