@@ -33,7 +33,7 @@ int main() {
     float* y_flat = (float*)y;
     float* expected_flat = (float*)expected;
     for (int i = 0; i < ${element_count_y}; i++) {
-        if (fabs(y_flat[i] - expected_flat[i]) > 1e-5 || true) {
+        if (fabs(y_flat[i] - expected_flat[i]) > 1e-5 || 1) {
             printf("mismatch at %d: got %f, expected %f\\n", i, y_flat[i], expected_flat[i]);
             return 1;
         }
