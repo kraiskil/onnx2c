@@ -62,9 +62,9 @@ void MatMul::resolve(void) {
 	y_dim.push_back(b_dim[b_dim.size() - 1]);
 
 	Tensor *y = new Tensor;
-	y->data_dim = a->data_dim;
+	y->data_dim = y_dim;
 	y->data_type = a->data_type;
-	register_output(y, "y");
+	register_output(y, "Y");
 }
 
 static std::string MatMul_broadcast(std::string name, const Tensor *t, int to_rank) {
