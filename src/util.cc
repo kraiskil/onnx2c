@@ -175,3 +175,16 @@ void print_loop_closes_over_dims(std::ostream &dst, const toC::Tensor *t, unsign
 		dst << "}"<< std::endl;
 	}
 }
+
+std::string broadcast(const toC::Tensor *t, const std::string &name, int to_rank) {
+	if (t->is_scalar()) {
+		return "*" + name;
+	}
+	std::ostringstream dst;
+	dst << name;
+	for (int i = 0; i < (int)t->data_dim.size(); i++) {
+		dst << "[i" << (to_rank - t->data_dim.size() + i) << "]";
+	}
+	return dst.str();
+}
+
