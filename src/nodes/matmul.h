@@ -39,6 +39,12 @@ void MatMul::resolve(void) {
 			}
 		}
 
+		int k_dim_a = a->data_dim[a->rank() - 1];
+		int k_dim_b = b->rank() > 1 ? b->data_dim[b->rank() - 2] : b->data_dim[0];
+		if (k_dim_a != k_dim_b) {
+			ERROR("Reduction dimension mismatch in MatMul");
+		}
+
 		if (a->data_dim.size() > b->data_dim.size()) {
 			y_dim.insert(y_dim.end(), a->data_dim.begin(), a->data_dim.end() - 2);
 		} else {
