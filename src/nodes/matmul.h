@@ -67,7 +67,7 @@ void MatMul::resolve(void) {
 	register_output(y, "Y");
 }
 
-static std::string MatMul_broadcast(std::string name, const Tensor *t, int to_rank) {
+static std::string matmul_broadcast(std::string name, const Tensor *t, int to_rank) {
 	assert(t->rank() >= 2);
 
 	std::ostringstream dst;
@@ -90,21 +90,21 @@ void MatMul::print(std::ostream &dst) const {
 		INDT_1 << "for (unsigned " << lv << "=0; " << lv << "<" << y->data_dim[i] << "; " << lv << "++)" << std::endl;
 	}
 
-	std::string a_idx = MatMul_broadcast("A", a, y->rank());
+	std::string a_idx = matmul_broadcast("A", a, y->rank());
 	if (a->data_dim.size() == 1) {
 		a_idx += "[k]";
 	} else {
 		a_idx += "[i][k]";
 	}
 
-	std::string b_idx = MatMul_broadcast("B", b, y->rank());
+	std::string b_idx = matmul_broadcast("B", b, y->rank());
 	if (b->data_dim.size() == 1) {
 		b_idx += "[k]";
 	} else {
 		b_idx += "[k][j]";
 	}
 
-	std::string y_idx = MatMul_broadcast("Y", y, y->rank()) + "[i][j]";
+	std::string y_idx = matmul_broadcast("Y", y, y->rank()) + "[i][j]";
 
 	INDT_1 << "{" << std::endl;
 	
