@@ -115,6 +115,22 @@ void Reduce::resolve(void)
 {
     input = get_input_tensor(0);
 	name_input(0, "x");
+
+    if (get_number_of_inputs() >= 2) {
+        const Tensor *axes_tensor = get_input_tensor(1);
+		name_input(1, "axes");
+
+        if ( !axes_tensor->isConst )
+            ERROR("Reducing on run-time defined axes not supported");
+        
+        assert(axes_tensor->data_type == onnx::TensorProto_DataType_INT64);
+
+        assert(axes.size() == 0);
+        for (int i = 0; i < axes_tensor->data_num_elem(); i++) {
+            axes.push_back(((int64_t*)axes_tensor->data_buffer)[i]);
+        }
+    }
+
 	Tensor *t = new Tensor;
 
     Tensor* x = get_input_tensor(0);
@@ -129,6 +145,13 @@ void Reduce::resolve(void)
     {
         type_min_value = "-FLT_MAX";
         type_max_value = "FLT_MAX";
+        type_0_value = "0.0";
+        type_1_value = "1.0";
+    }
+    else if( type == "double" )
+    {
+        type_min_value = "-DBL_MAX";
+        type_max_value = "DBL_MAX";
         type_0_value = "0.0";
         type_1_value = "1.0";
     }
