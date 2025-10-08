@@ -437,6 +437,18 @@ local_node_test(gemm_C1xN_transA_transB)
 local_node_test(gemm_CMx1_transA_transB)
 local_node_test(gemm_CN_transA_transB)
 
+local_node_test(matmul_2x3_3x4)
+local_node_test(matmul_5x2x3_5x3x4)
+local_node_test(matmul_4x5x2x3_4x5x3x4)
+local_node_test(matmul_2x3x4_4x5)
+local_node_test(matmul_3x4_2x4x5)
+local_node_test(matmul_3_3)
+local_node_test(matmul_3x4_4)
+local_node_test(matmul_2x3x4_4)
+local_node_test(matmul_2x3x4x5_5)
+local_node_test(matmul_3_3x4)
+local_node_test(matmul_3_2x3x4)
+
 ONNX_backend_node_test(globalaveragepool)
 ONNX_backend_node_test(globalaveragepool_precomputed)
 
@@ -493,8 +505,8 @@ local_node_test(lstm_with_initial_state)
 local_node_test(lstm_y_c)
 
 ONNX_backend_node_test(matmul_2d)
-#ONNX_backend_node_test(matmul_3d)
-#ONNX_backend_node_test(matmul_4d)
+ONNX_backend_node_test(matmul_3d)
+ONNX_backend_node_test(matmul_4d)
 
 ONNX_backend_node_test(matmulinteger)
 
