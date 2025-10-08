@@ -3,6 +3,7 @@
  * Generic node for two input tensors.
  * Calculates elementvise C = A <op> B
  */
+
 namespace toC {
 
 class Elementwise_2 : public Node {
@@ -129,44 +130,16 @@ class Elementwise_2 : public Node {
 		const Tensor *B = get_input_tensor(1);
 		const Tensor *C = get_output_tensor(0);
 
-		// if either A or B does not have enough dimensions, prepend
-		// dimensions of 1 to match rank of C
-		// TODO: explain why. This makes no sense. Can't index into A or B with
-		//       more dimensions than they have??
-		std::vector<int> padA = A->data_dim;
-		std::vector<int> padB = B->data_dim;
-		for( unsigned i=0; i< (C->rank() - A->rank()); i++)
-			padA.insert(padA.begin(), 0);
-		for( unsigned i=0; i< (C->rank() - B->rank()); i++)
-			padB.insert(padB.begin(), 0);
-
-		// print out the loops over all C dimensions.
-		// at the same time, create the indexing strings into A and B
-		std::string Aidx = A->is_scalar() ? "*A" : "A";
-		std::string Bidx = B->is_scalar() ? "*B" : "B";
-		std::string Cidx = C->is_scalar() ? "*C" : "C";
-
 		for( unsigned r=0; r<C->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
-			INDT_1 << "for (unsigned " << lv << "=0; " << lv << "<" << C->data_dim[r] << "; " << lv << "++) {" << std::endl;
-
-			if (!A->is_scalar() ) {
-				if (padA[r]==1)
-					Aidx += "[0]";
-				else if(padA[r]!=0)
-					Aidx += "[" + lv + "]";
-			}
-			if (!B->is_scalar() ) {
-				if (padB[r]==1)
-					Bidx += "[0]";
-				else if(padB[r]!=0)
-					Bidx += "[" + lv + "]";
-			}
-			// TODO: "if C->is_scalar()"?
-			// but then again, can the result ever be a scalar?
-			Cidx +="[" + lv + "]";
+			INDT_1 << "for (unsigned " << lv << "=0; " << lv << "<" << C->data_dim[r] << "; " << lv << "++)" << std::endl;
 		}
 
+		INDT_1 << "{" << std::endl;
+
+		std::string Aidx = broadcast(A, "A", C->rank());
+		std::string Bidx = broadcast(B, "B", C->rank());
+		std::string Cidx = broadcast(C, "C", C->rank());
 
 		if( options.quantize ) {
 			INDT_2 << "int32_t tmp = " << operation(Aidx, Bidx) << ";" << std::endl;
@@ -179,9 +152,7 @@ class Elementwise_2 : public Node {
 		else
 			INDT_2 << Cidx << " = " << operation(Aidx, Bidx) << ";" << std::endl;
 
-		for( unsigned r=0; r<C->rank(); r++) {
-			INDT_1 << "}" << std::endl;
-		}
+		INDT_1 << "}" << std::endl;
 	}
 
 
