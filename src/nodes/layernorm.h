@@ -79,12 +79,16 @@ void LayerNormalization::resolve(void) {
 
 static std::string broadcast(Tensor *t, const std::string &name, int to_rank) {
 	if (t->is_scalar()) {
-		return "*" + name;	
+		return "*" + name;
 	}
 	std::ostringstream dst;
 	dst << name;
 	for (int i = 0; i < (int)t->data_dim.size(); i++) {
-		dst << "[i" << (to_rank - t->data_dim.size() + i) << "]";
+		if (t->data_dim[i] == 1) {
+			dst << "[0]";
+		} else {
+			dst << "[i" << (to_rank - t->data_dim.size() + i) << "]";
+		}
 	}
 	return dst.str();
 }
