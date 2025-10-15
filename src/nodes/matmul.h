@@ -34,7 +34,9 @@ void MatMul::resolve(void) {
 
 	if (a->rank() > 2 || b->rank() > 2) {
 		for (unsigned i = 2; i < a->rank() && i < b->rank(); i++) {
-			if (a->data_dim[a->rank() - i - 1] != b->data_dim[b->rank() - i - 1]) {
+			if (a->data_dim[a->rank() - i - 1] != b->data_dim[b->rank() - i - 1] &&
+				a->data_dim[a->rank() - i - 1] != 1 &&
+				b->data_dim[b->rank() - i - 1] != 1) {
 				ERROR("Invalid broadcast dimensions for MatMul");
 			}
 		}
@@ -92,7 +94,11 @@ void MatMul::print(std::ostream &dst) const {
 		a_idx += "[k]";
 	} else {
 		for (int i = 0; i < (int)a->rank() - 2; i++) {
-			a_idx += "[i" + std::to_string(broadcast_dims - ((int)a->rank() - 2) + i) + "]";
+			if (a->data_dim[i] == 1) {
+				a_idx += "[0]";
+			} else {
+				a_idx += "[i" + std::to_string(broadcast_dims - ((int)a->rank() - 2) + i) + "]";
+			}
 		}
 		a_idx += "[i][k]";
 	}
@@ -102,7 +108,11 @@ void MatMul::print(std::ostream &dst) const {
 		b_idx += "[k]";
 	} else {
 		for (int i = 0; i < (int)b->rank() - 2; i++) {
-			b_idx += "[i" + std::to_string(broadcast_dims - ((int)b->rank() - 2) + i) + "]";
+			if (b->data_dim[i] == 1) {
+				b_idx += "[0]";
+			} else {
+				b_idx += "[i" + std::to_string(broadcast_dims - ((int)b->rank() - 2) + i) + "]";
+			}
 		}
 		b_idx += "[k][j]";
 	}
