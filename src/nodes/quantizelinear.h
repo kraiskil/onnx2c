@@ -79,8 +79,7 @@ void QuantizeLinear::print(std::ostream &dst) const {
 	}
 
 	std::string param_index;
-	assert(y_scale->data_dim.size() == 1);
-	if (y_scale->data_dim[0] == 1) {
+	if (y_scale->is_scalar()) {
 		param_index = "[0]";
 	} else {
 		param_index = "[i" + std::to_string(axis) + "]";

@@ -1,6 +1,7 @@
 #include "tensor.h"
 #include "util.h"
 #include <limits>
+#include <cmath>
 
 using namespace toC;
 void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
@@ -67,12 +68,6 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 		else if( tensor.has_raw_data() == false )
 			ERROR("Error: data size does not match dimensions, and no raw data");
 	}
-
-	// Panic-fix: if data is external, and scalar, dimensions are 0 at this point.
-	// Because that is how ONNX and/or protobuf do it :|
-	// TODO: can we do assertions here to verify this?
-	if( tensor.dims().size() == 0 )
-		data_dim.push_back(1);
 
 	data_buffer = malloc(data_num_elem() * data_elem_size());
 	if( data_buffer == NULL )
@@ -209,6 +204,23 @@ std::string Tensor::data_type_str(void) const
 	};
 }
 
+template <typename T>
+inline void print_float(std::ostream &dst, T value) {
+	if (std::isnan(value)) {
+		dst << "NAN";
+	} else if (std::isinf(value)) {
+		if (value > 0) {
+			dst << "INFINITY";
+		} else {
+			dst << "-INFINITY";
+		}
+	} else {
+		dst << std::fixed << value;
+		if (sizeof(T) == sizeof(float)) {
+			dst << "f";
+		}
+	}
+}
 
 void Tensor::print_element(std::ostream &dst, uint64_t element) const
 {
@@ -216,14 +228,19 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 	{
 		case onnx::TensorProto_DataType_FLOAT:
 		{
+			/*
+			some tests require large number e.g. 479001600
+			using std::showpoint prints 4.79002e+08f
+			The test passes if std::fixed is used printing 479001600.000000
+			*/
 			float *f = static_cast<float*>(data_buffer);
-			dst << std::showpoint << f[element]<< "f";
+			print_float(dst, f[element]);
 			break;
 		}
 		case onnx::TensorProto_DataType_DOUBLE:
 		{
 			double *f = static_cast<double*>(data_buffer);
-			dst << std::showpoint << f[element]<< "f";
+			print_float(dst, f[element]);
 			break;
 		}
 		case onnx::TensorProto_DataType_INT8:
@@ -289,6 +306,9 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 }
 
 /* Print the tensor initialization values.
+ * This is the values between '=' and ';'.
+ * The function recurses into itself to print multidimensional initializers.
+ *
  * dim: the dimension from which to print.
  * offs: the offset into this dimension from where to print.
  * This function recurses back into itself to print all more inner dimenstions there are.
@@ -297,8 +317,11 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
  */
 void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs) const
 {
-	if( data_dim[dim] == 0 )
+	if( is_scalar() )
+	{
+		print_element(dst, offs);
 		return;
+	}
 
 	for( int i=0; i<dim; i++)
 		dst << "  ";
@@ -337,38 +360,51 @@ void Tensor::print_tensor_initializer(std::ostream &dst, int dim, int offs) cons
 	dst << "}";
 }
 
-void Tensor::print_tensor(std::ostream &dst, bool is_callsite, std::string alternate_name, bool as_const) const
-{
-	// TODO: dupe code. Call print_tesor(string, bool, bool)!
 
-	if( is_callsite == false ) {
-		if( isConst || as_const )
-			dst << "const ";
-		dst << data_type_str() << " ";
-	}
-	else if( union_no >= 0 ) {
-		dst << "tu" << union_no << ".";
-	}
-	if( alternate_name == "" )
-		dst << cname();
-	else
-		dst << alternate_name;
-	if( is_callsite == false )
-		for( unsigned i : data_dim )
-			dst << "[" << i << "]";
-}
-
-std::string Tensor::print_tensor(std::string alternate_name, bool is_callsite, bool as_const) const
+/* Print the 'float foo[N][N]' part of the tensor.
+ * This is used for declaring of the tensor and as parameters to function definitions and calls.
+ *
+ * Outcomes for the result are:
+ * - foo (callsite: i.e. for a function argument when function is called)
+ * - const float foo[N] (definition - i.e. not a callsite)
+ * And for scalars, it's a bit more complex:
+ * - foo (definition)
+ * - &foo (callsite, and the tensor is an scalar)
+ * - *foo (as a parameter in a function definition)
+ * */
+std::string Tensor::print_tensor(
+		std::string alternate_name,
+		bool is_callsite,
+		bool as_const,
+		bool is_definition) const
 {
 	std::string rv = "";
 	if( is_callsite == false ) {
-		if( isConst || as_const )
+		bool print_const = as_const || isConst;
+		if( print_const )
 			rv += "const ";
 		rv += data_type_str() + " ";
 	}
 	else if( union_no >= 0 ) {
 		rv += "tu" + std::to_string(union_no) + ".";
 	}
+
+	if( is_scalar() ) {
+		// Scalars tensors are defined as scalars,
+		// but passed between functions as pointers.
+		if( is_callsite ) {
+			if ( !isIO ) {
+				rv += "&";
+			}
+			// else: IO tensors are never defined
+			// locally, so they already are pointers
+		}
+		// as function parameters
+		else if ( !is_definition ) {
+			rv += "*";
+		}
+	}
+
 	if( alternate_name == "" )
 		rv += cname();
 	else

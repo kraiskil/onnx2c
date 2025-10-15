@@ -50,7 +50,7 @@ class Gemm : public Node {
 		const Tensor *C  = get_number_of_inputs() > 2 ? get_input_tensor(2):nullptr;
 		//int A1 = A->data_dim[1];
 		int C0,C1; C0=C1=0;
-		if( C ) {
+		if( C && C->is_scalar()==false) {
 			C0 = C->data_dim[0];
 			if ( C->rank() > 1 ) {
 				C1 = C->data_dim[1];
@@ -89,7 +89,7 @@ class Gemm : public Node {
 			switch (C->rank())
 			{
 				case 0:
-					ERROR("Unimplemented: scalar C in Gemm");
+					C0=C1=0;
 					break;
 				case 1:
 					dim = C->data_dim[0];

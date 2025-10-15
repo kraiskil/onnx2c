@@ -74,12 +74,10 @@ class DynamicQuantizeLinear : public Node {
 		register_output(t, "y");
 
 		t = new Tensor;
-		t->data_dim.push_back(1);
 		t->data_type = onnx::TensorProto_DataType_FLOAT;
 		register_output(t, "y_scale");
 
 		t = new Tensor;
-		t->data_dim.push_back(1);
 		t->data_type = onnx::TensorProto_DataType_UINT8;
 		register_output(t, "y_zero_point");
 	}

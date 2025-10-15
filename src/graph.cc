@@ -395,8 +395,10 @@ bool Graph::hasUnresolvedNodes(void)
 int64_t Graph::onnx_ir_version(void)
 {
 	int opset_import_size = model.opset_import_size();
-	if( opset_import_size != 1 )
-		LOG(INFO) << "Model has multiple opset versions.";
+	if( opset_import_size == 0 )
+		ERROR("Model has no opset version");
+	if( opset_import_size > 1 )
+		LOG(INFO) << "Model has multiple opset versions." << std::endl;
 	auto foo = model.opset_import(0);
 	int64_t version = foo.version();
 	return version;
@@ -423,6 +425,8 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/gather.h"
 #include "nodes/gemm.h"
 #include "nodes/globalaveragepool.h"
+#include "nodes/globalmaxpool.h"
+#include "nodes/identity.h"
 #include "nodes/instancenorm.h"
 #include "nodes/lrn.h"
 #include "nodes/lstm.h"
@@ -432,7 +436,7 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/pad.h"
 #include "nodes/quantizelinear.h"
 #include "nodes/range.h"
-#include "nodes/reducemean.h"
+#include "nodes/reduce.h"
 #include "nodes/relu.h"
 #include "nodes/reshape.h"
 #include "nodes/resize.h"
@@ -508,15 +512,18 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "Gather" )return new Gather;
 	if( opName == "Gemm" )return new Gemm;
 	if( opName == "GlobalAveragePool" )return new GlobalAveragePool;
+	if( opName == "GlobalMaxPool" )return new GlobalMaxPool;
 	if( opName == "Greater")return new Elementwise_2("Greater");
 	if( opName == "GreaterOrEqual")return new Elementwise_2("GreaterOrEqual");
 	if( opName == "HardSigmoid" )return new Elementwise("HardSigmoid");
 	if( opName == "HardSwish" )return new Elementwise("HardSwish");
+	if( opName == "Identity" )return new Identity;
 	if( opName == "InstanceNormalization" )return new InstanceNormalization;
 	if( opName == "LeakyRelu" )return new Elementwise("LeakyRelu");
 	if( opName == "Less")return new Elementwise_2("Less");
 	if( opName == "LessOrEqual")return new Elementwise_2("LessOrEqual");
 	if( opName == "Log" )return new Elementwise("Log");
+	if( opName == "LogSoftmax" )return new Softmax("LogSoftmax");
 	if( opName == "LRN" )return new LRN;
 	if( opName == "LSTM" )return new LSTM;
 	if( opName == "MatMul" )return new MatMul;
@@ -535,7 +542,16 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "PRelu" )return new Elementwise_2("PRelu");
 	if( opName == "QuantizeLinear" )return new QuantizeLinear;
 	if( opName == "Range" )return new Range;
-	if( opName == "ReduceMean" )return new ReduceMean;
+	if( opName == "ReduceProd" )return new Reduce("Prod");
+	if( opName == "ReduceMean" )return new Reduce("Mean");
+	if( opName == "ReduceSumSquare" )return new Reduce("SumSquare");
+	if( opName == "ReduceMax" )return new Reduce("Max");
+	if( opName == "ReduceMin" )return new Reduce("Min");
+	if( opName == "ReduceSum" )return new Reduce("Sum");
+	if( opName == "ReduceL1" )return new Reduce("L1");
+	if( opName == "ReduceL2" )return new Reduce("L2");
+	if( opName == "ReduceLogSum" )return new Reduce("LogSum");
+	if( opName == "ReduceLogSumExp" )return new Reduce("LogSumExp");
 	if( opName == "Reciprocal" )return new Elementwise("Reciprocal");
 	if( opName == "Relu" )return new Relu;
 	if( opName == "Reshape" )return new Reshape;
@@ -552,7 +568,7 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	if( opName == "Slice" )return new Slice;
 	if( opName == "Softplus" )return new Elementwise("Softplus");
 	if( opName == "Softsign" )return new Elementwise("Softsign");
-	if( opName == "Softmax" )return new Softmax;
+	if( opName == "Softmax" )return new Softmax("Softmax");
 	if( opName == "Split" )return new Split;
 	if( opName == "Squeeze" )return new Squeeze;
 	if( opName == "Sqrt" )return new Elementwise("Sqrt");

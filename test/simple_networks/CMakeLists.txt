@@ -60,3 +60,17 @@ function( simple_test_treeensembleclassifier test_name output_size num_chan)
 endfunction()
 
 simple_test_treeensembleclassifier( treeensembleclassifier 3 1 )
+
+function( simple_test_scalar test_name )
+	compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/${test_name}.onnx ${test_name}_generated.c)
+	add_executable(${test_name} ${test_name}_generated.c ${test_name}.c  main_scalar.c)
+	target_link_libraries(${test_name} onnx2c_lib ${Protobuf_LIBRARIES})
+	target_compile_options(${test_name}
+		PRIVATE
+			-Wall -Werror)
+	add_test(small_${test_name} ${test_name})
+endfunction()
+
+simple_test_scalar( scalar_identity )
+simple_test_scalar( scalar_abs )
+simple_test_scalar( scalar_add )

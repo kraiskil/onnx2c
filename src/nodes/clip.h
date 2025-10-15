@@ -37,9 +37,9 @@ class Clip : public Node {
 		const Tensor *input = get_input_tensor(0);
 		name_input(0, "input");
 		if (get_number_of_inputs() > 1 && get_input_tensor(1)->is_used())
-			name_input(1, "min_tensor");
+			name_input(1, "min_val");
 		if (get_number_of_inputs() > 2 && get_input_tensor(2)->is_used())
-			name_input(2, "max_tensor");
+			name_input(2, "max_val");
 
 		Tensor *t = new Tensor;
 		t->data_dim = input->data_dim;
@@ -62,12 +62,12 @@ class Clip : public Node {
 		INDT_1 << "/* Clip */" << std::endl;
 
 		if( min_tensor )
-			INDT_1 << min_tensor->data_type_str() << " minv = min_tensor[0];" << std::endl;
+			INDT_1 << min_tensor->data_type_str() << " minv = *min_val;" << std::endl;
 		else
 			INDT_1 << "float minv = " << min_attr << ";" << std::endl;
 
 		if( max_tensor )
-			INDT_1 << max_tensor->data_type_str() << " maxv = max_tensor[0];" << std::endl;
+			INDT_1 << max_tensor->data_type_str() << " maxv = *max_val;" << std::endl;
 		else
 			INDT_1 << "float maxv = " << max_attr << ";" << std::endl;
 

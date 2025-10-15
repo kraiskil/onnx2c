@@ -20,7 +20,12 @@ int main(int argc, const char *argv[])
 		std::cerr << "Error opening input file: \"" << options.input_file << "\""  << std::endl;
 		exit(1); //TODO: check out error numbers for a more accurate one
 	}
-	onnx_model.ParseFromIstream(&input);
+	if (input.peek() == EOF) {
+		ERROR("\"" << options.input_file << "\" is empty");
+	}
+	if (!onnx_model.ParseFromIstream(&input)) {
+		ERROR("\"" << options.input_file << "\" is not a valid ONNX model");
+	}
 
 	std::cout.precision(20);
 	toC::Graph toCgraph(onnx_model);
