@@ -39,7 +39,7 @@ class Elementwise_2 : public Node {
 				};
 		else if (op == "Div" )
 			operation = [](const std::string& a, const std::string& b)
-				{ return  a+"/"+b+";"; };
+				{ return  a+"/ "+b+";"; };
 		else if (op == "Equal" ) {
 			output_is_bool = true;
 			// NB: specs don't define what kind of equality is meant when inputs are floating point
