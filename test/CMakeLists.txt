@@ -454,6 +454,11 @@ local_node_test(matmul_2x1x3x4_2x3x4x5)
 local_node_test(matmul_1x3x4_2x3x4x5)
 local_node_test(matmul_2x3x3x4_1x4x5)
 
+local_node_test(gather_basic)
+local_node_test(gather_scalar_axis0)
+local_node_test(gather_scalar_axis1)
+local_node_test(gather_output_scalar)
+
 ONNX_backend_node_test(globalaveragepool)
 ONNX_backend_node_test(globalaveragepool_precomputed)
 
