@@ -37,11 +37,11 @@ class Gather : public Node {
 		Tensor *t = new Tensor;
 
 		// output shape = data.shape[:axis] + indices.shape + data.shape[axis+1:]
-		unsigned i = 0;
-		for ( ; i < a; i++)
+		for (unsigned i = 0; i < a; i++)
 			t->data_dim.push_back(data->data_dim[i]);
-		t->data_dim.insert(t->data_dim.end(), indices->data_dim.begin(), indices->data_dim.end());
-		for (i = a+1; i < data->rank(); i++)
+		for (unsigned i = 0; i < indices->rank(); i++)
+			t->data_dim.push_back(indices->data_dim[i]);
+		for (unsigned i = a+1; i < data->rank(); i++)
 			t->data_dim.push_back(data->data_dim[i]);
 
 		t->data_type = data->data_type;
