@@ -30,8 +30,8 @@ class MaxPool : public Pooling {
 	{
 		std::string type = get_X()->data_type_str();
 		std::string type_min_value;
-		if( type == "float" )
-			type_min_value = "-FLT_MAX";
+		if( type == "float" || type == "double" || type == "_Float16" || type == "__bf16" )
+			type_min_value = "(" + type + ") -INFINITY";
 		else if( type == "int8_t" )
 			type_min_value = "INT8_MIN";
 		else if( type == "uint8_t" )

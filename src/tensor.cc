@@ -32,6 +32,10 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 			data_num_elements = tensor.float_data_size(); break;
 		case onnx::TensorProto_DataType_DOUBLE:
 			data_num_elements = tensor.double_data_size(); break;
+		
+		case onnx::TensorProto_DataType_FLOAT16:
+		case onnx::TensorProto_DataType_BFLOAT16:
+			data_num_elements = tensor.int32_data_size(); break;
 
 		// NB: all datatypes of 32bit or less are contained in int32_data field
 		case onnx::TensorProto_DataType_BOOL:
@@ -122,6 +126,11 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto &tensor)
 				for( int i=0; i<data_num_elem(); i++  )
 					((float*)data_buffer)[i] = tensor.float_data(i);
 				break;
+			case onnx::TensorProto_DataType_FLOAT16:
+			case onnx::TensorProto_DataType_BFLOAT16:
+				for( int i=0; i<data_num_elem(); i++  )
+					((uint16_t*)data_buffer)[i] = tensor.int32_data(i);
+				break;
 			default:
 				ERROR("unhandled tensor data type in tensor " << tensor.name());
 				break;
@@ -142,10 +151,13 @@ int Tensor::data_elem_size(void)const
 {
 	switch( data_type )
 	{
-	case onnx::TensorProto_DataType_FLOAT:
+		case onnx::TensorProto_DataType_FLOAT:
 			return sizeof(float); break;
 		case onnx::TensorProto_DataType_DOUBLE:
 			return sizeof(double); break;
+		case onnx::TensorProto_DataType_FLOAT16:
+		case onnx::TensorProto_DataType_BFLOAT16:
+			return sizeof(uint16_t); break;
 		case onnx::TensorProto_DataType_INT8:
 			return sizeof(int8_t); break;
 		case onnx::TensorProto_DataType_UINT8:
@@ -178,6 +190,10 @@ std::string Tensor::data_type_str(void) const
 			return "float"; break;
 		case onnx::TensorProto_DataType_DOUBLE:
 			return "double"; break;
+		case onnx::TensorProto_DataType_FLOAT16:
+			return "_Float16"; break;
+		case onnx::TensorProto_DataType_BFLOAT16:
+			return "__bf16"; break;
 		case onnx::TensorProto_DataType_INT8:
 			return "int8_t"; break;
 		case onnx::TensorProto_DataType_UINT8:
@@ -241,6 +257,18 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 		{
 			double *f = static_cast<double*>(data_buffer);
 			print_float(dst, f[element]);
+			break;
+		}
+		case onnx::TensorProto_DataType_FLOAT16:
+		{
+			_Float16 *f = static_cast<_Float16*>(data_buffer);
+			print_float(dst, (float)f[element]);
+			break;
+		}
+		case onnx::TensorProto_DataType_BFLOAT16:
+		{
+			__bf16 *f = static_cast<__bf16*>(data_buffer);
+			print_float(dst, (float)f[element]);
 			break;
 		}
 		case onnx::TensorProto_DataType_INT8:
