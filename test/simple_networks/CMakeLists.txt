@@ -74,3 +74,11 @@ endfunction()
 simple_test_scalar( scalar_identity )
 simple_test_scalar( scalar_abs )
 simple_test_scalar( scalar_add )
+
+compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/float16.onnx float16_generated.c)
+add_executable(float16 float16_generated.c float16.c  main_float16.c)
+target_link_libraries(float16 onnx2c_lib ${Protobuf_LIBRARIES})
+target_compile_options(float16
+	PRIVATE
+		-Wall -Werror)
+add_test(float16 float16)

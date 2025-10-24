@@ -238,22 +238,46 @@ inline void print_float(std::ostream &dst, T value) {
 	}
 }
 
+// We implement float16 and bfloat16 in software so that the system onnx2c
+// runs on does not necessarily have to support these types natively.
+
 float float16_to_float(uint16_t h) {
 	// 1 sign bit, 5 exponent bits, 10 mantissa bits
+	union {
+		uint32_t bits;
+		float value;
+	} res;
 	uint32_t sign = (h >> 15) & 1;
 	uint32_t exponent = (h >> 10) & 0x1F;
 	uint32_t mantissa = h & 0x3FF;
-	uint32_t res = (sign << 31)
-	             | ((exponent + (127 - 15)) << 23)
-				 | (mantissa << 13);
-	return *reinterpret_cast<float*>(&res);
+	if (exponent == 0) {
+		if (mantissa == 0) {
+			return 0.0f;
+		} else {
+			// Subnormal
+			float x = mantissa * std::pow(2.0f, -24.0f);
+			return sign ? -x : x;
+		}
+	} else if (exponent == 31) {
+		exponent = 0xff; // NaN and Infinity
+	} else {
+		exponent = exponent + (127 - 15);
+	}
+	res.bits = (sign << 31)
+			 | (exponent << 23)
+			 | (mantissa << 13);
+	return res.value;
 }
 
 float bfloat16_to_float(uint16_t h) {
 	// 1 sign bit, 8 exponent bits, 7 mantissa bits
 	// This is the same as taking the high 16 bits of a float
-	uint32_t res = ((uint32_t)h) << 16;
-	return *reinterpret_cast<float*>(&res);
+	union {
+		uint32_t bits;
+		float value;
+	} res;
+	res.bits = ((uint32_t)h) << 16;
+	return res.value;
 }
 
 void Tensor::print_element(std::ostream &dst, uint64_t element) const
