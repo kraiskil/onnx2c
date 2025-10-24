@@ -164,3 +164,20 @@ slower than RAM.
 
 Disabling of this optimisation should be added as a command-line option to onnx2c.
 
+### 16 bit Floating Point Support
+
+onnx2c supports the ONNX `Float16` and `BFloat16` data types. `Float16` is the
+IEEE 754 half-precision floating point format with 1 sign bit, 5 exponent bits and
+10 mantissa bits. `BFloat16` is the Brain Floating Point format with 1 sign bit,
+8 exponent bits and 7 mantissa bits.
+See [Wikipedia](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) for
+more details.
+
+They are mapped to the `_Float16` and `__bf16` C types respectively. While these
+types are not part of the C standard, both GCC and Clang support them depending on
+the target architecture:
+
+- [GCC Documentation](https://gcc.gnu.org/onlinedocs/gcc/Half-Precision.html)
+- [Clang Documentation](https://clang.llvm.org/docs/LanguageExtensions.html#half-precision-floating-point)
+
+If your model does not use these types, onnx2c will not generate any code using them.
