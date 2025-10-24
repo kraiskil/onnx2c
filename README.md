@@ -166,9 +166,9 @@ Disabling of this optimisation should be added as a command-line option to onnx2
 
 ### 16 bit Floating Point Support
 
-onnx2c supports the ONNX `Float16` and `BFloat16` data types. `Float16` is the
+onnx2c supports the ONNX `flaot16` and `bfloat16` data types. `float16` is the
 IEEE half-precision floating point format with 1 sign bit, 5 exponent bits and
-10 mantissa bits. `BFloat16` is the Brain Floating Point format with 1 sign bit,
+10 mantissa bits. `bfloat16` is the Brain Floating Point format with 1 sign bit,
 8 exponent bits and 7 mantissa bits.
 See [Wikipedia](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) for
 more details.
