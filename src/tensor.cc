@@ -238,6 +238,24 @@ inline void print_float(std::ostream &dst, T value) {
 	}
 }
 
+float float16_to_float(uint16_t h) {
+	// 1 sign bit, 5 exponent bits, 10 mantissa bits
+	uint32_t sign = (h >> 15) & 1;
+	uint32_t exponent = (h >> 10) & 0x1F;
+	uint32_t mantissa = h & 0x3FF;
+	uint32_t res = (sign << 31)
+	             | ((exponent + (127 - 15)) << 23)
+				 | (mantissa << 13);
+	return *reinterpret_cast<float*>(&res);
+}
+
+float bfloat16_to_float(uint16_t h) {
+	// 1 sign bit, 8 exponent bits, 7 mantissa bits
+	// This is the same as taking the high 16 bits of a float
+	uint32_t res = ((uint32_t)h) << 16;
+	return *reinterpret_cast<float*>(&res);
+}
+
 void Tensor::print_element(std::ostream &dst, uint64_t element) const
 {
 	switch(data_type)
@@ -261,14 +279,14 @@ void Tensor::print_element(std::ostream &dst, uint64_t element) const
 		}
 		case onnx::TensorProto_DataType_FLOAT16:
 		{
-			_Float16 *f = static_cast<_Float16*>(data_buffer);
-			print_float(dst, (float)f[element]);
+			uint16_t *f = static_cast<uint16_t*>(data_buffer);
+			print_float(dst, float16_to_float(f[element]));
 			break;
 		}
 		case onnx::TensorProto_DataType_BFLOAT16:
 		{
-			__bf16 *f = static_cast<__bf16*>(data_buffer);
-			print_float(dst, (float)f[element]);
+			uint16_t *f = static_cast<uint16_t*>(data_buffer);
+			print_float(dst, bfloat16_to_float(f[element]));
 			break;
 		}
 		case onnx::TensorProto_DataType_INT8:
