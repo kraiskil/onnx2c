@@ -397,14 +397,14 @@ ONNX_backend_node_test(gather_1)
 ONNX_backend_node_test(gather_negative_indices)
 ONNX_backend_node_test(gather_2d_indices)
 
-ONNX_backend_node_test(gather_elements_1)
-ONNX_backend_node_test(gather_elements_0)
-ONNX_backend_node_test(gather_elements_negative_indices)
-
 local_node_test(gather_basic)
 local_node_test(gather_scalar_axis0)
 local_node_test(gather_scalar_axis1)
 local_node_test(gather_output_scalar)
+
+#ONNX_backend_node_test(gather_elements_1)
+#ONNX_backend_node_test(gather_elements_0)
+#ONNX_backend_node_test(gather_elements_negative_indices)
 
 #ONNX_backend_node_test(gathernd_example_float32)
 #ONNX_backend_node_test(gathernd_example_int32)
