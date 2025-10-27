@@ -64,44 +64,26 @@ class Where : public Node {
 	virtual void print(std::ostream &dst) const override
 	{
 		dst << "\t/*" << op_name << "*/" << std::endl;
-
-		// This is essentially copied from 'Elementwise_variadic'
+		
+		const Tensor *condition = get_input_tensor(0);
+		const Tensor *x = get_input_tensor(1);
+		const Tensor *y = get_input_tensor(2);
 		const Tensor *out = get_output_tensor(0);
+		
 		std::string type = out->data_type_str();
-		std::vector<std::string> in_idx_strs(get_number_of_inputs());
-		std::string out_idx_str;
 
 		// Print out loops over output tensors dimensions
 		for( unsigned r=0; r<out->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
 			INDT_1 << "for (unsigned " << lv << "=0; ";
 			   dst << lv << "<" << out->data_dim[r] << "; ";
-			   dst << lv << "++) {" << std::endl;
-
-			// Generate indexing strings to be printed later on.
-			// TODO: this is a copy from earlier code. Feels like there might
-			// be a more elegant way of doing this.
-			for( unsigned i=0; i<get_number_of_inputs(); i++) {
-				std::vector<int> pads = get_input_tensor(i)->data_dim;
-				std::string idx_str;
-				if (pads[r]==1)
-					idx_str += "[0]";
-				else if(pads[r]!=0)
-					idx_str += "[" + lv + "]";
-
-				in_idx_strs[i] += idx_str;
-			}
-			out_idx_str += "[" + lv + "]";
+			   dst << lv << "++)" << std::endl;
 		}
 
-		INDT_2 << "output" << out_idx_str << " = " << std::endl;
-		INDT_3 << "condition" << in_idx_strs[0] << " ? " << "X"
-			   << in_idx_strs[1] << " : Y" << in_idx_strs[2] << ";" << std::endl;
-
-		// Close loop over output dimensions
-		for( unsigned r=0; r<out->rank(); r++) {
-			INDT_1 << "}" << std::endl;
-		}
+		INDT_2 << broadcast(out, "output", out->rank()) << " = " << std::endl;
+		INDT_3 << broadcast(condition, "condition", out->rank()) << " ? "
+		       << broadcast(x, "X", out->rank()) << " : "
+			   << broadcast(y, "Y", out->rank()) << ";" << std::endl;
 	}
 };
 }
