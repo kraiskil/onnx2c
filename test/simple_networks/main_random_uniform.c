@@ -12,7 +12,7 @@ int main() {
     for (unsigned i = 0; i < SIZE; i++) {
         if( isnan(output[i]) )
             return 1;
-        if( output[i] < 0.0f || output[i] > 1.0f )
+        if( output[i] < -20.0f || output[i] > 10.0f )
             return 1;
     }
     return 0;

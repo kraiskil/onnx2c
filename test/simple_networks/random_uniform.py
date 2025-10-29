@@ -13,8 +13,8 @@ node = make_node(
     outputs=["output"],
     shape=shape,
     dtype=onnx.TensorProto.FLOAT,
-    high=1.0,
-    low=0.0
+    high=10.0,
+    low=-20.0
 )
 
 graph = make_graph([node], "random_uniform", [], [output])
