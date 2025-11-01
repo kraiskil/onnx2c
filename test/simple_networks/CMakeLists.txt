@@ -74,3 +74,11 @@ endfunction()
 simple_test_scalar( scalar_identity )
 simple_test_scalar( scalar_abs )
 simple_test_scalar( scalar_add )
+
+compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/random_uniform.onnx random_uniform_generated.c)
+add_executable(random_uniform random_uniform_generated.c main_random_uniform.c)
+target_link_libraries(random_uniform onnx2c_lib ${Protobuf_LIBRARIES})
+target_compile_options(random_uniform
+	PRIVATE
+		-Wall -Werror)
+add_test(small_random_uniform random_uniform)
