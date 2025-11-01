@@ -28,6 +28,23 @@ void Graph::print_source(std::ostream &dst)
 	print_interface_function(dst);
 }
 
+void Graph::print_initialization(std::ostream &dst)
+{
+	print_file_frontmatter(dst);
+	dst << std::endl;
+	print_includes(dst);
+	dst << std::endl;
+
+	LOG(TRACE) << "printing initializers" << std::endl;
+	for( auto t : tensors )
+	{
+		LOG(TRACE) << "\t" << t->print_trace_dump() << std::endl;
+		if( t->union_no < 0
+		 && t->generate && t->initialize)
+			print_tensor(t, dst);
+	}
+	LOG(TRACE) << "(done printing initializers)" << std::endl;
+}
 
 void Graph::print_file_frontmatter(std::ostream &dst)
 {
@@ -57,15 +74,23 @@ void Graph::print_tensor(const Tensor *t, std::ostream &dst)
 		return;
 	}
 
-	if( t->union_no < 0 )
-		dst << "static ";
+	if( t->union_no < 0 ) {
+		if (options.extern_init && t->initialize) {
+			dst << "extern ";
+		} else if (!options.only_init) {
+			dst << "static ";
+		}
+	}
 
 	dst << t->print_tensor_definition();
 	if( t->initialize ) {
 		if( options.target_avr && t->isConst )
 			dst << " PROGMEM";
-		dst << " = "<<std::endl;
-		t->print_tensor_initializer(dst);
+		
+		if (!options.extern_init) {
+			dst << " = " << std::endl;
+			t->print_tensor_initializer(dst);
+		}
 	}
 	dst << ";" << std::endl;
 }
