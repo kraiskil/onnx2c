@@ -3,10 +3,11 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         build_type: [Debug, Release]
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,3 +25,48 @@ jobs:
       - name: Run tests
         run: make test
         working-directory: build
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: executable-${{ matrix.build_type }}-${{ matrix.os }}
+          path: build/onnx2c
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download Release executables
+        uses: actions/download-artifact@v4
+        with:
+          pattern: executable-*
+          path: dist
+      - name: Prepare assets
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for dir in dist/executable-*; do
+            [[ -d "$dir" ]] || continue
+            name="$(basename "$dir")"
+            IFS='-' read -r _ build_type os <<< "$name"
+            case "$os" in
+              ubuntu-24.04) arch="x86_64" ;;
+              ubuntu-24.04-arm) arch="arm64" ;;
+              *) echo "Unknown OS $os"; exit 1 ;;
+            esac
+            src="$dir/onnx2c"
+            dest="dist/onnx2c-${build_type}-${arch}"
+            mv "$src" "$dest"
+            rm -rf "$dir"
+          done
+          ls -l dist
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: dist/**
+          draft: false
+          prerelease: false
