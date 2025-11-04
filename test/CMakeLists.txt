@@ -651,6 +651,8 @@ ONNX_backend_node_test(pow_types_int32_int32)
 ONNX_backend_node_test(prelu_broadcast)
 ONNX_backend_node_test(prelu_example)
 
+ONNX_backend_node_test(qlinearconv)
+
 ONNX_backend_node_test(qlinearmatmul_2D_int8_float16)
 ONNX_backend_node_test(qlinearmatmul_2D_int8_float32)
 ONNX_backend_node_test(qlinearmatmul_2D_uint8_float16)
