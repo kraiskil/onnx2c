@@ -131,6 +131,8 @@ void Reduce::resolve(void)
         }
     }
 
+    set_math_type( input->data_type );
+
 	Tensor *t = new Tensor;
 
     Tensor* x = get_input_tensor(0);
@@ -199,8 +201,8 @@ void Reduce::resolve(void)
         initial_value = type_0_value;
     }
     else if (op_name == "ReduceL1"){
-        elemet_operation = [](const std::string& a, const std::string& b)
-        { return a + "+= fabs(" + b + ")";};
+        elemet_operation = [this](const std::string& a, const std::string& b)
+        { return a + "+= " + math_func("fabs") + "(" + b + ")";};
         initial_value = type_0_value;
     }
     else if (op_name == "ReduceL2"){
@@ -214,8 +216,8 @@ void Reduce::resolve(void)
         initial_value = type_0_value;
     }
     else if (op_name == "ReduceLogSumExp"){
-        elemet_operation = [](const std::string& a, const std::string& b)
-        { return a + "+= expf(" + b + ")";};
+        elemet_operation = [this](const std::string& a, const std::string& b)
+        { return a + "+= " + math_func("exp") + "(" + b + ")";};
         initial_value = type_0_value;
     }
     else if (op_name == "ReduceMean"){
@@ -324,7 +326,7 @@ void Reduce::print(std::ostream &dst) const
     if (op_name=="ReduceLogSum" || op_name=="ReduceLogSumExp") {
         INDT_1 << "/* ReduceLogSum : log of reduced sum*/" << std::endl;
         std::string out_idx = print_and_return_o_iterator(dst);
-        INDT(output->rank()+1) << "y" << out_idx << " = log(y" << out_idx << ");" << std::endl;
+        INDT(output->rank()+1) << "y" << out_idx << " = " << math_func("log") << "(y" << out_idx << ");" << std::endl;
         print_loop_closes_over_dims(dst, output->rank());
     }
 }

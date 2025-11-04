@@ -87,10 +87,9 @@ void LSTM::print_activation(std::ostream &dst, const std::string &activation, co
 		variable="CLIP(" + var + ", " + std::to_string(clip) + ")";
 
 	if( activation == "Sigmoid" )
-		dst << "1.0f/(1+expf(-" << variable << "));" << std::endl;
+		dst << "1.0f/(1+" << math_func("exp") << "(-" << variable << "));" << std::endl;
 	else if (activation == "Tanh" )
-		// TODO: optimize to tanhf? If someone uses tanh, do they care about execution speed? :)
-		dst << "tanh(" << variable << ");" << std::endl;
+		dst << math_func("tanh") << "(" << variable << ");" << std::endl;
 	else if (activation == "Relu" )
 		dst << "MAX(" << variable << ", 0);" << std::endl;
 	else

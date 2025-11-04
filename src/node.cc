@@ -220,3 +220,15 @@ bool Node::replace_input(Tensor *old, Tensor *replacement)
 	return false;
 }
 
+std::string Node::math_func(std::string name) const {
+	switch (math_type) {
+		case onnx::TensorProto_DataType_FLOAT:
+		case onnx::TensorProto_DataType_FLOAT16:
+		case onnx::TensorProto_DataType_BFLOAT16:
+			return name + "f";
+		case onnx::TensorProto_DataType_DOUBLE:
+			return name;
+		default:
+			ERROR("math function " << name << " is not available for type " << math_type);
+	}
+}
