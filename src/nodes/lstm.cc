@@ -464,6 +464,8 @@ void LSTM::resolve(void)
 	register_output(Y, "Y");
 	register_output(Y_h, "Y_h");
 	register_output(Y_c, "Y_c");
+
+	set_math_type( get_X()->data_type );
 }
 
 }
