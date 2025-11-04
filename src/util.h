@@ -49,3 +49,4 @@ void print_loops_over_dims(std::ostream &dst, const toC::Tensor *, std::string p
 // and the same for the loop closes
 void print_loop_closes_over_dims(std::ostream &dst, const toC::Tensor *t, unsigned indents);
 
+std::string broadcast(const toC::Tensor *t, const std::string &name, int to_rank);

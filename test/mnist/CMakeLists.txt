@@ -10,3 +10,8 @@ add_test(mnist_static mnist_static)
 compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/pytorch.onnx pytorch_generated.c )
 add_executable(pytorch_mnist test_pytorch.cc pytorch_generated.c)
 add_test(pytorch_mnist pytorch_mnist)
+
+compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/model.onnx mnist_extern_generated.c --extern-init )
+compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/model.onnx mnist_init_generated.c --only-init )
+add_executable(mnist_extern test.cc mnist_extern_generated.c mnist_init_generated.c)
+add_test(mnist_extern mnist_extern)

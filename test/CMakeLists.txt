@@ -29,11 +29,11 @@ function( compile_onnx onnx_file c_file )
 		OUTPUT
 			${c_file}
 		COMMAND
-			onnx2c -l 0 ${onnx_file} > ${c_file}
+			onnx2c ${ARGN} -l 0 ${onnx_file} > ${c_file}
 		DEPENDS 
 			${onnx_file}
 			onnx2c
-	) 
+	)
 endfunction()
 
 
@@ -396,6 +396,11 @@ ONNX_backend_node_test(gather_0)
 ONNX_backend_node_test(gather_1)
 ONNX_backend_node_test(gather_negative_indices)
 ONNX_backend_node_test(gather_2d_indices)
+
+local_node_test(gather_basic)
+local_node_test(gather_scalar_axis0)
+local_node_test(gather_scalar_axis1)
+local_node_test(gather_output_scalar)
 
 #ONNX_backend_node_test(gather_elements_1)
 #ONNX_backend_node_test(gather_elements_0)
