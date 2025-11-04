@@ -8,25 +8,22 @@
 
 namespace toC {
 
-class MatMul : public Node {
-	public:
-	MatMul() {
-		op_name = "MatMul";
-	}
+class AbstractMatMul : public Node {
+public:
+	using Node::Node;
 
-	virtual void resolve(void) override;
 	virtual void print(std::ostream &dst) const override;
+	virtual void print_multiply_accumulate(
+		std::ostream &dst,
+		const std::string &y_idx,
+		const std::string &a_idx,
+		const std::string &b_idx) const = 0;
+
+protected:
+	std::vector<int> resolve_shape(Tensor* a, Tensor* b) const;
 };
 
-void MatMul::resolve(void) {
-	Tensor *a = get_input_tensor(0);
-	Tensor *b = get_input_tensor(1);
-
-	assert(a->data_type == b->data_type);
-
-	name_input(0, "A");
-	name_input(1, "B");
-
+std::vector<int> AbstractMatMul::resolve_shape(Tensor* a, Tensor* b) const {
 	assert(a->rank() >= 1);
 	assert(b->rank() >= 1);
 
@@ -62,13 +59,11 @@ void MatMul::resolve(void) {
 		y_dim.push_back(b->data_dim[b->rank() - 1]);
 	}
 
-	Tensor *y = new Tensor;
-	y->data_dim = y_dim;
-	y->data_type = a->data_type;
-	register_output(y, "Y");
-}
+	return y_dim;
+};
 
-void MatMul::print(std::ostream &dst) const {
+
+void AbstractMatMul::print(std::ostream &dst) const {
 	INDT_1 << "/* MatMul */" << std::endl;
 
 	Tensor *a = get_input_tensor(0);
@@ -147,10 +142,48 @@ void MatMul::print(std::ostream &dst) const {
 	INDT_2 << "{" << std::endl;
 	INDT_3 << y_idx << " = 0;" << std::endl;
 	INDT_3 << "for (unsigned k = 0; k < " << k_dim << "; k++)" << std::endl;
-	INDT_4 << y_idx << " += " << a_idx << " * " << b_idx << ";" << std::endl;
+	print_multiply_accumulate(INDT_4, y_idx, a_idx, b_idx);
 	INDT_2 << "}" << std::endl;
 
 	INDT_1 << "}" << std::endl;
+}
+
+class MatMul : public AbstractMatMul {
+	public:
+	MatMul() {
+		op_name = "MatMul";
+	}
+
+	virtual void resolve(void) override;
+	void print_multiply_accumulate(
+		std::ostream &dst,
+		const std::string &y_idx,
+		const std::string &a_idx,
+		const std::string &b_idx) const override;
+};
+
+void MatMul::resolve(void) {
+	Tensor *a = get_input_tensor(0);
+	Tensor *b = get_input_tensor(1);
+
+	assert(a->data_type == b->data_type);
+
+	name_input(0, "A");
+	name_input(1, "B");
+
+	Tensor *y = new Tensor;
+	y->data_dim = resolve_shape(a, b);
+	y->data_type = a->data_type;
+	register_output(y, "Y");
+}
+
+void MatMul::print_multiply_accumulate(
+	std::ostream &dst,
+	const std::string &y_idx,
+	const std::string &a_idx,
+	const std::string &b_idx) const {
+	
+	dst << y_idx << " += " << a_idx << " * " << b_idx << ";" << std::endl;
 }
 
 } // namespace
