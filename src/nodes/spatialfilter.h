@@ -254,7 +254,7 @@ class SpatialFilter : public Node {
 
 		std::string w_idx = "[m][c]";
 		if (group != 1)
-			w_idx = "w[m][c-(gi*g)]";
+			w_idx = "[m][c-(gi*g)]";
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string idx = "k" + std::to_string(i);
 			INDT_3 << "for( uint32_t " << idx << "=0; ";
