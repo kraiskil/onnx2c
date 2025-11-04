@@ -81,6 +81,7 @@ target_compile_options(random_uniform
 	PRIVATE
 		-Wall -Werror)
 add_test(small_random_uniform random_uniform)
+compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/random_uniform.onnx random_uniform_generated.c)
 
 function( simple_test_fp test_name )
 	compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/${test_name}.onnx ${test_name}_generated.c)
@@ -94,4 +95,3 @@ endfunction()
 
 simple_test_fp( fp_float16 )
 simple_test_fp( fp_bfloat16 )
-compile_onnx( ${CMAKE_CURRENT_SOURCE_DIR}/random_uniform.onnx random_uniform_generated.c)
