@@ -918,7 +918,7 @@ ONNX_backend_node_test(xor_bcast3v1d)
 ONNX_backend_node_test(xor_bcast4v2d)
 ONNX_backend_node_test(xor_bcast4v4d)
 
-
+ONNX_backend_node_test(qlinearconv)
 
 add_subdirectory(old_onnx_backend)
 
