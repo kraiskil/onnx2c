@@ -22,10 +22,7 @@ class ConvInteger : public SpatialFilter {
 
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
 	{
-		if( options.quantize )
-			INDT_3 << "int32_t cell = 0;" << std::endl;
-		else
-			INDT_3 << "y[b][m][o0][o1] = 0;" << std::endl;
+		INDT_3 << "y" << y_idx << " = 0;" << std::endl;
 	}
 
 	virtual void print_output_cell_calc(
@@ -42,29 +39,12 @@ class ConvInteger : public SpatialFilter {
 		if( get_number_of_inputs() >= 4 ) // w_zero_point is optional, 4th input
 			w_zero = constant_acces_code( "w_zero_point[0]");
 
-
-		INDT_4 << get_W()->data_type_str() << " w_ = " << constant_acces_code("w[m][c][k0][k1]") << ";" << std::endl;
-		std::string dest;
-		if( options.quantize )
-			dest = "cell";
-		else
-			dest = "y[b][m][o0][o1]";
-
-		INDT_4 << dest << "+= (x[b][c][i0+k0][i1+k1] - " << x_zero << ") * (w_ -" << w_zero << ");" << std::endl;
+		INDT_4 << "y" << y_idx << " += (x " << x_idx << "  - " << x_zero << ") * (w" << w_idx << " -" << w_zero << ");" << std::endl;
 	}
 
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const override
 	{
-		if( options.quantize ) {
-			// TODO: this assumes 2D filter
-			int divisor = kernel_shape[0]*kernel_shape[1]*16;
-			INDT_3 << "int32_t tmp = cell/" << divisor << ";" << std::endl;
-			INDT_3 << "tmp = tmp > 127?127:tmp;" << std::endl;
-			INDT_3 << "tmp = tmp < -127?-127:tmp;" << std::endl;
-			INDT_3 << "y[b][m][o0][o1] = tmp;" << std::endl;
-		}
 	}
-
 
 	virtual void print(std::ostream &dst) const override
 	{

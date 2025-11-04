@@ -27,15 +27,7 @@ class Conv : public SpatialFilter {
 		const std::string &w_idx,
 		const std::string &y_idx) const override
 	{
-		std::string kidx="";
-		for(unsigned i=0; i<get_numDataDim(); i++){
-			kidx+= "[k" + std::to_string(i) + "]";
-		}
-		INDT_4 << "y" << y_idx << " += x" << x_idx << " *";
-		if( group == 1 )
-		   dst << "w[m][c]"<<kidx<<";" << std::endl;
-		else
-		   dst << "w[m][c-(gi*g)]"<<kidx<<";" << std::endl;
+		INDT_4 << "y" << y_idx << " += x" << x_idx << " * w" << w_idx << ";" << std::endl;
 	}
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const override
 	{
