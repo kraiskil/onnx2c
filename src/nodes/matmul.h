@@ -13,17 +13,29 @@ public:
 	using Node::Node;
 
 	virtual void print(std::ostream &dst) const override;
-	virtual void print_multiply_accumulate(
-		std::ostream &dst,
-		const std::string &y_idx,
-		const std::string &a_idx,
-		const std::string &b_idx) const = 0;
 
-protected:
-	std::vector<int> resolve_shape(Tensor* a, Tensor* b) const;
+	virtual void print_initialize(std::ostream &dst, const std::string &y_idx) const {
+		INDT_3 << y_idx << " = 0;" << std::endl;
+	}
+
+	virtual void print_finalize(std::ostream &dst, const std::string &y_idx) const {
+	}
+
+	virtual void print_multiply_accumulate(std::ostream &dst,
+	                                       const std::string &y_idx,
+	                                       const std::string &a_idx,
+	                                       const std::string &b_idx) const = 0;
+
+	virtual Tensor* get_a() const { return get_input_tensor(0); }
+	virtual Tensor* get_b() const { return get_input_tensor(1); }
+
+	std::vector<int> resolve_shape() const;
 };
 
-std::vector<int> AbstractMatMul::resolve_shape(Tensor* a, Tensor* b) const {
+std::vector<int> AbstractMatMul::resolve_shape() const {
+	Tensor *a = get_a();
+	Tensor *b = get_b();
+
 	assert(a->rank() >= 1);
 	assert(b->rank() >= 1);
 
@@ -64,10 +76,10 @@ std::vector<int> AbstractMatMul::resolve_shape(Tensor* a, Tensor* b) const {
 
 
 void AbstractMatMul::print(std::ostream &dst) const {
-	INDT_1 << "/* MatMul */" << std::endl;
+	INDT_1 << "/* " << op_name << " (AbstractMatMul) */" << std::endl;
 
-	Tensor *a = get_input_tensor(0);
-	Tensor *b = get_input_tensor(1);
+	Tensor *a = get_a();
+	Tensor *b = get_b();
 	Tensor *y = get_output_tensor(0);
 
 	// Number of dimensions to broadcast over
@@ -140,50 +152,55 @@ void AbstractMatMul::print(std::ostream &dst) const {
 	INDT_2 << "for (unsigned i = 0; i < " << i_dim << "; i++)" << std::endl;
 	INDT_2 << "for (unsigned j = 0; j < " << j_dim << "; j++)" << std::endl;
 	INDT_2 << "{" << std::endl;
-	INDT_3 << y_idx << " = 0;" << std::endl;
+	
+	print_initialize(dst, y_idx);
+	
 	INDT_3 << "for (unsigned k = 0; k < " << k_dim << "; k++)" << std::endl;
-	print_multiply_accumulate(INDT_4, y_idx, a_idx, b_idx);
-	INDT_2 << "}" << std::endl;
+	INDT_3 << "{" << std::endl;
+	print_multiply_accumulate(dst, y_idx, a_idx, b_idx);
+	INDT_3 << "}" << std::endl;
 
+	print_finalize(dst, y_idx);
+	
+	INDT_2 << "}" << std::endl;
 	INDT_1 << "}" << std::endl;
 }
 
 class MatMul : public AbstractMatMul {
-	public:
+public:
 	MatMul() {
 		op_name = "MatMul";
 	}
 
 	virtual void resolve(void) override;
-	void print_multiply_accumulate(
-		std::ostream &dst,
-		const std::string &y_idx,
-		const std::string &a_idx,
-		const std::string &b_idx) const override;
+	void print_multiply_accumulate(std::ostream &dst,
+	                               const std::string &y_idx,
+	                               const std::string &a_idx,
+	                               const std::string &b_idx) const override;
 };
 
 void MatMul::resolve(void) {
 	Tensor *a = get_input_tensor(0);
 	Tensor *b = get_input_tensor(1);
 
-	assert(a->data_type == b->data_type);
+	if (a->data_type != b->data_type) {
+		ERROR("Data types of A and B must match in MatMul");
+	}
 
 	name_input(0, "A");
 	name_input(1, "B");
 
 	Tensor *y = new Tensor;
-	y->data_dim = resolve_shape(a, b);
+	y->data_dim = resolve_shape();
 	y->data_type = a->data_type;
 	register_output(y, "Y");
 }
 
-void MatMul::print_multiply_accumulate(
-	std::ostream &dst,
-	const std::string &y_idx,
-	const std::string &a_idx,
-	const std::string &b_idx) const {
-	
-	dst << y_idx << " += " << a_idx << " * " << b_idx << ";" << std::endl;
+void MatMul::print_multiply_accumulate(std::ostream &dst,
+                                       const std::string &y_idx,
+                                       const std::string &a_idx,
+                                       const std::string &b_idx) const {
+	INDT_4 << y_idx << " += " << a_idx << " * " << b_idx << ";" << std::endl;
 }
 
 } // namespace
