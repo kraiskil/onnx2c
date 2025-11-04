@@ -229,9 +229,7 @@ std::string Node::math_func(std::string name) const {
 		case onnx::TensorProto_DataType_FLOAT16:
 		case onnx::TensorProto_DataType_BFLOAT16:
 			return name + "f";
-		case onnx::TensorProto_DataType_DOUBLE:
-			return name;
 		default:
-			ERROR("math function " << name << " is not available for type " << math_type);
+			return name;
 	}
 }
