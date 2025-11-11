@@ -94,7 +94,7 @@ void AbstractMatMul::print(std::ostream &dst) const {
 
 	for (int i = 0; i < broadcast_dims; i++) {
 		std::string lv = "i" + std::to_string(i);
-		INDT_1 << "for (unsigned " << lv << "=0; " << lv << "<" << y->data_dim[i] << "; " << lv << "++)" << std::endl;
+		INDT_1 << "for (size_t " << lv << "=0; " << lv << "<" << y->data_dim[i] << "; " << lv << "++)" << std::endl;
 	}
 
 	std::string a_idx = "A";
@@ -150,13 +150,13 @@ void AbstractMatMul::print(std::ostream &dst) const {
 
 	INDT_1 << "{" << std::endl;
 	
-	INDT_2 << "for (unsigned i = 0; i < " << i_dim << "; i++)" << std::endl;
-	INDT_2 << "for (unsigned j = 0; j < " << j_dim << "; j++)" << std::endl;
+	INDT_2 << "for (size_t i = 0; i < " << i_dim << "; i++)" << std::endl;
+	INDT_2 << "for (size_t j = 0; j < " << j_dim << "; j++)" << std::endl;
 	INDT_2 << "{" << std::endl;
 	
 	print_initialize(dst, y_idx);
 	
-	INDT_3 << "for (unsigned k = 0; k < " << k_dim << "; k++)" << std::endl;
+	INDT_3 << "for (size_t k = 0; k < " << k_dim << "; k++)" << std::endl;
 	INDT_3 << "{" << std::endl;
 	print_multiply_accumulate(dst, y_idx, a_idx, b_idx);
 	INDT_3 << "}" << std::endl;
