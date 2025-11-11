@@ -68,7 +68,7 @@ class MaxPool : public Pooling {
 
 		// Update the max and index value
 		INDT_4 << "if( curmax < x" << x_idx << ") {" <<std::endl;
-		INDT_4 << "curmax = MAX( curmax, x" << x_idx << ");" <<std::endl;
+		INDT_4 << "curmax = x" << x_idx << ";" <<std::endl;
 		if( get_Indices() )
 			INDT_4  << "curmaxind = " << indices_value << ";" <<std::endl;
 		INDT_4 << "}" << std::endl;

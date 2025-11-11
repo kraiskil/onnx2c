@@ -252,12 +252,15 @@ class SpatialFilter : public Node {
 		else    // same as above, just cleaner to read :)
 			INDT_3 <<   "for( int32_t c=0; c<" << channels << "; c++ ) {" << std::endl;
 
-
+		std::string w_idx = "[m][c]";
+		if (group != 1)
+			w_idx = "[m][c-(gi*g)]";
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string idx = "k" + std::to_string(i);
 			INDT_3 << "for( uint32_t " << idx << "=0; ";
 			   dst <<       idx << "<" << kernel_shape[i] << "; ";
 			   dst <<       idx <<"++ ) {" << std::endl;
+			w_idx += "[" + idx + "]";
 		}
 
 		// check for out-of-input reading (i.e. read a pad)
@@ -268,7 +271,7 @@ class SpatialFilter : public Node {
 			INDT_4 <<  "if( ii" << i_str << ">=" << get_X()->data_dim[2+i] << ") continue;" << std::endl;
 		}
 
-		print_output_cell_calc(dst, in_kern_idxs, "", y_idx);
+		print_output_cell_calc(dst, in_kern_idxs, w_idx, y_idx);
 
 		// close kernel loop
 		for( unsigned i = 0; i<n_data_dims; i++)
