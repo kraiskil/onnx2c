@@ -33,7 +33,7 @@ namespace toC {
             std::string float_dtype = get_input_tensor(1)->data_type_str();
             INDT_3 << float_dtype << " scaled = ((" << float_dtype << ")x) * (a_scale[0] * b_scale[0]) / y_scale[0];" << std::endl;
             INDT_3 << "scaled = scaled + (" << float_dtype << ")y_zero_point[0];" << std::endl;
-            INDT_3 << y_idx << " = (" << get_output_tensor(0)->data_type_str() << ") froundf(scaled);" << std::endl;
+            INDT_3 << y_idx << " = (" << get_output_tensor(0)->data_type_str() << ") roundf(scaled);" << std::endl;
         }
 
         void name_scalar_input(unsigned input_no, std::string name) {
