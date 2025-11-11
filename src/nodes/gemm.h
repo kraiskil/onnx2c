@@ -131,8 +131,8 @@ class Gemm : public Node {
 		// Now genereate the calculation source code
 
 		// Loop output rows, columns
-		INDT_1 << "for( uint32_t r=0; r<M; r++ )" << std::endl;
-		INDT_2 << "for( uint32_t c=0; c<N; c++ ) {" << std::endl;
+		INDT_1 << "for( size_t r=0; r<M; r++ )" << std::endl;
+		INDT_2 << "for( size_t c=0; c<N; c++ ) {" << std::endl;
 
 		/* Calculate the matrix muliplication dot inner dot product */
 		if( options.quantize ) {
@@ -141,7 +141,7 @@ class Gemm : public Node {
 		else {
 			INDT_3 << type <<" ABrc = 0;" << std::endl;
 		}
-		INDT_3 << "for( uint32_t i=0; i<K; i++ ) {" << std::endl;
+		INDT_3 << "for( size_t i=0; i<K; i++ ) {" << std::endl;
 		INDT_4 <<   B->data_type_str() << " B_el = " << constant_acces_code( "B" + B_idx ) << ";" << std::endl;
 		INDT_4 <<   "ABrc += " << A_el << " * B_el;" << std::endl;
 		INDT_3 << "}" << std::endl;

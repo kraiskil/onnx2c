@@ -13,8 +13,8 @@ class GlobalMaxPool : public Node {
 		int num_channels = X->data_dim[1];
 
 		dst << "\t/* GlobalMaxPool */" << std::endl;
-		dst << "\tfor( int32_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
-		dst << "\tfor( int32_t c=0; c<" << num_channels << "; c++ ) {" << std::endl;
+		dst << "\tfor( size_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
+		dst << "\tfor( size_t c=0; c<" << num_channels << "; c++ ) {" << std::endl;
 
 		// Initialize max_value to a very small value
 		dst << "\t\tfloat max_value = -FLT_MIN;" << std::endl;
@@ -29,7 +29,7 @@ class GlobalMaxPool : public Node {
 			in_idx_string += "[" + dim_var + "]";
 			out_idx_string += "[0]";
 
-			dst << "\t\tfor( int32_t " << dim_var << " = 0; " 
+			dst << "\t\tfor( size_t " << dim_var << " = 0; " 
 			    << dim_var << " < " << dim_size << "; " 
 			    << dim_var << "++ ) {" << std::endl;
 		}

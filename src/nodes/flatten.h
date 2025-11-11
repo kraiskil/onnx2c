@@ -34,7 +34,7 @@ class Flatten : public Node {
 		dst << "\t" << type << " *input_ = (" << type << "*)input;" << std::endl;
 		dst << "\t" << type << " *output_ = (" << type << "*)output;" << std::endl;
 
-		dst << "\t" << "for( uint32_t i=0; i<" << input->data_num_elem() << "; i++ )" << std::endl;
+		dst << "\t" << "for( size_t i=0; i<" << input->data_num_elem() << "; i++ )" << std::endl;
 		dst << "\t\toutput_[i] = input_[i];" << std::endl;
 		dst << std::endl;
 	}

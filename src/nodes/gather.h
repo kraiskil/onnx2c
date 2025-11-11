@@ -63,7 +63,7 @@ class Gather : public Node {
 		std::string oidx = output->rank() == 0 ? "*Y" : "Y";
 		for (unsigned r = 0; r < output->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
-			INDT_1 << "for (unsigned " << lv << "=0; ";
+			INDT_1 << "for (size_t " << lv << "=0; ";
 			dst << lv << "<" << output->data_dim[r] << "; ";
 			dst << lv << "++)" << std::endl;
 

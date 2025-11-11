@@ -41,7 +41,7 @@ class Dropout : public Node {
 		if( is_output_N_used(1) )
 			dst << "\t" << "bool *mask_1d = (bool*)mask;" << std::endl;
 
-		dst << "\tfor( uint32_t d=0; d<" << data->data_num_elem() << "; d++) {" << std::endl;
+		dst << "\tfor( size_t d=0; d<" << data->data_num_elem() << "; d++) {" << std::endl;
 
 		dst << "\t\t" << "out[d] = in[d];" << std::endl;
 

@@ -132,7 +132,7 @@ class Elementwise_2 : public Node {
 
 		for( unsigned r=0; r<C->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
-			INDT_1 << "for (unsigned " << lv << "=0; " << lv << "<" << C->data_dim[r] << "; " << lv << "++)" << std::endl;
+			INDT_1 << "for (size_t " << lv << "=0; " << lv << "<" << C->data_dim[r] << "; " << lv << "++)" << std::endl;
 		}
 
 		INDT_1 << "{" << std::endl;
