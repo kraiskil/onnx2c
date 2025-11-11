@@ -15,10 +15,7 @@ class Conv : public SpatialFilter {
 
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
 	{
-		std::string outidx="";
-		for(unsigned i=0; i<get_numDataDim(); i++)
-			outidx += "[o" + std::to_string(i) + "]";
-		INDT_3 << "y[b][m]" << outidx << " = ";
+		INDT_3 << "y" << y_idx << " = ";
 		if( get_number_of_inputs() < 3 ) // bias is the 3rd input, optional
 			dst << "0;" << std::endl;
 		else
@@ -30,19 +27,7 @@ class Conv : public SpatialFilter {
 		const std::string &w_idx,
 		const std::string &y_idx) const override
 	{
-		std::string outidx="";
-		std::string iididx="";
-		std::string kidx="";
-		for(unsigned i=0; i<get_numDataDim(); i++){
-			outidx += "[o" + std::to_string(i) + "]";
-			iididx+= "[ii" + std::to_string(i) + "]";
-			kidx+= "[k" + std::to_string(i) + "]";
-		}
-		INDT_4 << "y[b][m]"<<outidx<<" += x[b][c]"<<iididx<<" *";
-		if( group == 1 )
-		   dst << "w[m][c]"<<kidx<<";" << std::endl;
-		else
-		   dst << "w[m][c-(gi*g)]"<<kidx<<";" << std::endl;
+		INDT_4 << "y" << y_idx << " += x" << x_idx << " * w" << w_idx << ";" << std::endl;
 	}
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const override
 	{
