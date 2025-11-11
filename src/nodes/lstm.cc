@@ -273,18 +273,18 @@ void LSTM::print(std::ostream &dst) const
 	int ds = input_size;
 	int bs = batch_size;
 
-	INDT_1<<  "int hs = " << hs << ";" << std::endl;
-	INDT_1<<  "int ds = " << ds << ";" << std::endl;
-	INDT_1<<  "int bs = " << bs << ";" << std::endl;
+	INDT_1<<  "size_t hs = " << hs << ";" << std::endl;
+	INDT_1<<  "size_t ds = " << ds << ";" << std::endl;
+	INDT_1<<  "size_t bs = " << bs << ";" << std::endl;
 	// index into W, R to get the start of the gate indices
-	INDT_1<<  "int iidx = 0;" << std::endl;
-	INDT_1<<  "int oidx = hs;" << std::endl;
-	INDT_1<<  "int fidx = 2*hs;" << std::endl;
-	INDT_1<<  "int cidx = 3*hs;" << std::endl;
+	INDT_1<<  "size_t iidx = 0;" << std::endl;
+	INDT_1<<  "size_t oidx = hs;" << std::endl;
+	INDT_1<<  "size_t fidx = 2*hs;" << std::endl;
+	INDT_1<<  "size_t cidx = 3*hs;" << std::endl;
 	// index into B, to get Rb. Wb is B at offset 0
-	INDT_1<<  "int Rb = 4*hs;" << std::endl;
+	INDT_1<<  "size_t Rb = 4*hs;" << std::endl;
 	// TODO: variable lenght sequences not yet implemented
-	INDT_1<<  "int sequence_lenght = " << seq_length << ";" << std::endl;
+	INDT_1<<  "size_t sequence_lenght = " << seq_length << ";" << std::endl;
 
 	// TODO: these temporary variables are BIG. Make them global to minimize
 	// stack usage? Probably needs to be an onnx2c flag for user to select
@@ -313,7 +313,7 @@ void LSTM::print(std::ostream &dst) const
 	dst << std::endl;
 
 	/* Loop over sequences */
-	INDT_1<<  "for( int s=0; s<sequence_lenght; s++) {" << std::endl;
+	INDT_1<<  "for( size_t s=0; s<sequence_lenght; s++) {" << std::endl;
 	dst << std::endl;
 	INDT_2<<  "/* Forward lane */" << std::endl;
 	print_lstm_kernel(dst, /* forward= */ true);

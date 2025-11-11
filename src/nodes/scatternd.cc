@@ -64,7 +64,7 @@ void ScatterND::print(std::ostream &dst) const
 	unsigned i;
 	for( i=0; i< indices->rank()-1 ; i++) {
 		std::string idxstr = "idx"+std::to_string(i);
-		INDT_1 << "for(uint64_t " <<idxstr<<" = 0; ";
+		INDT_1 << "for(size_t " <<idxstr<<" = 0; ";
 		  dst  << idxstr << " < " << indices->data_dim[i] << "; ";
                   dst  << idxstr <<"++) {" << std::endl;
 
@@ -87,7 +87,7 @@ void ScatterND::print(std::ostream &dst) const
 		u_idxs += "[" + o_idx + "]";
 		o_idxs += "[" + o_idx + "]";
 
-		INDT_2 << "for( uint32_t " << o_idx << "=0; ";
+		INDT_2 << "for( size_t " << o_idx << "=0; ";
 		   dst <<       o_idx << "<" << output->data_dim[i] << "; ";
 		   dst <<       o_idx <<"++) {" << std::endl;
 	}

@@ -224,8 +224,8 @@ class SpatialFilter : public Node {
 		if( direct_channel_map() )
 			INDT_1 << "for( size_t m=0, c=0; m<" << maps << "; m++, c=m) {" << std::endl;
 		else if( get_W() && group > 1 ) {
-			INDT_1 << "uint32_t go = " << maps/group     << "; // output group size, i.e. maps/group" << std::endl;
-			INDT_1 << "uint32_t gi = " << channels/group << "; // inptput group size, i.e. channels/group" << std::endl;
+			INDT_1 << "size_t go = " << maps/group     << "; // output group size, i.e. maps/group" << std::endl;
+			INDT_1 << "size_t gi = " << channels/group << "; // inptput group size, i.e. channels/group" << std::endl;
 			INDT_1 << "for( size_t g=0; g<" << group << "; g++) {" << std::endl;
 			INDT_1 << "for( size_t m=go*g; m<go*(g+1); m++) {" << std::endl;
 		}
@@ -248,9 +248,9 @@ class SpatialFilter : public Node {
 		if (direct_channel_map())
 			;
 		else if( get_W() && group > 1 )
-			INDT_3 <<   "for( int32_t c=gi*g; c<gi*(g+1); c++ ) {" << std::endl;
+			INDT_3 <<   "for( size_t c=gi*g; c<gi*(g+1); c++ ) {" << std::endl;
 		else    // same as above, just cleaner to read :)
-			INDT_3 <<   "for( int32_t c=0; c<" << channels << "; c++ ) {" << std::endl;
+			INDT_3 <<   "for( size_t c=0; c<" << channels << "; c++ ) {" << std::endl;
 
 		std::string w_idx = "[m][c]";
 		if (group != 1)
