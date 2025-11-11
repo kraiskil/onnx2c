@@ -50,7 +50,7 @@ class Transpose : public Node {
 		// loop over all indices
 		for( unsigned i = 0; i<n_dim; i++) {
 			std::string idx = "i" + std::to_string(i);
-			dst << "\t" << "for( uint32_t " << idx << "=0; ";
+			dst << "\t" << "for( size_t " << idx << "=0; ";
 			dst <<               idx << "<" << data->data_dim[i] << "; ";
 			dst <<               idx <<"++ ) {" << std::endl;
 		}

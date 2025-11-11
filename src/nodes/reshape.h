@@ -36,9 +36,8 @@ class Reshape : public Node {
 		dst << "\t/*Reshape*/" << std::endl;
 		dst << "\t" << type << " *data_ptr = (" << type << "*)data;" << std::endl;
 		dst << "\t" << type << " *reshaped_ptr = (" << type << "*)reshaped;" << std::endl;
-		dst << "\tuint32_t i;" << std::endl;
 
-		dst << "\t" << "for( i=0; i<" << data->data_num_elem() << "; i++ )" << std::endl;
+		dst << "\t" << "for( size_t i=0; i<" << data->data_num_elem() << "; i++ )" << std::endl;
 		dst << "\t\treshaped_ptr[i] = data_ptr[i];" << std::endl;
 		dst << std::endl;
 	}

@@ -216,21 +216,21 @@ class SpatialFilter : public Node {
 		 * In case this SpatialFilter has a weights input (w), this first loop is over
 		 * output channels (M). Othervise input channels==outputchannels, and it is named C
 		 */
-		INDT_1 << "for( uint32_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
+		INDT_1 << "for( size_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
 		if( options.quantize ) {
 			INDT_2 << "int32_t batch_min = INT32_MAX;" << std::endl;
 			INDT_2 << "int32_t batch_max = INT32_MIN;" << std::endl;
 		}
 		if( direct_channel_map() )
-			INDT_1 << "for( uint32_t m=0, c=0; m<" << maps << "; m++, c=m) {" << std::endl;
+			INDT_1 << "for( size_t m=0, c=0; m<" << maps << "; m++, c=m) {" << std::endl;
 		else if( get_W() && group > 1 ) {
 			INDT_1 << "uint32_t go = " << maps/group     << "; // output group size, i.e. maps/group" << std::endl;
 			INDT_1 << "uint32_t gi = " << channels/group << "; // inptput group size, i.e. channels/group" << std::endl;
-			INDT_1 << "for( uint32_t g=0; g<" << group << "; g++) {" << std::endl;
-			INDT_1 << "for( uint32_t m=go*g; m<go*(g+1); m++) {" << std::endl;
+			INDT_1 << "for( size_t g=0; g<" << group << "; g++) {" << std::endl;
+			INDT_1 << "for( size_t m=go*g; m<go*(g+1); m++) {" << std::endl;
 		}
 		else
-			INDT_1 << "for( uint32_t m=0; m<" << maps << "; m++) {" << std::endl;
+			INDT_1 << "for( size_t m=0; m<" << maps << "; m++) {" << std::endl;
 
 
 		// loop over outputs and inputs
@@ -257,7 +257,7 @@ class SpatialFilter : public Node {
 			w_idx = "[m][c-(gi*g)]";
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string idx = "k" + std::to_string(i);
-			INDT_3 << "for( uint32_t " << idx << "=0; ";
+			INDT_3 << "for( size_t " << idx << "=0; ";
 			   dst <<       idx << "<" << kernel_shape[i] << "; ";
 			   dst <<       idx <<"++ ) {" << std::endl;
 			w_idx += "[" + idx + "]";

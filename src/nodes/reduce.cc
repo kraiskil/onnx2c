@@ -49,7 +49,7 @@ std::string Reduce::print_and_return_o_iterator(std::ostream &dst) const
     std::string idx = "";
     for (unsigned r = 0; r < output->rank(); r++) {
         std::string lv = "i" + std::to_string(r);
-        INDT(r+1) << "for (unsigned " << lv << " = 0; ";
+        INDT(r+1) << "for (size_t " << lv << " = 0; ";
         dst << lv << "<" << output->data_dim[r] << "; ";
         dst << lv << "++) {" << std::endl;
 
@@ -72,7 +72,7 @@ std::pair<std::string, std::string> Reduce::print_and_return_io_iterator(std::os
     
     for (unsigned r = 0; r < input->rank(); r++) {
         std::string lv = "i" + std::to_string(r);
-        INDT(r+1) << "for (unsigned " << lv << " = 0; ";
+        INDT(r+1) << "for (size_t " << lv << " = 0; ";
         dst << lv << "<" << input->data_dim[r] << "; ";
         dst << lv << "++) {" << std::endl;
 
