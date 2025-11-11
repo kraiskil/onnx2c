@@ -66,8 +66,8 @@ namespace toC {
 
 			std::string float_type = get_input_tensor(1)->data_type_str();
 
-			INDT_2 << float_type << " a = ((" << float_type << ")" << a_idx << " - (int32_t)A_zero_point[0]) * A_scale[0];" << std::endl;
-			INDT_2 << float_type << " b = ((" << float_type << ")" << b_idx << " - (int32_t)B_zero_point[0]) * B_scale[0];" << std::endl;
+			INDT_2 << float_type << " a = ((" << float_type << ")" << a_idx << " - A_zero_point[0]) * A_scale[0];" << std::endl;
+			INDT_2 << float_type << " b = ((" << float_type << ")" << b_idx << " - B_zero_point[0]) * B_scale[0];" << std::endl;
 
 			INDT_2 << float_type << " c = ";
 			if (op_name == "QLinearAdd") {
@@ -79,7 +79,7 @@ namespace toC {
 			}
 			dst << ";" << std::endl;
 
-			INDT_2 << c_idx << " = roundf(c / Y_scale[0] + Y_zero_point);" << std::endl;
+			INDT_2 << c_idx << " = roundf(c / C_scale[0] + C_zero_point[0]);" << std::endl;
 
 			INDT_1 << "}" << std::endl;
 		}
