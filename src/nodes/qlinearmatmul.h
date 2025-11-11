@@ -4,6 +4,8 @@
  * 
  */
 
+#include "abstractmatmul.h"
+
 namespace toC {
     class QLinearMatMul : public AbstractMatMul {
     public:
