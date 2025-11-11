@@ -135,12 +135,7 @@ class Gemm : public Node {
 		INDT_2 << "for( uint32_t c=0; c<N; c++ ) {" << std::endl;
 
 		/* Calculate the matrix muliplication dot inner dot product */
-		if( options.quantize ) {
-			INDT_3 << "int32_t ABrc = 0;" << std::endl;
-		}
-		else {
-			INDT_3 << type <<" ABrc = 0;" << std::endl;
-		}
+		INDT_3 << type <<" ABrc = 0;" << std::endl;
 		INDT_3 << "for( uint32_t i=0; i<K; i++ ) {" << std::endl;
 		INDT_4 <<   B->data_type_str() << " B_el = " << constant_acces_code( "B" + B_idx ) << ";" << std::endl;
 		INDT_4 <<   "ABrc += " << A_el << " * B_el;" << std::endl;
@@ -148,19 +143,10 @@ class Gemm : public Node {
 
 
 		/* Add scale & bias, store result in output */
-		if( options.quantize )
-			INDT_3 << "int32_t tmp = ABrc * alpha;" << std::endl;
-		else
-			INDT_3 << type <<" tmp = ABrc * alpha;" << std::endl;
+		INDT_3 << type <<" tmp = ABrc * alpha;" << std::endl;
 
 		if( C ) {
 			INDT_3 << "tmp += C_" << C_idx << " * beta;" << std::endl;
-		}
-
-		if( options.quantize ) {
-			INDT_3 << "tmp = tmp/(K*16);" << std::endl;
-			INDT_3 << "tmp = tmp > 127?127:tmp;" << std::endl;
-			INDT_3 << "tmp = tmp < -127?-127:tmp;" << std::endl;
 		}
 
 		INDT_3 << "Y[r][c] = tmp;" << std::endl;

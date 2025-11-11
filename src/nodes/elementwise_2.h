@@ -141,16 +141,7 @@ class Elementwise_2 : public Node {
 		std::string Bidx = broadcast(B, "B", C->rank());
 		std::string Cidx = broadcast(C, "C", C->rank());
 
-		if( options.quantize ) {
-			INDT_2 << "int32_t tmp = " << operation(Aidx, Bidx) << ";" << std::endl;
-			// TODO: division amount here depends on operand
-			INDT_2 << "tmp = tmp/2;" << std::endl;
-			INDT_2 << "tmp = tmp > 127?127:tmp;" << std::endl;
-			INDT_2 << "tmp = tmp < -127?-127:tmp;" << std::endl;
-			INDT_2 << Cidx << "= tmp;" << std::endl;
-		}
-		else
-			INDT_2 << Cidx << " = " << operation(Aidx, Bidx) << ";" << std::endl;
+		INDT_2 << Cidx << " = " << operation(Aidx, Bidx) << ";" << std::endl;
 
 		INDT_1 << "}" << std::endl;
 	}
