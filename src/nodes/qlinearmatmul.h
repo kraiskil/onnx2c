@@ -36,18 +36,27 @@ namespace toC {
             INDT_3 << y_idx << " = (" << get_output_tensor(0)->data_type_str() << ") roundf(scaled);" << std::endl;
         }
 
+        void name_1d_scalar_input(unsigned input_no, std::string name) {
+            // TODO: Support per-channel quantization
+            name_input(input_no, name);
+            if ( get_input_tensor(input_no)->data_dim.size() != 1 ||
+			     get_input_tensor(input_no)->data_dim[0] != 1 ) {
+				ERROR(name << " must be 1 dimensional with 1 element");
+			}
+        }
+
         void resolve(void) override
         {
             name_input(0, "A");
-            name_input(1, "a_scale");
-            name_input(2, "a_zero_point");
+            name_1d_scalar_input(1, "a_scale");
+            name_1d_scalar_input(2, "a_zero_point");
 
             name_input(3, "B");
-            name_input(4, "b_scale");
-            name_input(5, "b_zero_point");
+            name_1d_scalar_input(4, "b_scale");
+            name_1d_scalar_input(5, "b_zero_point");
 
             name_input(6, "y_scale");
-            name_input(7, "y_zero_point");
+            name_1d_scalar_input(7, "y_zero_point");
 
             Tensor *y_zero_point = get_input_tensor(7);
 
