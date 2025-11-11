@@ -79,7 +79,7 @@ namespace toC {
 			}
 			dst << ";" << std::endl;
 
-			INDT_2 << c_idx << " = froundf(c / Y_scale[0] + Y_zero_point);" << std::endl;
+			INDT_2 << c_idx << " = roundf(c / Y_scale[0] + Y_zero_point);" << std::endl;
 
 			INDT_1 << "}" << std::endl;
 		}
