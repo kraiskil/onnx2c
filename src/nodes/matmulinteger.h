@@ -7,6 +7,8 @@
  * which is useful for quantized networks.
  */
 
+#include "abstractmatmul.h"
+
 namespace toC {
 
 class MatMulInteger : public AbstractMatMul {
