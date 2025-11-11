@@ -30,14 +30,14 @@ namespace toC {
 									const std::string &x_idx,
 									const std::string &w_idx,
 									const std::string &y_idx) const override {
-			INDT_4 << "a += (x" << x_idx << " - (int32_t)x_zero_point[0]) * (w" << w_idx << " - (int32_t)w_zero_point[0]);" << std::endl;
+			INDT_4 << "a += ((int32_t)x" << x_idx << " - x_zero_point[0]) * ((int32_t)w" << w_idx << " - w_zero_point[0]);" << std::endl;
 		}
 
 		void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const override {
 			std::string float_dtype = get_input_tensor(1)->data_type_str();
 			INDT_3 << float_dtype << " scaled = ((" << float_dtype << ")a) * (x_scale[0] * w_scale[0]) / y_scale[0];" << std::endl;
 			INDT_3 << "scaled = scaled + (" << float_dtype << ")y_zero_point[0];" << std::endl;
-			INDT_3 << "y" << y_idx << " = (" << get_output_tensor(0)->data_type_str() << ") roundf(scaled);" << std::endl;
+			INDT_3 << "y" << y_idx << " = (" << get_output_tensor(0)->data_type_str() << ") froundf(scaled);" << std::endl;
 		}
 
 		void print(std::ostream &dst) const override {
