@@ -44,7 +44,7 @@ void ConstantOfShape::print(std::ostream &dst) const
 	INDT_1 << "/* ConstantOfShape */" << std::endl;
 
 	INDT_1 << type << " *dst = (" << type << "*)output;" << std::endl;
-	INDT_1 << "for( unsigned i=0; i< " << output->data_num_elem() << "; i++)" << std::endl;
+	INDT_1 << "for( size_t i=0; i< " << output->data_num_elem() << "; i++)" << std::endl;
 	INDT_2 <<   "dst[i] = " ;
 	if( value == NULL )
 		dst << "0;" <<std::endl;

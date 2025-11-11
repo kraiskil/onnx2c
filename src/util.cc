@@ -162,7 +162,7 @@ void print_loops_over_dims(std::ostream &dst, const toC::Tensor *t, std::string 
 		std::string loopvar = prefix + std::to_string(dim);
 		for(unsigned i=0; i<indents; i++)
 			dst << "\t";
-		dst << "for( uint32_t " << loopvar << "=0; ";
+		dst << "for( size_t " << loopvar << "=0; ";
 		dst <<       loopvar << " < " << t->data_dim[dim] << "; ";
 		dst <<       loopvar << "++) {"<< std::endl;
 	}

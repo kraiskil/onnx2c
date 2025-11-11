@@ -74,7 +74,7 @@ class Clip : public Node {
 		std::string idx = "";
 		for( unsigned r=0; r< input->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
-			INDT_1 << "for (unsigned " << lv << "=0; ";
+			INDT_1 << "for (size_t " << lv << "=0; ";
 			 dst << lv << "<" << input->data_dim[r] << "; ";
 			 dst << lv << "++) {" << std::endl;
 
