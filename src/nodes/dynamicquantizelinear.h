@@ -33,7 +33,7 @@ class DynamicQuantizeLinear : public Node {
 		INDT_1 << "uint8_t *y_zero_point_ = (uint8_t*)y_zero_point;" << std::endl;
 		INDT_1 << "float min, max; min=max=0.0;" << std::endl;
 
-		INDT_1 << "for (int i=0; i<" << n_el << "; i++ ) {" << std::endl;
+		INDT_1 << "for (size_t i=0; i<" << n_el << "; i++ ) {" << std::endl;
 			INDT_2 << "float xi = in_data[i];" << std::endl;
 			INDT_2 << "min = xi<min ? xi : min;" << std::endl;
 			INDT_2 << "max = xi>max ? xi : max;" << std::endl;
@@ -54,7 +54,7 @@ class DynamicQuantizeLinear : public Node {
 		INDT_1 << "*y_zero_point_ = round(fl_zero_point);" << std::endl;
 
 
-		INDT_1 << "for (int i=0; i<" << n_el << "; i++ ) {" << std::endl;
+		INDT_1 << "for (size_t i=0; i<" << n_el << "; i++ ) {" << std::endl;
 			INDT_2 << "float scaled = in_data[i]/ *y_scale + *y_zero_point;" << std::endl;
 			INDT_2 << "scaled = scaled < 0 ? 0 : scaled;" << std::endl;
 			INDT_2 << "scaled = scaled > 255 ? 255 : scaled;" << std::endl;

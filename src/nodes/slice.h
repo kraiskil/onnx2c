@@ -226,7 +226,7 @@ class Slice : public Node {
 
 			std::string iv = "i" + std::to_string(d);
 			std::string ov = "o" + std::to_string(d);
-			INDT_1 << "for (unsigned " << iv << "=" << s << ", " << ov << "=0; ";
+			INDT_1 << "for (size_t " << iv << "=" << s << ", " << ov << "=0; ";
 			//dst    << iv << "<" << e  << "; ";
 			dst    << ov << "<" << output->data_dim[d]  << "; ";
 			dst    << iv << "+=" << st <<", " << ov << "++) {" << std::endl;

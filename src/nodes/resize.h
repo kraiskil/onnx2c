@@ -351,7 +351,7 @@ class Resize : public Node {
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string i_str = std::to_string(i);
 			std::string o_idx = "o" + i_str;
-			INDT_1 << "for( uint32_t " << o_idx << "=0; ";
+			INDT_1 << "for( size_t " << o_idx << "=0; ";
 			   dst <<       o_idx << "<" << Y->data_dim[i] << "; ";
 			   dst <<       o_idx <<"++) {" << std::endl;
 

@@ -82,8 +82,8 @@ class BatchNormalization : public Node {
 		if( sqrt_var_offline  == false)
 			INDT_1 << "float epsilon = " << epsilon << ";" <<std::endl;
 
-		dst<<"\t" << "for( int32_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
-		dst<<"\t" << "for( int32_t c=0; c<" << num_chan << "; c++ ) {" << std::endl;
+		dst<<"\t" << "for( size_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
+		dst<<"\t" << "for( size_t c=0; c<" << num_chan << "; c++ ) {" << std::endl;
 
 		// create the indexing string for picking out an element in input/output
 		std::string idxs = "[b][c]";
@@ -94,7 +94,7 @@ class BatchNormalization : public Node {
 		// Loop over data dimensions
 		for( unsigned i = 2; i<input->data_dim.size(); i++) {
 			std::string idx = "i" + std::to_string(i);
-			dst << "\t" << "for( uint32_t " << idx << "=0; ";
+			dst << "\t" << "for( size_t " << idx << "=0; ";
 			dst <<               idx << "<" << input->data_dim[i] << "; ";
 			dst <<               idx <<"++ ) {" << std::endl;
 		}

@@ -87,7 +87,7 @@ void LayerNormalization::print(std::ostream &dst) const {
 
 	std::string outer_idx = "";
 	for (int i = 0; i < axis; i++) {
-		INDT_1 << "for (unsigned i" << i << " = 0; i" << i << "<" << x->data_dim[i] << "; i" << i << "++)" << std::endl;
+		INDT_1 << "for (size_t i" << i << " = 0; i" << i << "<" << x->data_dim[i] << "; i" << i << "++)" << std::endl;
 		outer_idx += "[i" + std::to_string(i) + "]";
 	}
 
@@ -103,7 +103,7 @@ void LayerNormalization::print(std::ostream &dst) const {
 	// Compute mean
 	INDT_2 << stash_type_str << " mean_value = 0;" << std::endl;
 	for (int i = axis; i < (int)x->data_dim.size(); i++) {
-		INDT_2 << "for (unsigned i" << i << " = 0; i" << i << "<" << x->data_dim[i] << "; i" << i << "++)" << std::endl;
+		INDT_2 << "for (size_t i" << i << " = 0; i" << i << "<" << x->data_dim[i] << "; i" << i << "++)" << std::endl;
 	}
 
 	INDT_3 << "mean_value += x" << idx << " / (" << stash_type_str << ")" << inner_element_count << ";" << std::endl;
@@ -111,7 +111,7 @@ void LayerNormalization::print(std::ostream &dst) const {
 	// Compute variance
 	INDT_2 << stash_type_str << " variance_value = 0;" << std::endl;
 	for (int i = axis; i < (int)x->data_dim.size(); i++) {
-		INDT_2 << "for (unsigned i" << i << " = 0; i" << i << "<" << x->data_dim[i] << "; i" << i << "++)" << std::endl;
+		INDT_2 << "for (size_t i" << i << " = 0; i" << i << "<" << x->data_dim[i] << "; i" << i << "++)" << std::endl;
 	}
 	INDT_3 << "variance_value += (x" << idx << " - mean_value) * (x" << idx << " - mean_value) / (" << stash_type_str << ")" << inner_element_count << ";" << std::endl;
 
@@ -119,7 +119,7 @@ void LayerNormalization::print(std::ostream &dst) const {
 
 	// Normalize
 	for (int i = axis; i < (int)x->data_dim.size(); i++) {
-		INDT_2 << "for (unsigned i" << i << " = 0; i" << i << "<" << x->data_dim[i] << "; i" << i << "++)" << std::endl;
+		INDT_2 << "for (size_t i" << i << " = 0; i" << i << "<" << x->data_dim[i] << "; i" << i << "++)" << std::endl;
 	}
 	INDT_3 << "y" << idx << " = (x" << idx << " - mean_value) * inv_std_dev_value * " << broadcast(scale, "scale", x->rank());
 	if (get_number_of_inputs() == 3) {

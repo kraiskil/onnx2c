@@ -88,7 +88,7 @@ class Range : public Node {
 
 		INDT_1 << dt <<" start = start_arg[0];" << std::endl;
 		INDT_1 << dt <<" delta = delta_arg[0];" << std::endl;
-		INDT_1 << "for(int i=0; i< "<< output_size << "; ++i) {" << std::endl;
+		INDT_1 << "for(size_t i=0; i< "<< output_size << "; ++i) {" << std::endl;
 		INDT_2 <<   "output[i] = start + (i * delta);" << std::endl;
 		INDT_1 << "}" << std::endl;
 	}

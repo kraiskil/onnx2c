@@ -61,7 +61,7 @@ void RandomUniform::print(std::ostream &dst) const {
 	Tensor *output = get_output_tensor(0);
 
 	INDT_1 << output->data_type_str() << " *output_ptr = (" << output->data_type_str() << "*) output;" << std::endl;
-	INDT_1 << "for( int i=0; i<" << output->data_num_elem() << "; i++ )" << std::endl;
+	INDT_1 << "for( size_t i=0; i<" << output->data_num_elem() << "; i++ )" << std::endl;
 	INDT_2 << "output_ptr[i] = (" << output->data_type_str() << ")"
 	       << "(rand() / (float) RAND_MAX) * " << (high - low) << " + " << low << ";" << std::endl;
 }

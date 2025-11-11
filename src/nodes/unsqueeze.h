@@ -40,7 +40,7 @@ class Unsqueeze : public Node {
 
 		// TODO: can't this be a no-op? Check if the compiler can optimize this away?
 		//       also if not, can it optimize a memcpy()?
-		dst << "\t" << "for( uint32_t i=0; i<" << data->data_num_elem() << "; i++ )" << std::endl;
+		dst << "\t" << "for( size_t i=0; i<" << data->data_num_elem() << "; i++ )" << std::endl;
 		dst << "\t\t" << "expanded[i] = data[i];" << std::endl;
 		dst << std::endl;
 	}

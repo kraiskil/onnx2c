@@ -127,8 +127,8 @@ void Pad::print(std::ostream &dst) const
 		std::string dopad = "pad_at_" + std::to_string(i);
 
 		// Print the loop in C source
-		INDT(i+1) << "uint32_t " << iridx << ";" << std::endl;
-		INDT(i+1) << "for( uint32_t " << oidx << "=0, " << ilidx << "=0; ";
+		INDT(i+1) << "size_t " << iridx << ";" << std::endl;
+		INDT(i+1) << "for( size_t " << oidx << "=0, " << ilidx << "=0; ";
 		dst <<            oidx << "<" << output->data_dim[i] << "; ";
 		dst <<            oidx <<"++ ) {" << std::endl;
 		if ( mode == "constant" )

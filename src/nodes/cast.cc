@@ -54,7 +54,7 @@ void Cast::print(std::ostream &dst) const
 	INDT_1 << intype << " *X = (" << intype << "*)input;" << std::endl;
 	INDT_1 << outtype << " *Y = (" << outtype << "*)output;" << std::endl;
 
-	INDT_1 << "for( unsigned i=0; i<"<<input->data_num_elem() << "; i++)"  << std::endl;
+	INDT_1 << "for( size_t i=0; i<"<<input->data_num_elem() << "; i++)"  << std::endl;
 	INDT_2 <<   "Y[i]= (" << outtype << ")X[i];" << std::endl;
 }
 

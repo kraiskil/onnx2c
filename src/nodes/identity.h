@@ -39,7 +39,7 @@ void Identity::print(std::ostream &dst) const {
 	INDT_1 << "const " << type << "* input_ptr = (const " << type << "*) input;" << std::endl;
 	INDT_1 << type << "* output_ptr = (" << type << "*) output;" << std::endl;
 
-	INDT_1 << "for (unsigned i = 0; i < " << input->data_num_elem() << "; i++)" << std::endl;
+	INDT_1 << "for (size_t i = 0; i < " << input->data_num_elem() << "; i++)" << std::endl;
 	INDT_2 << "output_ptr[i] = input_ptr[i];" << std::endl;
 }
 
