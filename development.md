@@ -90,4 +90,6 @@ Coding style
 ------------
 
  - indent with tab, align with space
+ - run `./scripts/code_layout_diff.sh` before pushing.
 
+CI doe not enforce a coding style yet. 
