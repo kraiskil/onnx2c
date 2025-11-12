@@ -10,7 +10,8 @@ namespace toC {
 
 class Identity : public Node {
 	public:
-	Identity() {
+	Identity()
+	{
 		op_name = "Identity";
 	}
 
@@ -18,7 +19,8 @@ class Identity : public Node {
 	virtual void print(std::ostream &dst) const override;
 };
 
-void Identity::resolve(void) {
+void Identity::resolve(void)
+{
 	Tensor *input = get_input_tensor(0);
 	name_input(0, "input");
 
@@ -28,7 +30,8 @@ void Identity::resolve(void) {
 	register_output(t, "output");
 }
 
-void Identity::print(std::ostream &dst) const {
+void Identity::print(std::ostream &dst) const
+{
 	LOG(INFO) << "Emitting unnecessary code for Identity node " << onnx_name << "." << std::endl;
 
 	INDT_1 << "/* Identity */" << std::endl;
@@ -43,5 +46,4 @@ void Identity::print(std::ostream &dst) const {
 	INDT_2 << "output_ptr[i] = input_ptr[i];" << std::endl;
 }
 
-} // namespace
-
+} // namespace toC

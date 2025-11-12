@@ -8,14 +8,16 @@ namespace toC {
 
 class Constant : public Node {
 	public:
-	Constant() {
+	Constant()
+	{
 		op_name = "Constant";
 	}
 
 	Tensor *value_tensor = nullptr;
 
-	virtual void parseAttributes( onnx::NodeProto &node ) override {
-		for( const auto& a : node.attribute() ) {
+	virtual void parseAttributes(onnx::NodeProto &node) override
+	{
+		for( const auto &a : node.attribute() ) {
 			LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
 			if( a.name() == "value" ) {
 				LOG(TRACE) << "Adding attribute 'value' as input tensor to node" << std::endl;
@@ -27,16 +29,15 @@ class Constant : public Node {
 		}
 	}
 
-
 	virtual void print(std::ostream &dst) const override
 	{
-		Tensor *output= get_output_tensor(0);
+		Tensor *output = get_output_tensor(0);
 
 		dst << "\t/* Constant */" << std::endl;
 		dst << "\t/* The output is generated as a global tensor */" << std::endl;
 
 		if( output->isIO == false ) {
-			dst << "\t(void)output;" <<std::endl;
+			dst << "\t(void)output;" << std::endl;
 			return;
 		}
 		// most likely this is not what the user wants :)
@@ -47,7 +48,7 @@ class Constant : public Node {
 		if( value_tensor == nullptr )
 			ERROR("Constant tensor not resolved");
 		std::string dimstr;
-		for( unsigned dim=0; dim<value_tensor->rank(); dim++) {
+		for( unsigned dim = 0; dim < value_tensor->rank(); dim++ ) {
 			dimstr += "[d" + std::to_string(dim) + "]";
 		}
 
@@ -78,5 +79,4 @@ class Constant : public Node {
 		register_output(value_tensor, "output");
 	}
 };
-}
-
+} // namespace toC

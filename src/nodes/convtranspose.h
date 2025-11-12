@@ -8,18 +8,19 @@
 #include "options.h"
 
 #include "aixlog.hpp"
-#include <iostream>
 #include "spatialfilter.h"
+#include <iostream>
 namespace toC {
 
 class ConvTranspose : public Node {
 	public:
-	ConvTranspose() {
+	ConvTranspose()
+	{
 		op_name = "ConvTranspose";
-		x=w=y=b = NULL;
+		x = w = y = b = NULL;
 		output_shape_given = false;
 		auto_pad = "NOTSET";
-		group=1;
+		group = 1;
 	}
 	// inputs
 	const Tensor *x;
@@ -41,7 +42,7 @@ class ConvTranspose : public Node {
 
 	bool output_shape_given; // [sic] - should be output_shape_given
 
-	virtual void parseAttributes( onnx::NodeProto &node ) override;
+	virtual void parseAttributes(onnx::NodeProto &node) override;
 
 	virtual void resolve(void) override;
 	std::vector<int> calculate_output_size(void);
@@ -57,5 +58,4 @@ class ConvTranspose : public Node {
 	void print_calculation(std::ostream &dst) const;
 };
 
-} // namespace
-
+} // namespace toC

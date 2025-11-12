@@ -1,7 +1,7 @@
 /* This file is part of onnx2c.
  *
  * DequantizeLinear node.
- * 
+ *
  */
 
 #include "node.h"
@@ -10,7 +10,8 @@ namespace toC {
 
 class DequantizeLinear : public Node {
 	public:
-	DequantizeLinear() {
+	DequantizeLinear()
+	{
 		op_name = "DequantizeLinear";
 		axis = 1;
 	}
@@ -23,9 +24,9 @@ class DequantizeLinear : public Node {
 	virtual void print(std::ostream &dst) const override;
 };
 
-
-void DequantizeLinear::parseAttributes( onnx::NodeProto &node ) {
-	for( const auto& a : node.attribute() ) {
+void DequantizeLinear::parseAttributes(onnx::NodeProto &node)
+{
+	for( const auto &a : node.attribute() ) {
 		LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
 		if( a.name() == "axis" )
 			axis = parse_attribute_int(a);
@@ -34,17 +35,18 @@ void DequantizeLinear::parseAttributes( onnx::NodeProto &node ) {
 	}
 }
 
-void DequantizeLinear::resolve(void) {
+void DequantizeLinear::resolve(void)
+{
 	Tensor *x = get_input_tensor(0);
 	Tensor *x_scale = get_input_tensor(1);
 	name_input(0, "x");
 	name_input(1, "x_scale");
 
-	if (axis < 0) {
+	if( axis < 0 ) {
 		axis += x->data_dim.size();
 	}
 
-	if (get_number_of_inputs() == 3) {
+	if( get_number_of_inputs() == 3 ) {
 		name_input(2, "x_zero_point");
 	}
 
@@ -54,14 +56,15 @@ void DequantizeLinear::resolve(void) {
 	register_output(t, "y");
 }
 
-void DequantizeLinear::print(std::ostream &dst) const {
+void DequantizeLinear::print(std::ostream &dst) const
+{
 	INDT_1 << "/* DequantizeLinear */" << std::endl;
 
 	Tensor *x = get_input_tensor(0);
 	Tensor *x_scale = get_input_tensor(1);
 
 	std::string index;
-	for (unsigned loop_axis = 0; loop_axis < x->rank(); loop_axis++) {
+	for( unsigned loop_axis = 0; loop_axis < x->rank(); loop_axis++ ) {
 		std::string name = "i" + std::to_string(loop_axis);
 		INDT_1 << "for (unsigned " << name << " = 0; " << name << " < " << x->data_dim[loop_axis] << "; " << name << "++)" << std::endl;
 
@@ -69,20 +72,20 @@ void DequantizeLinear::print(std::ostream &dst) const {
 	}
 
 	std::string param_index;
-	if (x_scale->is_scalar()) {
+	if( x_scale->is_scalar() ) {
 		param_index = "[0]";
-	} else {
+	}
+	else {
 		param_index = "[i" + std::to_string(axis) + "]";
 	}
 
 	INDT_1 << "{" << std::endl;
 	INDT_2 << "y" << index << " = (x" << index;
-	if (get_number_of_inputs() == 3) {
+	if( get_number_of_inputs() == 3 ) {
 		dst << " - x_zero_point" << param_index;
 	}
 	dst << ") * x_scale" << param_index << ";" << std::endl;
 	INDT_1 << "}" << std::endl;
 }
 
-} // namespace
-
+} // namespace toC

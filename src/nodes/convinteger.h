@@ -14,7 +14,8 @@ namespace toC {
 
 class ConvInteger : public SpatialFilter {
 	public:
-	ConvInteger() {
+	ConvInteger()
+	{
 		op_name = "ConvInteger";
 		auto_pad = "NOTSET";
 		group = 1;
@@ -26,18 +27,18 @@ class ConvInteger : public SpatialFilter {
 	}
 
 	virtual void print_output_cell_calc(
-		std::ostream &dst,
-		const std::string &x_idx,
-		const std::string &w_idx,
-		const std::string &y_idx) const override
+	    std::ostream &dst,
+	    const std::string &x_idx,
+	    const std::string &w_idx,
+	    const std::string &y_idx) const override
 	{
-		std::string x_zero="0";
+		std::string x_zero = "0";
 		if( get_number_of_inputs() >= 3 ) // x_zero_point is optional, 3rd input
-			x_zero = constant_acces_code( "x_zero_point[0]");
+			x_zero = constant_acces_code("x_zero_point[0]");
 
-		std::string w_zero="0";
+		std::string w_zero = "0";
 		if( get_number_of_inputs() >= 4 ) // w_zero_point is optional, 4th input
-			w_zero = constant_acces_code( "w_zero_point[0]");
+			w_zero = constant_acces_code("w_zero_point[0]");
 
 		INDT_4 << "y" << y_idx << " += (x " << x_idx << "  - " << x_zero << ") * (w" << w_idx << " -" << w_zero << ");" << std::endl;
 	}
@@ -59,13 +60,12 @@ class ConvInteger : public SpatialFilter {
 
 		if( get_number_of_inputs() > 2 )
 			name_input(2, "x_zero_point");
-		if( get_number_of_inputs() > 3 ){
+		if( get_number_of_inputs() > 3 ) {
 			name_input(3, "w_zero_point");
 		}
 
 		if( get_X()->data_dim.size() != 4 )
 			ERROR("Unimplemented: ConvInteger for non 2D images");
-
 
 		resolve_strides();
 		resolve_dilations();
@@ -89,4 +89,4 @@ class ConvInteger : public SpatialFilter {
 		register_output(rv, "y");
 	}
 };
-}
+} // namespace toC
