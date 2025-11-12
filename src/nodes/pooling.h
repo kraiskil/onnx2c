@@ -6,6 +6,7 @@
  */
 #pragma once
 #include "spatialfilter.h"
+#include <cmath>
 
 namespace toC {
 
