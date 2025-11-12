@@ -5,9 +5,9 @@
 #include "constantofshape.h"
 using namespace toC;
 
-void ConstantOfShape::parseAttributes( onnx::NodeProto &node )
+void ConstantOfShape::parseAttributes(onnx::NodeProto &node)
 {
-	for( const auto& a : node.attribute() ) {
+	for( const auto &a : node.attribute() ) {
 		LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
 		if( a.name() == "value" )
 			value = parse_attribute_tensor(a);
@@ -16,14 +16,13 @@ void ConstantOfShape::parseAttributes( onnx::NodeProto &node )
 	}
 }
 
-
 void ConstantOfShape::resolve(void)
 {
-	Tensor *input  = get_input_tensor(0);
+	Tensor *input = get_input_tensor(0);
 	name_input(0, "input");
 
 	Tensor *t = new Tensor;
-	for( int i=0; i<input->data_num_elem(); i++) {
+	for( int i = 0; i < input->data_num_elem(); i++ ) {
 		uint64_t d = input->get_data_element(i);
 		t->data_dim.push_back(d);
 	}
@@ -35,23 +34,20 @@ void ConstantOfShape::resolve(void)
 	register_output(t, "output");
 }
 
-
 void ConstantOfShape::print(std::ostream &dst) const
 {
-	Tensor *output  = get_output_tensor(0);
+	Tensor *output = get_output_tensor(0);
 	std::string type = output->data_type_str();
 
 	INDT_1 << "/* ConstantOfShape */" << std::endl;
 
 	INDT_1 << type << " *dst = (" << type << "*)output;" << std::endl;
 	INDT_1 << "for( unsigned i=0; i< " << output->data_num_elem() << "; i++)" << std::endl;
-	INDT_2 <<   "dst[i] = " ;
+	INDT_2 << "dst[i] = ";
 	if( value == NULL )
-		dst << "0;" <<std::endl;
-	else if( isFloat( value->data_type ) )
-		dst << value->get_data_element_float(0) << ";" <<std::endl;
+		dst << "0;" << std::endl;
+	else if( isFloat(value->data_type) )
+		dst << value->get_data_element_float(0) << ";" << std::endl;
 	else
-		dst << value->get_data_element(0) << ";" <<std::endl;
+		dst << value->get_data_element(0) << ";" << std::endl;
 }
-
-

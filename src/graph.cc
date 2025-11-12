@@ -1,6 +1,6 @@
 // model resolving part of the toC Graph class
-#include "error.h"
 #include "graph.h"
+#include "error.h"
 #include "nodes/graph_io.h"
 #include "onnx.pb.h"
 #include "options.h"
@@ -8,67 +8,63 @@
 #include "aixlog.hpp"
 #include <iostream>
 
-
 using namespace toC;
 
-int Graph::anonymous_nodes=0;
-
+int Graph::anonymous_nodes = 0;
 
 Graph::Graph(
-	onnx::ModelProto &onnx_model,
-	std::vector<Tensor*> ext_inputs
-	)
-	:model(onnx_model)
+    onnx::ModelProto &onnx_model,
+    std::vector<Tensor *> ext_inputs)
+    : model(onnx_model)
 {
 
 	processGraph(onnx_model, ext_inputs);
 }
 
 void Graph::processGraph(
-	onnx::ModelProto &onnx_model,
-	std::vector<Tensor*> ext_inputs
-	)
+    onnx::ModelProto &onnx_model,
+    std::vector<Tensor *> ext_inputs)
 {
 	onnx::GraphProto onnx_graph = onnx_model.graph();
 	Node::onnx_ir_version = onnx_ir_version();
 	// 0. add provided external initializers (from test bench
-	LOG(DEBUG) << "Adding external (testsuite) tensors." <<std::endl;
+	LOG(DEBUG) << "Adding external (testsuite) tensors." << std::endl;
 	for( auto t : ext_inputs ) {
-		LOG(DEBUG) << "  - " << t->name <<std::endl;
+		LOG(DEBUG) << "  - " << t->name << std::endl;
 		tensors.push_back(t);
 	}
-	LOG(TRACE) << "  (done adding external tensors)." <<std::endl;
+	LOG(TRACE) << "  (done adding external tensors)." << std::endl;
 
 	// 1. add initializers as resolved tensors
 	// in case of quantization, make quantized copies here
-	LOG(DEBUG) << "Adding initialized constant tensors from .onnx file." <<std::endl;
+	LOG(DEBUG) << "Adding initialized constant tensors from .onnx file." << std::endl;
 	for( auto i : onnx_graph.initializer() )
-		addInitializedTensor( i );
-	LOG(TRACE) << "  (done adding initialized tensors)." <<std::endl;
+		addInitializedTensor(i);
+	LOG(TRACE) << "  (done adding initialized tensors)." << std::endl;
 
 	// 2. add graph inputs as resolved tensors
 	// in case of quantization, convert all IO to INT8
 	addGraphInputMetanode();
-	LOG(DEBUG) << "Marking graph input tensors as IO." <<std::endl;
-	for ( auto i : onnx_graph.input() ) {
+	LOG(DEBUG) << "Marking graph input tensors as IO." << std::endl;
+	for( auto i : onnx_graph.input() ) {
 		// NB: onnx:Graph:input() gives graph inputs AND initialized tensors
 		// filter out the initizlized (i.e. const) tensors.
 		// They are not graph inputs in the sense of onnx2c::Tensor::isIO
-		if( findTensorByName( i.name()) == nullptr ) {
-			Tensor *n = getIoTensor( i );
-			addTensor( n );
+		if( findTensorByName(i.name()) == nullptr ) {
+			Tensor *n = getIoTensor(i);
+			addTensor(n);
 		}
 	}
-	LOG(TRACE) << "  (done marking input tensors)." <<std::endl;
+	LOG(TRACE) << "  (done marking input tensors)." << std::endl;
 
 	// 3. Do the nodes
-	LOG(DEBUG) << "Resolving nodes." <<std::endl;
+	LOG(DEBUG) << "Resolving nodes." << std::endl;
 	resolveGraphNodes(onnx_graph);
 
 	// 4. Add the IO tag to those tensors the user wants back.
 	Node *graph_output_node = addGraphOutputMetanode();
-	LOG(DEBUG) << "Marking graph output tensors as IO." <<std::endl;
-	for ( auto o : onnx_graph.output() ) {
+	LOG(DEBUG) << "Marking graph output tensors as IO." << std::endl;
+	for( auto o : onnx_graph.output() ) {
 		LOG(TRACE) << "\t- found graph output tensor '" << o.name() << "':" << std::endl;
 		Tensor *t = findTensor(o.name());
 		if( t == nullptr )
@@ -105,7 +101,7 @@ void Graph::resolveGraphNodes(onnx::GraphProto &onnx_graph)
 		num_unresolved = 0;
 
 		for( onnx::NodeProto n : onnx_graph.node() ) {
-			bool res = tryResolveNode( n );
+			bool res = tryResolveNode(n);
 			if( res == false )
 				num_unresolved++;
 		}
@@ -114,8 +110,8 @@ void Graph::resolveGraphNodes(onnx::GraphProto &onnx_graph)
 		if( num_unresolved == 0 )
 			break;
 
-	// repeat as long as at least one new node got resolved
-	} while ( num_unresolved < num_unresolved_prev_round );
+		// repeat as long as at least one new node got resolved
+	} while( num_unresolved < num_unresolved_prev_round );
 
 	if( num_unresolved != 0 )
 		ERROR("Input ONNX graph is not resolvable.");
@@ -140,7 +136,7 @@ void Graph::addInitializedTensor(onnx::TensorProto &tensor)
 	}
 }
 
-Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
+Tensor *Graph::getIoTensor(onnx::ValueInfoProto &vi)
 {
 	onnx::TypeProto tp = vi.type();
 	onnx::TypeProto::ValueCase vc = tp.value_case();
@@ -152,12 +148,12 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 	onnx::TensorShapeProto tsp = tpt.shape();
 
 	Tensor *t = new Tensor;
-	t->initialize=false;
-	t->generate=false;
+	t->initialize = false;
+	t->generate = false;
 	t->isIO = true;
 	t->isConst = false;
 	t->name = vi.name();
-	t->doc  = vi.doc_string();
+	t->doc = vi.doc_string();
 
 	int32_t datatype = tpt.elem_type(); // TODO: check! The onnx.proto doesn't document this explicitly.
 	if( onnx::TensorProto_DataType_IsValid(datatype) == false )
@@ -178,15 +174,15 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 		int dim_size;
 		if( isalpha(d.dim_param()[0]) ) {
 			if( d.dim_value() ) {
-				dim_size=d.dim_value();
+				dim_size = d.dim_value();
 			}
 			else {
 				uint32_t user_value = options.dim_defines[d.dim_param()];
 				if( user_value == 0 ) {
 					LOG(WARNING) << "Graph input tensor dimension (" << d.dim_param() << ") not specified!" << std::endl;
-					LOG(WARNING) << "Specify with command line option '-d "<< d.dim_param() <<":<value>'" << std::endl;
-					LOG(WARNING) << "Defining this dimension as 1 for now."<< std::endl;
-					dim_size=1;
+					LOG(WARNING) << "Specify with command line option '-d " << d.dim_param() << ":<value>'" << std::endl;
+					LOG(WARNING) << "Defining this dimension as 1 for now." << std::endl;
+					dim_size = 1;
 				}
 				else {
 					LOG(DEBUG) << "Graph input tensor dimension (" << d.dim_param() << ") set on command line to " << user_value << std::endl;
@@ -195,7 +191,7 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 			}
 		}
 		else {
-			dim_size=d.dim_value();
+			dim_size = d.dim_value();
 		}
 
 		t->data_dim.push_back(dim_size);
@@ -204,15 +200,13 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 	return t;
 }
 
-
 // Populate the onnx2c_node's
 // input tensors using already created tensors in the graph.
 // All inputs should exist as onnx2c tensors before calling this, or else we return false.
 bool Graph::getNodeInputTensors(const onnx::NodeProto &node, toC::Node *onnx2c_node)
 {
 	// Step through the ONNX node's input tensors
-	for( auto i : node.input() )
-	{
+	for( auto i : node.input() ) {
 		bool input_resolved = false;
 		// in case the input is not used by the node, ONNX has a dummy input
 		// for the node. This dummy input serves only to put the rest of the
@@ -227,7 +221,7 @@ bool Graph::getNodeInputTensors(const onnx::NodeProto &node, toC::Node *onnx2c_n
 
 		LOG(TRACE) << "Looking for input tensor '" << i << "':" << std::endl;
 		for( auto t : tensors ) {
-			if ( t->name == i ) {
+			if( t->name == i ) {
 				LOG(TRACE) << "\t- found input tensor '" << i << "':" << std::endl;
 				LOG(TRACE) << "\t\t " << t->print_trace_dump() << std::endl;
 				input_resolved = true;
@@ -250,19 +244,18 @@ bool Graph::getNodeInputTensors(const onnx::NodeProto &node, toC::Node *onnx2c_n
 	return true;
 }
 
-
 /* Make an onnx2c node object out of the onnx::NodeProto object.
  * @return true node is (or was earlier) added to Graph::nodes datastructure.
  *          Return false if Graph::tensors does not yet have all the input tensor for this node.
  */
 bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 {
-	LOG(DEBUG) << "Resolving ONNX node: '" << onnx_node.name() << "'" <<std::endl;
+	LOG(DEBUG) << "Resolving ONNX node: '" << onnx_node.name() << "'" << std::endl;
 
 	// This check is needed in case the caller needs to iterate over the nodes more than once.
 	for( auto o : nodes )
 		if( onnx_node.name() == o->onnx_name ) {
-			LOG(TRACE) << "Node '" << onnx_node.name() << "' already resolved"<<std::endl;
+			LOG(TRACE) << "Node '" << onnx_node.name() << "' already resolved" << std::endl;
 			return true;
 		}
 
@@ -270,7 +263,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 
 	// TODO: add comment explaining what is going on here...
 	if( getNodeInputTensors(onnx_node, n) == false ) {
-		LOG(TRACE) << "getNodeInputTensors() failed. Not adding node!"<< std::endl;
+		LOG(TRACE) << "getNodeInputTensors() failed. Not adding node!" << std::endl;
 		delete n;
 		return false;
 	}
@@ -280,7 +273,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 	if( onnx_node.name() == "" ) {
 		std::string name = "anonymous_";
 		name += n->op_name;
-		name +=  "_" + std::to_string(anonymous_nodes);
+		name += "_" + std::to_string(anonymous_nodes);
 		n->onnx_name = name;
 		anonymous_nodes++;
 	}
@@ -291,10 +284,10 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 	LOG(TRACE) << "    inputs: " << std::endl;
 
 	// Record this node as the consumer of the the input tensors
-	for(unsigned iidx=0; iidx<(n->get_number_of_inputs()); iidx++) {
+	for( unsigned iidx = 0; iidx < (n->get_number_of_inputs()); iidx++ ) {
 		Tensor *i = n->get_input_tensor(iidx);
-		LOG(TRACE) << "         " << i->name << " - "<< i->data_type_str() << " { " << i->str_dimensions() << "}" << std::endl;
-		const_cast<Tensor*>(i)->consumers.push_back(n);
+		LOG(TRACE) << "         " << i->name << " - " << i->data_type_str() << " { " << i->str_dimensions() << "}" << std::endl;
+		const_cast<Tensor *>(i)->consumers.push_back(n);
 		i->print_trace_dump();
 	}
 	LOG(TRACE) << "     (no more inputs)" << std::endl;
@@ -302,7 +295,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 
 	LOG(TRACE) << "  Parsing node attributes" << std::endl;
 	if( onnx_node.attribute_size() != 0 )
-		n->parseAttributes( onnx_node );
+		n->parseAttributes(onnx_node);
 	LOG(TRACE) << "    (done parsing attributes)" << std::endl;
 
 	// Now loop over the node inputs, check that they are all added
@@ -311,7 +304,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 	// TODO: how does this work? attribute tensors are added as node inputs?
 	//       Are they a part of the arguments to a function call in C?
 	LOG(TRACE) << "  Making sure node attributes are in the graph" << std::endl;
-	for(unsigned nn = 0; nn<n->get_number_of_inputs(); nn++)
+	for( unsigned nn = 0; nn < n->get_number_of_inputs(); nn++ )
 		addTensor(n->get_input_tensor(nn));
 	LOG(TRACE) << "   (end of attribute-input-vectors)" << std::endl;
 
@@ -323,8 +316,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 	// So create a list of that tells if outputs are used or not *before* resolving
 	// the node.
 	std::vector<bool> output_used;
-	for(int nn = 0; nn<onnx_node.output_size(); nn++)
-	{
+	for( int nn = 0; nn < onnx_node.output_size(); nn++ ) {
 		// ONNX spec:
 		// "There are two ways to leave an optional input or output unspecified:
 		// the first, available only for trailing inputs and outputs, is to simply
@@ -347,7 +339,7 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 	// This will now contain all of the node's outputs, also such optional ones
 	// that are not used in the model.
 	LOG(TRACE) << "Adding resolved node's output to graph's tensors" << std::endl;
-	for( unsigned o=0; o<n->get_number_of_outputs(); o++) {
+	for( unsigned o = 0; o < n->get_number_of_outputs(); o++ ) {
 		Tensor *t = n->get_output_tensor(o);
 
 		// optional outputs are named "" or just omitted
@@ -360,20 +352,20 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 		// recursive nodes are special: if they are not used by other nodes,
 		// then the ONNX graph doesn't record them (i.e. they look like they'd be unused)
 		if( onnx_name == "" ) {
-			if (t->isRecursive==false) {
+			if( t->isRecursive == false ) {
 				LOG(TRACE) << "skipping: output number " << o << " is unused" << std::endl;
 				continue;
 			}
-			onnx_name = n->c_name() + "_recursive_"+std::to_string(o);
+			onnx_name = n->c_name() + "_recursive_" + std::to_string(o);
 		}
 		t->name = onnx_name;
 
 		addTensor(t);
 	}
 	LOG(TRACE) << "   (done) all outputs now:" << std::endl;
-	for( unsigned o=0; o<n->get_number_of_outputs(); o++) {
+	for( unsigned o = 0; o < n->get_number_of_outputs(); o++ ) {
 		Tensor *t = n->get_output_tensor(o);
-		LOG(TRACE) << "         " << t->name << " - "<< t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
+		LOG(TRACE) << "         " << t->name << " - " << t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
 	}
 	LOG(TRACE) << "      (no more outputs)" << std::endl;
 
@@ -382,7 +374,6 @@ bool Graph::tryResolveNode(onnx::NodeProto &onnx_node)
 	nodes.push_back(n);
 	return true;
 }
-
 
 bool Graph::hasUnresolvedNodes(void)
 {
@@ -445,9 +436,9 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/scatternd.h"
 #include "nodes/shape.h"
 #include "nodes/slice.h"
-#include "nodes/squeeze.h"
 #include "nodes/softmax.h"
 #include "nodes/split.h"
+#include "nodes/squeeze.h"
 #include "nodes/transpose.h"
 #include "nodes/treeensembleclassifier.h"
 #include "nodes/unsqueeze.h"
@@ -456,7 +447,7 @@ int64_t Graph::onnx_ir_version(void)
 
 // Create a new onnx2c Node from an operand name of an ONNX Graph node.
 // NB: the onnx2c-special graph input and graph output nodes are not created here
-Node* Graph::createNode(const onnx::NodeProto &onnx_node)
+Node *Graph::createNode(const onnx::NodeProto &onnx_node)
 {
 	std::string opName = onnx_node.op_type();
 	LOG(TRACE) << "Creating new node: " << onnx_node.name() << std::endl;
@@ -468,7 +459,7 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	// onnx2c implementation.
 	if( options.quantize ) {
 		LOG(WARNING) << "Quantization is deprecated, and probably broken" << std::endl;
-		std::vector<Tensor*> inputs;
+		std::vector<Tensor *> inputs;
 		replaceWithQuantized(inputs);
 		if( opName == "Conv" )
 			opName = "ConvInteger";
@@ -476,118 +467,117 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 			opName = "MatMulInteger";
 	}
 
-	if( opName == "Abs" )return new Elementwise("Abs");
-	if( opName == "Acos" )return new Elementwise("Acos");
-	if( opName == "Acosh" )return new Elementwise("Acosh");
-	if( opName == "Add" )return new Elementwise_2("Add");
-	if( opName == "And" )return new Elementwise_2("And");
-	if( opName == "Asin" )return new Elementwise("Asin");
-	if( opName == "Asinh" )return new Elementwise("Asinh");
-	if( opName == "Atan" )return new Elementwise("Atan");
-	if( opName == "Atanh" )return new Elementwise("Atanh");
-	if( opName == "AveragePool" )return new AveragePool;
-	if( opName == "BatchNormalization" )return new BatchNormalization;
-	if( opName == "BitShift" )return new Elementwise_2("BitShift");
-	if( opName == "Cast" )return new Cast;
-	if( opName == "Ceil" )return new Elementwise("Ceil");
-	if( opName == "Celu" )return new Elementwise("Celu");
-	if( opName == "Clip" )return new Clip;
-	if( opName == "Concat" )return new Concat;
-	if( opName == "Constant" )return new Constant;
-	if( opName == "ConstantOfShape" )return new ConstantOfShape;
-	if( opName == "Conv" )return new Conv;
-	if( opName == "Cos" )return new Elementwise("Cos");
-	if( opName == "Cosh" )return new Elementwise("Cosh");
-	if( opName == "ConvInteger" )return new ConvInteger;
-	if( opName == "ConvTranspose" )return new ConvTranspose;
-	if( opName == "DequantizeLinear" )return new DequantizeLinear;
-	if( opName == "Div" )return new Elementwise_2("Div");
-	if( opName == "Dropout" )return new Dropout;
-	if( opName == "DynamicQuantizeLinear" )return new DynamicQuantizeLinear;
-	if( opName == "Flatten" )return new Flatten;
-	if( opName == "Floor" )return new Elementwise("Floor");
-	if( opName == "Elu" )return new Elementwise("Elu");
-	if( opName == "Equal")return new Elementwise_2("Equal");
-	if( opName == "Erf" )return new Elementwise("Erf");
-	if( opName == "Exp" )return new Elementwise("Exp");
-	if( opName == "Expand" )return new Expand;
-	if( opName == "Gather" )return new Gather;
-	if( opName == "Gemm" )return new Gemm;
-	if( opName == "GlobalAveragePool" )return new GlobalAveragePool;
-	if( opName == "GlobalMaxPool" )return new GlobalMaxPool;
-	if( opName == "Greater")return new Elementwise_2("Greater");
-	if( opName == "GreaterOrEqual")return new Elementwise_2("GreaterOrEqual");
-	if( opName == "HardSigmoid" )return new Elementwise("HardSigmoid");
-	if( opName == "HardSwish" )return new Elementwise("HardSwish");
-	if( opName == "Identity" )return new Identity;
-	if( opName == "InstanceNormalization" )return new InstanceNormalization;
-	if( opName == "LayerNormalization" )return new LayerNormalization;
-	if( opName == "LeakyRelu" )return new Elementwise("LeakyRelu");
-	if( opName == "Less")return new Elementwise_2("Less");
-	if( opName == "LessOrEqual")return new Elementwise_2("LessOrEqual");
-	if( opName == "Log" )return new Elementwise("Log");
-	if( opName == "LogSoftmax" )return new Softmax("LogSoftmax");
-	if( opName == "LRN" )return new LRN;
-	if( opName == "LSTM" )return new LSTM;
-	if( opName == "MatMul" )return new MatMul;
-	if( opName == "MatMulInteger" )return new MatMulInteger;
-	if( opName == "Max" )return new Elementwise_variadic("Max");
-	if( opName == "MaxPool" )return new MaxPool;
-	if( opName == "Mean" )return new Elementwise_variadic("Mean");
-	if( opName == "Min" )return new Elementwise_variadic("Min");
-	if( opName == "Mod" )return new Elementwise_2("Mod");
-	if( opName == "Mul" )return new Elementwise_2("Mul");
-	if( opName == "Neg" )return new Elementwise("Neg");
-	if( opName == "Not" )return new Elementwise("Not");
-	if( opName == "Or" )return new Elementwise_2("Or");
-	if( opName == "Pad" )return new Pad;
-	if( opName == "Pow" )return new Elementwise_2("Pow");
-	if( opName == "PRelu" )return new Elementwise_2("PRelu");
-	if( opName == "QuantizeLinear" )return new QuantizeLinear;
-	if( opName == "RandomUniform" )return new RandomUniform;
-	if( opName == "Range" )return new Range;
-	if( opName == "ReduceProd" )return new Reduce("Prod");
-	if( opName == "ReduceMean" )return new Reduce("Mean");
-	if( opName == "ReduceSumSquare" )return new Reduce("SumSquare");
-	if( opName == "ReduceMax" )return new Reduce("Max");
-	if( opName == "ReduceMin" )return new Reduce("Min");
-	if( opName == "ReduceSum" )return new Reduce("Sum");
-	if( opName == "ReduceL1" )return new Reduce("L1");
-	if( opName == "ReduceL2" )return new Reduce("L2");
-	if( opName == "ReduceLogSum" )return new Reduce("LogSum");
-	if( opName == "ReduceLogSumExp" )return new Reduce("LogSumExp");
-	if( opName == "Reciprocal" )return new Elementwise("Reciprocal");
-	if( opName == "Relu" )return new Relu;
-	if( opName == "Reshape" )return new Reshape;
-	if( opName == "Resize" )return new Resize;
-	if( opName == "Round" )return new Elementwise("Round");
-	if( opName == "ScatterND" )return new ScatterND;
-	if( opName == "Selu" )return new Elementwise("Selu");
-	if( opName == "Shape" )return new Shape;
-	if( opName == "Shrink" )return new Elementwise("Shrink");
-	if( opName == "Sigmoid" )return new Elementwise("Sigmoid");
-	if( opName == "Sign" )return new Elementwise("Sign");
-	if( opName == "Sin" )return new Elementwise("Sin");
-	if( opName == "Sinh" )return new Elementwise("Sinh");
-	if( opName == "Slice" )return new Slice;
-	if( opName == "Softplus" )return new Elementwise("Softplus");
-	if( opName == "Softsign" )return new Elementwise("Softsign");
-	if( opName == "Softmax" )return new Softmax("Softmax");
-	if( opName == "Split" )return new Split;
-	if( opName == "Squeeze" )return new Squeeze;
-	if( opName == "Sqrt" )return new Elementwise("Sqrt");
-	if( opName == "Sub" )return new Elementwise_2("Sub");
-	if( opName == "Sum" )return new Elementwise_variadic("Sum");
-	if( opName == "Tan" )return new Elementwise("Tan");
-	if( opName == "Tanh" )return new Elementwise("Tanh");
-	if( opName == "Transpose" )return new Transpose;
-	if( opName == "TreeEnsembleClassifier" )return new TreeEnsembleClassifier();
-	if( opName == "ThresholdedRelu" )return new Elementwise("ThresholdedRelu");
-	if( opName == "Unsqueeze" )return new Unsqueeze;
-	if( opName == "Upsample" )return new Upsample;
-	if( opName == "Where" )return new Where;
-	if( opName == "Xor" )return new Elementwise_2("Xor");
-
+	if( opName == "Abs" ) return new Elementwise("Abs");
+	if( opName == "Acos" ) return new Elementwise("Acos");
+	if( opName == "Acosh" ) return new Elementwise("Acosh");
+	if( opName == "Add" ) return new Elementwise_2("Add");
+	if( opName == "And" ) return new Elementwise_2("And");
+	if( opName == "Asin" ) return new Elementwise("Asin");
+	if( opName == "Asinh" ) return new Elementwise("Asinh");
+	if( opName == "Atan" ) return new Elementwise("Atan");
+	if( opName == "Atanh" ) return new Elementwise("Atanh");
+	if( opName == "AveragePool" ) return new AveragePool;
+	if( opName == "BatchNormalization" ) return new BatchNormalization;
+	if( opName == "BitShift" ) return new Elementwise_2("BitShift");
+	if( opName == "Cast" ) return new Cast;
+	if( opName == "Ceil" ) return new Elementwise("Ceil");
+	if( opName == "Celu" ) return new Elementwise("Celu");
+	if( opName == "Clip" ) return new Clip;
+	if( opName == "Concat" ) return new Concat;
+	if( opName == "Constant" ) return new Constant;
+	if( opName == "ConstantOfShape" ) return new ConstantOfShape;
+	if( opName == "Conv" ) return new Conv;
+	if( opName == "Cos" ) return new Elementwise("Cos");
+	if( opName == "Cosh" ) return new Elementwise("Cosh");
+	if( opName == "ConvInteger" ) return new ConvInteger;
+	if( opName == "ConvTranspose" ) return new ConvTranspose;
+	if( opName == "DequantizeLinear" ) return new DequantizeLinear;
+	if( opName == "Div" ) return new Elementwise_2("Div");
+	if( opName == "Dropout" ) return new Dropout;
+	if( opName == "DynamicQuantizeLinear" ) return new DynamicQuantizeLinear;
+	if( opName == "Flatten" ) return new Flatten;
+	if( opName == "Floor" ) return new Elementwise("Floor");
+	if( opName == "Elu" ) return new Elementwise("Elu");
+	if( opName == "Equal" ) return new Elementwise_2("Equal");
+	if( opName == "Erf" ) return new Elementwise("Erf");
+	if( opName == "Exp" ) return new Elementwise("Exp");
+	if( opName == "Expand" ) return new Expand;
+	if( opName == "Gather" ) return new Gather;
+	if( opName == "Gemm" ) return new Gemm;
+	if( opName == "GlobalAveragePool" ) return new GlobalAveragePool;
+	if( opName == "GlobalMaxPool" ) return new GlobalMaxPool;
+	if( opName == "Greater" ) return new Elementwise_2("Greater");
+	if( opName == "GreaterOrEqual" ) return new Elementwise_2("GreaterOrEqual");
+	if( opName == "HardSigmoid" ) return new Elementwise("HardSigmoid");
+	if( opName == "HardSwish" ) return new Elementwise("HardSwish");
+	if( opName == "Identity" ) return new Identity;
+	if( opName == "InstanceNormalization" ) return new InstanceNormalization;
+	if( opName == "LayerNormalization" ) return new LayerNormalization;
+	if( opName == "LeakyRelu" ) return new Elementwise("LeakyRelu");
+	if( opName == "Less" ) return new Elementwise_2("Less");
+	if( opName == "LessOrEqual" ) return new Elementwise_2("LessOrEqual");
+	if( opName == "Log" ) return new Elementwise("Log");
+	if( opName == "LogSoftmax" ) return new Softmax("LogSoftmax");
+	if( opName == "LRN" ) return new LRN;
+	if( opName == "LSTM" ) return new LSTM;
+	if( opName == "MatMul" ) return new MatMul;
+	if( opName == "MatMulInteger" ) return new MatMulInteger;
+	if( opName == "Max" ) return new Elementwise_variadic("Max");
+	if( opName == "MaxPool" ) return new MaxPool;
+	if( opName == "Mean" ) return new Elementwise_variadic("Mean");
+	if( opName == "Min" ) return new Elementwise_variadic("Min");
+	if( opName == "Mod" ) return new Elementwise_2("Mod");
+	if( opName == "Mul" ) return new Elementwise_2("Mul");
+	if( opName == "Neg" ) return new Elementwise("Neg");
+	if( opName == "Not" ) return new Elementwise("Not");
+	if( opName == "Or" ) return new Elementwise_2("Or");
+	if( opName == "Pad" ) return new Pad;
+	if( opName == "Pow" ) return new Elementwise_2("Pow");
+	if( opName == "PRelu" ) return new Elementwise_2("PRelu");
+	if( opName == "QuantizeLinear" ) return new QuantizeLinear;
+	if( opName == "RandomUniform" ) return new RandomUniform;
+	if( opName == "Range" ) return new Range;
+	if( opName == "ReduceProd" ) return new Reduce("Prod");
+	if( opName == "ReduceMean" ) return new Reduce("Mean");
+	if( opName == "ReduceSumSquare" ) return new Reduce("SumSquare");
+	if( opName == "ReduceMax" ) return new Reduce("Max");
+	if( opName == "ReduceMin" ) return new Reduce("Min");
+	if( opName == "ReduceSum" ) return new Reduce("Sum");
+	if( opName == "ReduceL1" ) return new Reduce("L1");
+	if( opName == "ReduceL2" ) return new Reduce("L2");
+	if( opName == "ReduceLogSum" ) return new Reduce("LogSum");
+	if( opName == "ReduceLogSumExp" ) return new Reduce("LogSumExp");
+	if( opName == "Reciprocal" ) return new Elementwise("Reciprocal");
+	if( opName == "Relu" ) return new Relu;
+	if( opName == "Reshape" ) return new Reshape;
+	if( opName == "Resize" ) return new Resize;
+	if( opName == "Round" ) return new Elementwise("Round");
+	if( opName == "ScatterND" ) return new ScatterND;
+	if( opName == "Selu" ) return new Elementwise("Selu");
+	if( opName == "Shape" ) return new Shape;
+	if( opName == "Shrink" ) return new Elementwise("Shrink");
+	if( opName == "Sigmoid" ) return new Elementwise("Sigmoid");
+	if( opName == "Sign" ) return new Elementwise("Sign");
+	if( opName == "Sin" ) return new Elementwise("Sin");
+	if( opName == "Sinh" ) return new Elementwise("Sinh");
+	if( opName == "Slice" ) return new Slice;
+	if( opName == "Softplus" ) return new Elementwise("Softplus");
+	if( opName == "Softsign" ) return new Elementwise("Softsign");
+	if( opName == "Softmax" ) return new Softmax("Softmax");
+	if( opName == "Split" ) return new Split;
+	if( opName == "Squeeze" ) return new Squeeze;
+	if( opName == "Sqrt" ) return new Elementwise("Sqrt");
+	if( opName == "Sub" ) return new Elementwise_2("Sub");
+	if( opName == "Sum" ) return new Elementwise_variadic("Sum");
+	if( opName == "Tan" ) return new Elementwise("Tan");
+	if( opName == "Tanh" ) return new Elementwise("Tanh");
+	if( opName == "Transpose" ) return new Transpose;
+	if( opName == "TreeEnsembleClassifier" ) return new TreeEnsembleClassifier();
+	if( opName == "ThresholdedRelu" ) return new Elementwise("ThresholdedRelu");
+	if( opName == "Unsqueeze" ) return new Unsqueeze;
+	if( opName == "Upsample" ) return new Upsample;
+	if( opName == "Where" ) return new Where;
+	if( opName == "Xor" ) return new Elementwise_2("Xor");
 
 	ERROR("Unimplemented: node operation " << opName);
 	return NULL;
@@ -616,7 +606,7 @@ void Graph::addTensor(Tensor *t)
 
 	if( prev == NULL ) {
 		tensors.push_back(t);
-		LOG(DEBUG) << "New tensor: " << t->name << " - "<< t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
+		LOG(DEBUG) << "New tensor: " << t->name << " - " << t->data_type_str() << " { " << t->str_dimensions() << "}" << std::endl;
 		LOG(TRACE) << "    " << t->print_trace_dump();
 		// TODO return & remove else {}
 	}
@@ -640,7 +630,7 @@ void Graph::addTensor(Tensor *t)
 
 		prev->initialize = t->initialize || prev->initialize;
 		if( prev->initialize )
-			prev->generate=true;
+			prev->generate = true;
 
 		// huh? what is this use case?
 		if( prev->isIO == false )
@@ -651,8 +641,8 @@ void Graph::addTensor(Tensor *t)
 		// node, not necessarily an input from the user.
 		// If the user doesn't provide them, they must be initialized in the graph.
 		// E.g. the weights for a Convolution at the start is such an example
-		if( t->isIO && prev->initialize == false)
-			prev->isIO=true;
+		if( t->isIO && prev->initialize == false )
+			prev->isIO = true;
 
 		// Some graph IO (output) tensors are not marked with dimensions in ONNX files
 		if( prev->rank() == 0 )
@@ -664,23 +654,21 @@ void Graph::addTensor(Tensor *t)
 
 Tensor *Graph::findTensor(const std::string &name) const
 {
-	for( auto o : tensors)
+	for( auto o : tensors )
 		if( o->name == name )
 			return o;
 	return NULL;
 }
 
-void Graph::replaceWithQuantized(std::vector<Tensor*> &inputs)
+void Graph::replaceWithQuantized(std::vector<Tensor *> &inputs)
 {
-	for( unsigned i=0; i<inputs.size(); i++ ) {
-		if(inputs[i]->quantizedCopy)
+	for( unsigned i = 0; i < inputs.size(); i++ ) {
+		if( inputs[i]->quantizedCopy )
 			inputs[i] = inputs[i]->quantizedCopy;
 	}
 }
 
-
-
-Node* Graph::addGraphInputMetanode()
+Node *Graph::addGraphInputMetanode()
 {
 	Node *n = new graph_io();
 	n->isResolved = true;
@@ -689,7 +677,7 @@ Node* Graph::addGraphInputMetanode()
 	return n;
 }
 
-Node* Graph::addGraphOutputMetanode()
+Node *Graph::addGraphOutputMetanode()
 {
 	Node *n = new graph_io();
 	n->isResolved = true;
@@ -698,7 +686,7 @@ Node* Graph::addGraphOutputMetanode()
 	return n;
 }
 
-Node* Graph::findNodeByName( const std::string node_name )
+Node *Graph::findNodeByName(const std::string node_name)
 {
 	for( auto n : nodes )
 		if( n->onnx_name == node_name )
@@ -706,13 +694,12 @@ Node* Graph::findNodeByName( const std::string node_name )
 	return nullptr;
 }
 
-Tensor* Graph::findTensorByName(std::string name)
+Tensor *Graph::findTensorByName(std::string name)
 {
-	for( auto t : tensors)
+	for( auto t : tensors )
 		if( name == t->name ) {
 			return t;
 			break;
 		}
 	return nullptr;
 }
-

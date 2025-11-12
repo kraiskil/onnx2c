@@ -36,11 +36,9 @@ void Graph::print_initialization(std::ostream &dst)
 	dst << std::endl;
 
 	LOG(TRACE) << "printing initializers" << std::endl;
-	for( auto t : tensors )
-	{
+	for( auto t : tensors ) {
 		LOG(TRACE) << "\t" << t->print_trace_dump() << std::endl;
-		if( t->union_no < 0
-		 && t->generate && t->initialize)
+		if( t->union_no < 0 && t->generate && t->initialize )
 			print_tensor(t, dst);
 	}
 	LOG(TRACE) << "(done printing initializers)" << std::endl;
@@ -59,7 +57,9 @@ void Graph::print_file_frontmatter(std::ostream &dst)
 	dst << "// Model documentation: " << std::endl;
 	// TODO: beware & check for maliciously formatted doc strings!!!
 	// (and when you do that, also append "//" to every newlin in the doc_string for nicer printing :)
-	dst << "/*" << std::endl << model.doc_string() << std::endl << "*/" << std::endl;
+	dst << "/*" << std::endl
+	    << model.doc_string() << std::endl
+	    << "*/" << std::endl;
 }
 
 void Graph::print_tensor(const Tensor *t, std::ostream &dst)
@@ -69,15 +69,16 @@ void Graph::print_tensor(const Tensor *t, std::ostream &dst)
 	if( t->name == "" )
 		return;
 	// This case has been seen in the wild. Not sure why it happens
-	if( t->data_dim.size() == 1 && t->data_dim[0]==0 ){
+	if( t->data_dim.size() == 1 && t->data_dim[0] == 0 ) {
 		LOG(WARNING) << "Tensor " << t->name << " has size of 0. Skipping it" << std::endl;
 		return;
 	}
 
 	if( t->union_no < 0 ) {
-		if (options.extern_init && t->initialize) {
+		if( options.extern_init && t->initialize ) {
 			dst << "extern ";
-		} else if (!options.only_init) {
+		}
+		else if( !options.only_init ) {
 			dst << "static ";
 		}
 	}
@@ -86,8 +87,8 @@ void Graph::print_tensor(const Tensor *t, std::ostream &dst)
 	if( t->initialize ) {
 		if( options.target_avr && t->isConst )
 			dst << " PROGMEM";
-		
-		if (!options.extern_init) {
+
+		if( !options.extern_init ) {
 			dst << " = " << std::endl;
 			t->print_tensor_initializer(dst);
 		}
@@ -99,30 +100,26 @@ void Graph::print_global_tensors(std::ostream &dst)
 {
 	// ununionized tensors
 	LOG(TRACE) << "printing global tensors - ununionized " << std::endl;
-	for( auto t : tensors )
-	{
+	for( auto t : tensors ) {
 		LOG(TRACE) << "\t" << t->print_trace_dump() << std::endl;
-		if( t->union_no < 0
-		 && t->generate)
+		if( t->union_no < 0 && t->generate )
 			this->print_tensor(t, dst);
 	}
 
 	LOG(TRACE) << "printing global tensors - unionized " << std::endl;
-	for( unsigned u=0; u<tensor_unions.size(); u++ )
-	{
+	for( unsigned u = 0; u < tensor_unions.size(); u++ ) {
 		dst << "union tensor_union_" << u << " {" << std::endl;
-		for( auto t : tensors )
-		{
-			if( t->union_no == static_cast<int32_t>(u))
+		for( auto t : tensors ) {
+			if( t->union_no == static_cast<int32_t>(u) )
 				this->print_tensor(t, dst);
 		}
-		dst << "};" <<std::endl;
-		if (!no_globals)
-		{
-			dst << "static union tensor_union_" << u << " tu" << u << ";" << std::endl <<std::endl;
+		dst << "};" << std::endl;
+		if( !no_globals ) {
+			dst << "static union tensor_union_" << u << " tu" << u << ";" << std::endl
+			    << std::endl;
 		}
 	}
-	LOG(TRACE) << "(done printing global tensors)"<< std::endl;
+	LOG(TRACE) << "(done printing global tensors)" << std::endl;
 }
 
 void Graph::print_functions(std::ostream &dst)
@@ -139,11 +136,13 @@ void Graph::print_functions(std::ostream &dst)
 		dst << n->c_name() << "( ";
 		n->print_function_parameters_definition(dst);
 		dst << " )";
-		dst <<  std::endl << "{" << std::endl;
+		dst << std::endl
+		    << "{" << std::endl;
 
 		n->print(dst);
 
-		dst << "}" << std::endl << std::endl;
+		dst << "}" << std::endl
+		    << std::endl;
 	}
 }
 
@@ -162,7 +161,7 @@ void Graph::print_includes(std::ostream &dst)
 	dst << "#define CLIP(X,L) ( MAX(MIN(X,L), -L) )" << std::endl;
 	dst << std::endl;
 
- 	// 'inline' functions are a C99 addition.
+	// 'inline' functions are a C99 addition.
 	dst << "#if __STDC_VERSION__ < 199901L" << std::endl;
 	dst << "#define FUNC_PREFIX" << std::endl;
 	dst << "#else" << std::endl;
@@ -179,15 +178,15 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 {
 	bool isfirst = true;
 	// TODO: take the interface function name from the ONNX file name
-	dst << "void entry(" ;
-	for ( auto i : model.graph().input() ) {
+	dst << "void entry(";
+	for( auto i : model.graph().input() ) {
 		/* TODO: FIXME: separate input tensors that are initialized
 		 * or re-initializable (and therefore count as input), from
 		 * the "actual" input data */
-		Tensor *t=findTensor(i.name());
+		Tensor *t = findTensor(i.name());
 
 		if( t && t->isIO ) {
-			if(!isfirst)
+			if( !isfirst )
 				dst << ", ";
 			else
 				isfirst = false;
@@ -205,12 +204,11 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 	if( graph_out_node == nullptr )
 		ERROR("internal onnx2c error: no graph_output node");
 
-	for( unsigned o=0; o<graph_out_node->get_number_of_inputs(); o++)
-	{
+	for( unsigned o = 0; o < graph_out_node->get_number_of_inputs(); o++ ) {
 		Tensor *t = graph_out_node->get_input_tensor(o);
 
 		if( t ) {
-			if(!isfirst)
+			if( !isfirst )
 				dst << ", ";
 			else
 				isfirst = false;
@@ -232,10 +230,8 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 	dst << "{" << std::endl;
 
 	// Print tensors here if no globals
-	if( no_globals )
-	{
-		for( unsigned u=0; u<tensor_unions.size(); u++ )
-		{
+	if( no_globals ) {
+		for( unsigned u = 0; u < tensor_unions.size(); u++ ) {
 			INDT_1 << "union tensor_union_" << u << " tu" << u << ";" << std::endl;
 		}
 		dst << std::endl;
@@ -244,8 +240,7 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 	// since nodes were resolved from graph inputs in the order there were
 	// node inputs resolved, the nodes vector is now sorted in order so that
 	// we don't need to check dependancies :)
-	for( auto n : nodes )
-	{
+	for( auto n : nodes ) {
 		// handle meta-nodes separately
 		if( n->op_name == "graph_io" )
 			continue;

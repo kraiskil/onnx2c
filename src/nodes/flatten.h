@@ -3,15 +3,17 @@ namespace toC {
 
 class Flatten : public Node {
 	public:
-	Flatten() {
+	Flatten()
+	{
 		op_name = "Flatten";
 		axis = 1;
 	}
 	int axis;
 
-	virtual void parseAttributes( onnx::NodeProto &node ) override {
+	virtual void parseAttributes(onnx::NodeProto &node) override
+	{
 
-		for( const auto& a : node.attribute() ) {
+		for( const auto &a : node.attribute() ) {
 			if( a.name() == "axis" ) {
 				if( a.type() != onnx::AttributeProto_AttributeType_INT )
 					ERROR("Bad attribute " << a.name());
@@ -39,7 +41,6 @@ class Flatten : public Node {
 		dst << std::endl;
 	}
 
-
 	virtual void resolve(void) override
 	{
 		if( get_number_of_inputs() != 1 )
@@ -57,16 +58,16 @@ class Flatten : public Node {
 		std::vector<int> result_dim;
 
 		int count_axis = axis;
-		if( axis < 0 ) 
+		if( axis < 0 )
 			count_axis = input->data_dim.size() + axis;
 
-		int dim=1;
+		int dim = 1;
 		int i;
-		for(i=0; i<count_axis; i++)
+		for( i = 0; i < count_axis; i++ )
 			dim *= input->data_dim[i];
 		result_dim.push_back(dim);
 		dim = 1;
-		for(; i<(int)input->data_dim.size(); i++)
+		for( ; i < (int)input->data_dim.size(); i++ )
 			dim *= input->data_dim[i];
 		result_dim.push_back(dim);
 
@@ -76,4 +77,4 @@ class Flatten : public Node {
 		register_output(rv, "output");
 	}
 };
-}
+} // namespace toC

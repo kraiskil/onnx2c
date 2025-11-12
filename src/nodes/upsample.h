@@ -9,7 +9,8 @@ namespace toC {
 
 class Upsample : public Resize {
 	public:
-	Upsample() {
+	Upsample()
+	{
 		op_name = "Upsample";
 	}
 
@@ -23,12 +24,11 @@ class Upsample : public Resize {
 		if( scales->isConst == false )
 			ERROR("Unimplemented: Upsample 'sizes' input is not a compile-time constant: " + scales->name);
 
-
 		std::vector<int64_t> output_size;
-		for( int d=0; d<scales->data_num_elem(); d++ ) {
+		for( int d = 0; d < scales->data_num_elem(); d++ ) {
 			float scale = scales->get_data_element_float(d);
 			float size = scale * X->data_dim[d];
-			output_size.push_back( floor(size) );
+			output_size.push_back(floor(size));
 			dim_scales.push_back(scale);
 		}
 
@@ -43,5 +43,4 @@ class Upsample : public Resize {
 		register_output(t, "Y");
 	}
 };
-}
-
+} // namespace toC

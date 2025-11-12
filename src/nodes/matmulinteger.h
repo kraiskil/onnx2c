@@ -13,7 +13,8 @@ namespace toC {
 
 class MatMulInteger : public Node {
 	public:
-	MatMulInteger() {
+	MatMulInteger()
+	{
 		op_name = "MatMulInteger";
 	}
 
@@ -35,7 +36,7 @@ class MatMulInteger : public Node {
 		int32_t cols = B->data_dim[1];
 		int32_t inner = A->data_dim[1];
 		int32_t inner2 = B->data_dim[0];
-		if( inner == 0 ) inner=1;
+		if( inner == 0 ) inner = 1;
 
 		// TODO: handle the case of [N] * [Nx1] multiplication,
 		//       i.e. shift rows to inner, set rows as 1
@@ -43,11 +44,11 @@ class MatMulInteger : public Node {
 		if( inner != inner2 )
 			ERROR("MatMulInteger input's inner dimensions don't match");
 
-		if( get_number_of_inputs() > 2)
+		if( get_number_of_inputs() > 2 )
 			a_zero = "a_zero_point[0]";
 		else
 			a_zero = "0";
-		if( get_number_of_inputs() > 3)
+		if( get_number_of_inputs() > 3 )
 			b_zero = "b_zero_point[0]";
 		else
 			b_zero = "0";
@@ -60,27 +61,26 @@ class MatMulInteger : public Node {
 		INDT_1 << "for( uint32_t r=0; r<" << rows << "; r++ )" << std::endl;
 		INDT_2 << "for( uint32_t c=0; c<" << cols << "; c++ ) {" << std::endl;
 
-
 		// NB: quantization here is the experimental ONNXC quantization
 		// that is not only integers, but also scales the output to 8bits.
 		// This quantization terribly kludgy, and really should be removed
 		if( options.quantize )
 			INDT_3 << "int32_t sum = 0;" << std::endl;
 		else
-			INDT_3 << "Y[r*"<<cols<<" + c] = 0;" << std::endl;
+			INDT_3 << "Y[r*" << cols << " + c] = 0;" << std::endl;
 		INDT_3 << "for( uint32_t i=0; i<" << inner << "; i++ )" << std::endl;
 		if( options.quantize )
 			INDT_4 << "sum";
 		else
-			INDT_4 << "Y[r*"<<cols<<"+c]";
-		dst <<         "+= (A[r*"<<inner<< "+i] - " << a_zero << ")";
-		dst <<           " * (B[i*"<<cols<<"+c] - " << b_zero << ");" << std::endl;
+			INDT_4 << "Y[r*" << cols << "+c]";
+		dst << "+= (A[r*" << inner << "+i] - " << a_zero << ")";
+		dst << " * (B[i*" << cols << "+c] - " << b_zero << ");" << std::endl;
 
 		if( options.quantize ) {
 			INDT_3 << "int32_t tmp = sum/64;" << std::endl;
 			INDT_3 << "tmp = tmp > 127?127:tmp;" << std::endl;
 			INDT_3 << "tmp = tmp < -127?-127:tmp;" << std::endl;
-			INDT_3 << "Y[r*"<<cols<<"+c] = tmp;" << std::endl;
+			INDT_3 << "Y[r*" << cols << "+c] = tmp;" << std::endl;
 		}
 
 		INDT_2 "}" << std::endl;
@@ -117,28 +117,24 @@ class MatMulInteger : public Node {
 		register_output(rv, "output_Y");
 	}
 
-	void result_dim( int32_t &rows, int32_t &cols) const
+	void result_dim(int32_t &rows, int32_t &cols) const
 	{
 		// TODO: this is the check for vectors. Check equivalent for N-dimensons: N>2
-		if( get_input_tensor(0)->data_dim[1] != 0 && get_input_tensor(1)->data_dim[1] != 0 )
-		{
+		if( get_input_tensor(0)->data_dim[1] != 0 && get_input_tensor(1)->data_dim[1] != 0 ) {
 			rows = get_input_tensor(0)->data_dim[0];
 			cols = get_input_tensor(1)->data_dim[1];
 		}
-		else if( get_input_tensor(0)->data_dim[1] == 0 && get_input_tensor(1)->data_dim[1] == 0 )
-		{
+		else if( get_input_tensor(0)->data_dim[1] == 0 && get_input_tensor(1)->data_dim[1] == 0 ) {
 			ERROR("Bad input/unhandled: 2 vectors to MatMulInteger");
 		}
-		else if( get_input_tensor(0)->data_dim[1] == 0 )
-		{
+		else if( get_input_tensor(0)->data_dim[1] == 0 ) {
 			cols = get_input_tensor(1)->data_dim[1];
 			if( get_input_tensor(0)->data_dim[0] == get_input_tensor(1)->data_dim[0] )
 				rows = 1;
 			else
 				rows = get_input_tensor(0)->data_dim[0];
 		}
-		else
-		{
+		else {
 			rows = get_input_tensor(0)->data_dim[0];
 			if( get_input_tensor(0)->data_dim[1] == get_input_tensor(1)->data_dim[0] )
 				cols = 1;
@@ -147,4 +143,4 @@ class MatMulInteger : public Node {
 		}
 	}
 };
-}
+} // namespace toC

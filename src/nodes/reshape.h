@@ -3,16 +3,17 @@ namespace toC {
 
 class Reshape : public Node {
 	public:
-	Reshape() {
+	Reshape()
+	{
 		op_name = "Reshape";
-		allowzero=0;
+		allowzero = 0;
 	}
 
 	int32_t allowzero;
 
-	void parseAttributes( onnx::NodeProto &node ) override
+	void parseAttributes(onnx::NodeProto &node) override
 	{
-		for( const auto& a : node.attribute() ) {
+		for( const auto &a : node.attribute() ) {
 			LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
 			if( a.name() == "allowzero" )
 				allowzero = parse_attribute_int(a);
@@ -20,7 +21,6 @@ class Reshape : public Node {
 				LOG(ERROR) << "Ignoring attribute " << a.name() << " for node TEMPLATE/" << onnx_name << std::endl;
 		}
 	}
-
 
 	virtual void print(std::ostream &dst) const override
 	{
@@ -45,7 +45,7 @@ class Reshape : public Node {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *data= get_input_tensor(0);
+		const Tensor *data = get_input_tensor(0);
 		name_input(0, "data");
 		const Tensor *shape = get_input_tensor(1);
 		name_input(1, "shape");
@@ -57,36 +57,35 @@ class Reshape : public Node {
 		if( typeConstraint_integers(shape) == false )
 			ERROR("Incorrect input for node");
 
-
 		if( shape->isConst == false ) {
 			ERROR("Reshaping to a run-time defined shape is not supported");
 		}
 
-		if( allowzero != 0) {
+		if( allowzero != 0 ) {
 			ERROR("Allowzero attribute set. What exactly are you expecting as the output here?");
 		}
 
 		std::vector<int> out_data_dim;
-		int64_t *new_shape = (int64_t*)(shape->data_buffer);
-		bool negative_shape_found=false;
+		int64_t *new_shape = (int64_t *)(shape->data_buffer);
+		bool negative_shape_found = false;
 		int negative_shape_at = -1;
 
 		/* Check new shape has no more than 1 negative. Replace zeros */
-		uint64_t output_size=1;
-		for(unsigned i=0; (int)i<shape->data_num_elem(); i++) {
+		uint64_t output_size = 1;
+		for( unsigned i = 0; (int)i < shape->data_num_elem(); i++ ) {
 			int s = new_shape[i];
 			if( s < 0 ) {
 				if( negative_shape_found )
 					ERROR("Bad input: two negatives in reshape's target shape");
 				else {
 					negative_shape_found = true;
-					negative_shape_at=i;
+					negative_shape_at = i;
 				}
 			}
 			else if( s == 0 ) {
 				if( i >= data->data_dim.size() )
 					ERROR("Bad input: Reshape request duplication of input dimension that don't exist");
-				s=data->data_dim[i];
+				s = data->data_dim[i];
 			}
 
 			out_data_dim.push_back(s);
@@ -104,7 +103,6 @@ class Reshape : public Node {
 			out_data_dim[negative_shape_at] = missing_dim;
 		}
 
-
 		Tensor *rv = new Tensor;
 		rv->data_dim = out_data_dim;
 
@@ -112,4 +110,4 @@ class Reshape : public Node {
 		register_output(rv, "reshaped");
 	}
 };
-}
+} // namespace toC
