@@ -40,7 +40,6 @@ void Graph::processGraph(
 	LOG(TRACE) << "  (done adding external tensors)." <<std::endl;
 
 	// 1. add initializers as resolved tensors
-	// in case of quantization, make quantized copies here
 	LOG(DEBUG) << "Adding initialized constant tensors from .onnx file." <<std::endl;
 	for( auto i : onnx_graph.initializer() )
 		addInitializedTensor( i );
@@ -132,12 +131,6 @@ void Graph::addInitializedTensor(onnx::TensorProto &tensor)
 	t->isConst = true;
 
 	addTensor(t);
-
-	if( options.quantize ) {
-		t = t->make_quantized_copy();
-		if( t )
-			addTensor(t);
-	}
 }
 
 Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
@@ -163,10 +156,6 @@ Tensor* Graph::getIoTensor(onnx::ValueInfoProto &vi)
 	if( onnx::TensorProto_DataType_IsValid(datatype) == false )
 		ERROR("Non-valid data type " << datatype << " in tensor " << t->name);
 	t->data_type = static_cast<onnx::TensorProto_DataType>(datatype);
-
-	// TODO: this is a bit coarse
-	if( options.quantize )
-		t->data_type = onnx::TensorProto_DataType_INT8;
 
 	for( onnx::TensorShapeProto_Dimension d : tsp.dim() ) {
 
@@ -462,20 +451,6 @@ Node* Graph::createNode(const onnx::NodeProto &onnx_node)
 	LOG(TRACE) << "Creating new node: " << onnx_node.name() << std::endl;
 	LOG(TRACE) << "     Operand type: " << opName << std::endl;
 
-	// ONNX has a few nodes that have quantized alternatives.
-	// Switch to those here.
-	// For the rest, rely on optional quantization in the
-	// onnx2c implementation.
-	if( options.quantize ) {
-		LOG(WARNING) << "Quantization is deprecated, and probably broken" << std::endl;
-		std::vector<Tensor*> inputs;
-		replaceWithQuantized(inputs);
-		if( opName == "Conv" )
-			opName = "ConvInteger";
-		if( opName == "MatMul" )
-			opName = "MatMulInteger";
-	}
-
 	if( opName == "Abs" )return new Elementwise("Abs");
 	if( opName == "Acos" )return new Elementwise("Acos");
 	if( opName == "Acosh" )return new Elementwise("Acosh");
@@ -669,16 +644,6 @@ Tensor *Graph::findTensor(const std::string &name) const
 			return o;
 	return NULL;
 }
-
-void Graph::replaceWithQuantized(std::vector<Tensor*> &inputs)
-{
-	for( unsigned i=0; i<inputs.size(); i++ ) {
-		if(inputs[i]->quantizedCopy)
-			inputs[i] = inputs[i]->quantizedCopy;
-	}
-}
-
-
 
 Node* Graph::addGraphInputMetanode()
 {

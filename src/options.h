@@ -10,7 +10,6 @@
 
 struct onnx2c_opts
 {
-	bool quantize=false;
 	bool target_avr=false;
 	bool no_globals = false;
 	bool extern_init = false;
