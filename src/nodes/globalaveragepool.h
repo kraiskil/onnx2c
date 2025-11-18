@@ -20,8 +20,8 @@ class GlobalAveragePool : public Node {
 		int num_channels = X->data_dim[1];
 
 		dst << "\t/* GlobalAveragePool */" << std::endl;
-		dst<<"\t"  << "for( int32_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
-		dst<<"\t"  << "for( int32_t c=0; c<" << num_channels << "; c++ ) {" << std::endl;
+		dst<<"\t"  << "for( size_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
+		dst<<"\t"  << "for( size_t c=0; c<" << num_channels << "; c++ ) {" << std::endl;
 
 		// TODO: float16, double? accuracy vs speed...
 		dst << "\t\tfloat dimsum=0.0f;" << std::endl;
@@ -37,7 +37,7 @@ class GlobalAveragePool : public Node {
 			std::string dim_var = "d" + std::to_string(dim-2);
 			in_idx_string += "[" + dim_var + "]";
 			out_idx_string += "[0]";
-			dst << "\t\t" << "for( int32_t " << dim_var <<" = 0; ";
+			dst << "\t\t" << "for( size_t " << dim_var <<" = 0; ";
 			dst <<            dim_var << "<" << dim_size << "; ";
 			dst <<            dim_var<<"++ ) {" << std::endl;
 		}

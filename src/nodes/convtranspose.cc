@@ -279,19 +279,19 @@ void ConvTranspose::print_calculation( std::ostream &dst) const
 	INDT_1 << "memset(y, 0," << y->data_num_elem()*y->data_elem_size() << ");" << std::endl << std::endl;
 
 	// Create the loops over batches and maps (output channels).
-	INDT_1 << "for( uint32_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
-	INDT_1 << "for( uint32_t m=0; m<" << maps << "; m++) {" << std::endl;
+	INDT_1 << "for( size_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
+	INDT_1 << "for( size_t m=0; m<" << maps << "; m++) {" << std::endl;
 
 	// loop inputs
 	for( unsigned i = 0; i<n_data_dims; i++) {
 		std::string i_idx = "i" + std::to_string(i);
-		INDT_2 << "for( int32_t " << i_idx << "=0; ";
+		INDT_2 << "for( size_t " << i_idx << "=0; ";
 		   dst <<       i_idx << "<" << x->data_dim[2+i] << "; ";
 		   dst <<       i_idx <<"++) {" << std::endl;
 	}
 
 	// Loop over input channels
-	INDT_3 <<   "for( int32_t c=0; c<" << channels << "; c++ ) {" << std::endl;
+	INDT_3 <<   "for( size_t c=0; c<" << channels << "; c++ ) {" << std::endl;
 
 
 	// Generate loops over outputs and kernel indices. Something like:
@@ -348,11 +348,11 @@ void ConvTranspose::print_calculation( std::ostream &dst) const
     // YK: bias should be added only once
     if( b ) {
         // Create the loops over batches and maps (output channels).
-        INDT_1 << "for( uint32_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
-        INDT_2 << "for( uint32_t m=0; m<" << maps << "; m++) {" << std::endl;
+        INDT_1 << "for( size_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
+        INDT_2 << "for( size_t m=0; m<" << maps << "; m++) {" << std::endl;
         for( unsigned i = 0; i<n_data_dims; i++) {
             std::string i_str = std::to_string(i);
-            INDT_3 << "for( uint32_t o"<<i_str<<"=0; o"<<i_str<<"<" << output_shape[i] << "; o"<<i_str<<"++) {" << std::endl;
+            INDT_3 << "for( size_t o"<<i_str<<"=0; o"<<i_str<<"<" << output_shape[i] << "; o"<<i_str<<"++) {" << std::endl;
             
         }
         INDT_4 << "y" << y_idx;

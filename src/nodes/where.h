@@ -75,7 +75,7 @@ class Where : public Node {
 		// Print out loops over output tensors dimensions
 		for( unsigned r=0; r<out->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
-			INDT_1 << "for (unsigned " << lv << "=0; ";
+			INDT_1 << "for (size_t " << lv << "=0; ";
 			   dst << lv << "<" << out->data_dim[r] << "; ";
 			   dst << lv << "++)" << std::endl;
 		}

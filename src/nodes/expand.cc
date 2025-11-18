@@ -84,7 +84,7 @@ void Expand::print(std::ostream &dst) const
 			i_idxs += "[0]";
 		else
 			i_idxs += "[o" + i_str +"]";
-		INDT_1 << "for( uint32_t " << o_idx << "=0; ";
+		INDT_1 << "for( size_t " << o_idx << "=0; ";
 		   dst <<       o_idx << "<" << output->data_dim[i] << "; ";
 		   dst <<       o_idx <<"++) {" << std::endl;
 

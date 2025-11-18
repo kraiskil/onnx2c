@@ -58,7 +58,7 @@ namespace toC {
 
 				// copy the data across: for every 'inputAxisPitch' values copied, we move over by the 'axisPitch'
 				dst << "\toutputOffset = " << outputBase << ";" << std::endl;
-				dst << "\tfor (int64_t i = 0, j = 0; i < " << inputSize << "; i++) {" << std::endl;
+				dst << "\tfor (size_t i = 0, j = 0; i < " << inputSize << "; i++) {" << std::endl;
 
 				dst << "\t\t*((" << concat_result ->data_type_str() << "*)output";
 				dst << " + (outputOffset + i)) = *((" << concat_result ->data_type_str() << "*)";

@@ -34,7 +34,7 @@ class Squeeze : public Node {
 		dst << "\t" << type << " *squeezed= (" << type << "*)output" << ";" << std::endl;
 
 		// TODO: is a memcpy faster?
-		dst << "\t" << "for( uint32_t i=0; i<" << data->data_num_elem() << "; i++ )" << std::endl;
+		dst << "\t" << "for( size_t i=0; i<" << data->data_num_elem() << "; i++ )" << std::endl;
 		dst << "\t\t" << "squeezed[i] = data[i];" << std::endl;
 		dst << std::endl;
 	}

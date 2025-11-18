@@ -57,8 +57,8 @@ void InstanceNormalization::print(std::ostream &dst) const
 	std::string type = input->data_type_str();
 
 
-	INDT_1 << "for( int32_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
-	INDT_1 << "for( int32_t c=0; c<" << num_chan << "; c++ ) {" << std::endl;
+	INDT_1 << "for( size_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
+	INDT_1 << "for( size_t c=0; c<" << num_chan << "; c++ ) {" << std::endl;
 
 
 	std::string idxs = "[b][c]";
@@ -72,7 +72,7 @@ void InstanceNormalization::print(std::ostream &dst) const
 	INDT_2 << type << " sqmean =  0;" << std::endl;
 	for( unsigned i = 2; i<input->data_dim.size(); i++) {
 		std::string idx = "i" + std::to_string(i);
-		INDT_2 << "for( uint32_t " << idx << "=0; ";
+		INDT_2 << "for( size_t " << idx << "=0; ";
 		dst <<            idx << "<" << input->data_dim[i] << "; ";
 		dst <<            idx <<"++ ) {" << std::endl;
 
@@ -95,7 +95,7 @@ void InstanceNormalization::print(std::ostream &dst) const
 	// Now loop over the instance again, normalizing
 	for( unsigned i = 2; i<input->data_dim.size(); i++) {
 		std::string idx = "i" + std::to_string(i);
-		INDT_2 << "for( uint32_t " << idx << "=0; ";
+		INDT_2 << "for( size_t " << idx << "=0; ";
 		dst <<            idx << "<" << input->data_dim[i] << "; ";
 		dst <<            idx <<"++ ) {" << std::endl;
 	}

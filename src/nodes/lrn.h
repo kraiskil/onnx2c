@@ -79,14 +79,14 @@ class LRN : public Node {
 		INDT_1 << "int size = " << size << ";" << std::endl;
 
 		// loop over batches and channels
-		INDT_1 << "for (unsigned n=0; n<N; n++) {" << std::endl;
-		INDT_1 << "for (unsigned c=0; c<C; c++) {" << std::endl;
+		INDT_1 << "for (size_t n=0; n<N; n++) {" << std::endl;
+		INDT_1 << "for (size_t c=0; c<C; c++) {" << std::endl;
 
 		// loop over the data channels
 		std::string y_idx="";
 		for( unsigned r=2; r< X->rank(); r++) {
 			std::string lv = "i" + std::to_string(r);
-			INDT_1 << "for (unsigned " << lv << "=0; ";
+			INDT_1 << "for (size_t " << lv << "=0; ";
 				dst << lv << "<" << X->data_dim[r] << "; ";
 				dst << lv << "++) {" << std::endl;
 
@@ -98,7 +98,7 @@ class LRN : public Node {
 			INDT_2 << "int start_i = MAX(0,   c-floor((size-1)/2));" << std::endl;
 			INDT_2 << "int end_i   = MIN(C-1, c+ceil((size-1)/2));" << std::endl;
 			INDT_2 << "float square_sum = 0;" << std::endl;
-			INDT_2 << "for (unsigned i=start_i; i<=end_i; i++) {" << std::endl;
+			INDT_2 << "for (size_t i=start_i; i<=end_i; i++) {" << std::endl;
 				INDT_3 << "square_sum += pow(X[n][i]"<<y_idx <<", 2);" << std::endl;
 			INDT_2 << "}" << std::endl;
 

@@ -63,7 +63,7 @@ void DequantizeLinear::print(std::ostream &dst) const {
 	std::string index;
 	for (unsigned loop_axis = 0; loop_axis < x->rank(); loop_axis++) {
 		std::string name = "i" + std::to_string(loop_axis);
-		INDT_1 << "for (unsigned " << name << " = 0; " << name << " < " << x->data_dim[loop_axis] << "; " << name << "++)" << std::endl;
+		INDT_1 << "for (size_t " << name << " = 0; " << name << " < " << x->data_dim[loop_axis] << "; " << name << "++)" << std::endl;
 
 		index += "[" + name + "]";
 	}

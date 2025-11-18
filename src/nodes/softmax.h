@@ -95,7 +95,7 @@ class Softmax : public Node {
 
 		for( unsigned i = 0; i<n_dim; i++) {
 			std::string idx = "i" + std::to_string(i);
-			dst << "\t" << "for( uint32_t " << idx << "=0; ";
+			dst << "\t" << "for( size_t " << idx << "=0; ";
 			dst <<               idx << "<" << input->data_dim[i] << "; ";
 			dst <<               idx <<"++ ) {" << std::endl;
 		}
@@ -108,7 +108,7 @@ class Softmax : public Node {
 		// Calculate exp() and running sum of innermost flattened dimensions
 		for( unsigned i = flatten_axis; i<n_dim; i++) {
 			std::string idx = "i" + std::to_string(i);
-			dst << "\t" << "for( uint32_t " << idx << "=0; ";
+			dst << "\t" << "for( size_t " << idx << "=0; ";
 			dst <<               idx << "<" << input->data_dim[i] << "; ";
 			dst <<               idx <<"++ ) {" << std::endl;
 		}
@@ -121,7 +121,7 @@ class Softmax : public Node {
 		// loop again over inner dimensions to do the division
 		for( unsigned i = flatten_axis; i<n_dim; i++) {
 			std::string idx = "i" + std::to_string(i);
-			dst << "\t" << "for( uint32_t " << idx << "=0; ";
+			dst << "\t" << "for( size_t " << idx << "=0; ";
 			dst <<               idx << "<" << input->data_dim[i] << "; ";
 			dst <<               idx <<"++ ) {" << std::endl;
 		}
@@ -170,7 +170,7 @@ class Softmax : public Node {
 			if (i==reduce_axis)
 				continue;
 			std::string idx = "i" + std::to_string(i);
-			INDT_1 << "for( uint32_t " << idx << "=0; ";
+			INDT_1 << "for( size_t " << idx << "=0; ";
 			dst <<               idx << "<" << input->data_dim[i] << "; ";
 			dst <<               idx <<"++ ) {" << std::endl;
 		}
@@ -178,7 +178,7 @@ class Softmax : public Node {
 		// Loop over the reduction axis three times, first calculate the max, then sum, then the elements
 		std::string ridx = "i" + std::to_string(reduce_axis);
 		INDT_2 << type << " max = -INFINITY;" << std::endl;
-		INDT_2 << "for( uint32_t " << ridx << "=0; ";
+		INDT_2 << "for( size_t " << ridx << "=0; ";
 		   dst <<       ridx << "<" << reduce_axis_size << "; ";
 		   dst <<       ridx <<"++ ) {" << std::endl;
 		INDT_3 << "max = max>input" << idxs << " ? max :input" << idxs << ";" << std::endl;
@@ -186,14 +186,14 @@ class Softmax : public Node {
 
 		// Now loop to calculate sum
 		INDT_2 << type << " sum = 0.0;" << std::endl;
-		INDT_2 << "for( uint32_t " << ridx << "=0; ";
+		INDT_2 << "for( size_t " << ridx << "=0; ";
 		   dst <<       ridx << "<" << reduce_axis_size << "; ";
 		   dst <<       ridx <<"++ ) {" << std::endl;
 		INDT_3 << "sum += " << math_func("exp") << "(input" << idxs << " - max);" << std::endl;
 		INDT_2 << "};" << std::endl;
 
 		// And last the elementwise softmax
-		INDT_2 << "for( uint32_t " << ridx << "=0; ";
+		INDT_2 << "for( size_t " << ridx << "=0; ";
 		   dst <<       ridx << "<" << reduce_axis_size << "; ";
 		   dst <<       ridx <<"++ ) {" << std::endl;
 		INDT_3 << "output" << idxs << " = ";
