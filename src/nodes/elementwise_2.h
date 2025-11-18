@@ -72,7 +72,7 @@ class Elementwise_2 : public Node {
 			operation = [this](const std::string& a, const std::string& b)
 				{
 					if( fmod )
-						return "fmod("+a+","+b+");";
+						return math_func("fmod")+"("+a+","+b+");";
 					else
 						ERROR("Non fmod Mod operator definition is not clear in ONNX specification");
 				};
@@ -86,8 +86,8 @@ class Elementwise_2 : public Node {
 		}
 		else if (op == "Pow" )
 			// TODO: don't use powf for integers!
-			operation = [](const std::string& a, const std::string& b)
-				{ return  "powf("+a+","+b+");"; };
+			operation = [this](const std::string& a, const std::string& b)
+				{ return  math_func("pow")+"("+a+","+b+");"; };
 		else if (op == "PRelu" )
 			operation = [](const std::string& a, const std::string& b)
 				{ return  a+"<0?"+a+"*"+b+":"+a+";"; };
@@ -173,6 +173,8 @@ class Elementwise_2 : public Node {
 		else
 			t->data_type = A->data_type;
 		register_output(t, "C");
+
+		set_math_type( A->data_type );
 	}
 };
 }

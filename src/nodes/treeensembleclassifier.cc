@@ -206,7 +206,7 @@ void TreeEnsembleClassifier::print(std::ostream &dst) const
 		}
 		else if(post_transform == "LOGISTIC")
 		{
-			dst << "1.0f / (1.0f + exp(result_class_" << class_id << "));" << std::endl;
+			dst << "1.0f / (1.0f + expf(result_class_" << class_id << "));" << std::endl;
 		}
 	}
 
