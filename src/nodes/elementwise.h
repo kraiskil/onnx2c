@@ -19,50 +19,50 @@ class Elementwise : public Node {
 		// TODO: use the double precision version of the arithmetics for
 		// double precision input. OTOH - who uses doubles on MCUs?
 		if( op == "Abs" )
-			operation = [](const std::string& x){ return  "fabs("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("fabs") + "("+x+");"; };
 		else if( op == "Acos" )
-			operation = [](const std::string& x){ return  "acosf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("acos") + "("+x+");"; };
 		else if( op == "Acosh" )
-			operation = [](const std::string& x){ return  "acoshf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("acosh") + "("+x+");"; };
 		else if( op == "Asin" )
-			operation = [](const std::string& x){ return  "asinf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("asin") + "("+x+");"; };
 		else if( op == "Asinh" )
-			operation = [](const std::string& x){ return  "asinhf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("asinh") + "("+x+");"; };
 		else if( op == "Atan" )
-			operation = [](const std::string& x){ return  "atanf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("atan") + "("+x+");"; };
 		else if( op == "Atanh" )
-			operation = [](const std::string& x){ return  "atanhf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("atanh") + "("+x+");"; };
 		else if( op == "Ceil" )
-			operation = [](const std::string& x){ return  "ceilf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("ceil") + "("+x+");"; };
 		else if( op == "Celu" ) {
 			alpha=1.0;
 			operation = [this](const std::string& x){
 				std::string a = std::to_string(alpha);
-				return  "fmax(0,"+x+") + fmin(0,"+a+"*(exp("+x+"/"+a+")-1));"; };
+				return math_func("fmax")+"(0,"+x+") + "+math_func("fmin")+"(0,"+a+"*("+math_func("exp")+"("+x+"/"+a+")-1));"; };
 		}
 		else if( op == "Cos" )
-			operation = [](const std::string& x){ return  "cosf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("cos") + "("+x+");"; };
 		else if( op == "Cosh" )
-			operation = [](const std::string& x){ return  "coshf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("cosh") + "("+x+");"; };
 		else if( op == "Floor" )
-			operation = [](const std::string& x){ return  "floorf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("floor") + "("+x+");"; };
 		else if( op == "Elu" ) {
 			alpha=1.0;
 			operation = [this](const std::string& x){
 				std::string a = std::to_string(alpha);
-				return x+">0 ? "+x+": "+a+"*(exp("+x+")-1);"; };
+				return x+">0 ? "+x+": "+a+"*("+math_func("exp")+"("+x+")-1);"; };
 		}
 		else if( op == "Erf" )
-			operation = [](const std::string& x){ return  "erff("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("erf") + "("+x+");"; };
 		else if( op == "Exp" )
-			operation = [](const std::string& x){ return  "expf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("exp") + "("+x+");"; };
 		else if( op == "HardSigmoid" ) {
 			alpha=0.2;
 			beta=0.5;
 			operation = [this](const std::string& x){
 				std::string a = std::to_string(alpha);
 				std::string b = std::to_string(beta);
-				return "fmax(0, fmin(1, "+a+"*"+x+"+"+b+"));";};
+				return math_func("fmax")+"(0, "+math_func("fmin")+"(1, "+a+"*"+x+"+"+b+"));";};
 		}
 		else if( op == "HardSwish" ) {
 			// NB: HardSwish has fixed attributes. parseAttributes() can override
@@ -73,7 +73,7 @@ class Elementwise : public Node {
 			operation = [this](const std::string& x){
 				std::string a = std::to_string(alpha);
 				std::string b = std::to_string(beta);
-				return x+"*fmax(0, fmin(1, "+a+"*"+x+"+"+b+"));";};
+				return x+"*"+math_func("fmax")+"(0, "+math_func("fmin")+"(1, "+a+"*"+x+"+"+b+"));";};
 		}
 		else if( op == "LeakyRelu" ) {
 			alpha=0.01f;
@@ -82,7 +82,7 @@ class Elementwise : public Node {
 				return x+">0 ? "+x+" : " +x+ "*" +a+ ";"; };
 		}
 		else if( op == "Log" )
-			operation = [](const std::string& x){ return  "logf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("log") + "("+x+");"; };
 		else if( op == "Neg" )
 			operation = [](const std::string& x){ return  " -"+x+";"; };
 		else if( op == "Not" )
@@ -98,7 +98,7 @@ class Elementwise : public Node {
 			// please file an improvement suggestion to ONNX. Or fix this with
 			// something clean that does what ONNX wants.
 			LOG(WARNING) << "Round operand implementation is not strictly conformant" << std::endl;
-			operation = [](const std::string& x){ return  "roundf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("round") + "("+x+");"; };
 		}
 		else if( op == "Selu" ) {
 			alpha=1.67326319217681884765625f;
@@ -107,7 +107,7 @@ class Elementwise : public Node {
 				std::string a = std::to_string(alpha);
 				std::string c = std::to_string(gamma);
 				//`y = gamma * (alpha * e^x - alpha) for x <= 0`, `y = gamma * x for x > 0`,
-				return x+">0 ? "+c+"*"+x+": "+c+"*("+a+"*exp("+x+")-"+a+");"; };
+				return x+">0 ? "+c+"*"+x+": "+c+"*("+a+"*"+math_func("exp")+"("+x+")-"+a+");"; };
 		}
 		else if( op == "Shrink" ) {
 			operation = [this](const std::string& x){
@@ -123,23 +123,23 @@ class Elementwise : public Node {
 			};
 		}
 		else if( op == "Sigmoid" )
-			operation = [](const std::string& x){ return  "1/(1+exp(-"+x+"));"; };
+			operation = [this](const std::string& x){ return  "1/(1+"+math_func("exp")+"(-"+x+"));"; };
 		else if( op == "Sign" )
 			operation = [](const std::string& x){ return  ""+x+"<0?-1:"+x+">0?1:0;"; };
 		else if( op == "Sin" )
-			operation = [](const std::string& x){ return  "sinf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("sin") + "("+x+");"; };
 		else if( op == "Sinh" )
-			operation = [](const std::string& x){ return  "sinhf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("sinh") + "("+x+");"; };
 		else if( op == "Softplus" )
-			operation = [](const std::string& x){ return  "logf(exp("+x+")+1);"; };
+			operation = [this](const std::string& x){ return math_func("log") + "("+math_func("exp")+"("+x+")+1);"; };
 		else if( op == "Softsign" )
-			operation = [](const std::string& x){ return  ""+x+"/(1+fabsf("+x+"));"; };
+			operation = [this](const std::string& x){ return  ""+x+"/(1+"+math_func("fabs")+"("+x+"));"; };
 		else if( op == "Sqrt" )
-			operation = [](const std::string& x){ return  "sqrtf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("sqrt") + "("+x+");"; };
 		else if( op == "Tan" )
-			operation = [](const std::string& x){ return  "tanf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("tan") + "("+x+");"; };
 		else if( op == "Tanh" )
-			operation = [](const std::string& x){ return  "tanhf("+x+");"; };
+			operation = [this](const std::string& x){ return math_func("tanh") + "("+x+");"; };
 		else if( op == "ThresholdedRelu" ) {
 			alpha=1.0f;
 			operation = [this](const std::string& x){
@@ -217,6 +217,8 @@ class Elementwise : public Node {
 		t->data_dim = X->data_dim;
 		t->data_type = X->data_type;
 		register_output(t, "Y");
+
+		set_math_type(X->data_type);
 	}
 };
 }
