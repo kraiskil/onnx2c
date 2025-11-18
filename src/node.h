@@ -137,6 +137,12 @@ public:  // TODO: split up into more protected functions
 	void name_input(unsigned input_no, std::string name);
 	void register_output(unsigned output_no, std::string name);
 
+private:
+	onnx::TensorProto_DataType math_type = onnx::TensorProto_DataType_UNDEFINED;
+
+protected:
+	void set_math_type(onnx::TensorProto_DataType t) { math_type = t; }
+	std::string math_func(std::string name) const;
 };
 }
 
