@@ -69,28 +69,6 @@ class Softmax : public Node {
 			print11(dst);
 	}
 
-	std::string expfunc() const {
-		switch (get_input_tensor(0)->data_type) {
-			case onnx::TensorProto_DataType_FLOAT:
-				return "expf";
-			case onnx::TensorProto_DataType_DOUBLE:
-				return "exp";
-			default:
-				ERROR("exp function is not available for type " << get_input_tensor(0)->data_type_str());
-		}
-	}
-
-	std::string logfunc() const {
-		switch (get_input_tensor(0)->data_type) {
-			case onnx::TensorProto_DataType_FLOAT:
-				return "logf";
-			case onnx::TensorProto_DataType_DOUBLE:
-				return "log";
-			default:
-				ERROR("log function is not available for type " << get_input_tensor(0)->data_type_str());
-		}
-	}
-
 	void print11(std::ostream &dst) const
 	{
 		const Tensor *input=get_input_tensor(0);
@@ -135,7 +113,7 @@ class Softmax : public Node {
 			dst <<               idx <<"++ ) {" << std::endl;
 		}
 		INDT_2 << "output"<< idxs << " = ";
-		dst           << expfunc() << "(input" << idxs << "-max);" << std::endl;
+		dst           << math_func("exp") << "(input" << idxs << "-max);" << std::endl;
 		INDT_2 << "sum += output" << idxs << ";" << std::endl;
 		for( unsigned i = flatten_axis; i<n_dim; i++)
 			dst << "\t}" << std::endl;
@@ -149,7 +127,7 @@ class Softmax : public Node {
 		}
 		INDT_2 << "output" << idxs <<" /= sum;" << std::endl;
 		if (is_log_softmax) {
-			INDT_2 << "output" << idxs <<" = " << logfunc() << "(output" << idxs << ");" << std::endl;
+			INDT_2 << "output" << idxs <<" = " << math_func("log") << "(output" << idxs << ");" << std::endl;
 		}
 
 		for( unsigned i = flatten_axis; i<n_dim; i++)
@@ -211,7 +189,7 @@ class Softmax : public Node {
 		INDT_2 << "for( uint32_t " << ridx << "=0; ";
 		   dst <<       ridx << "<" << reduce_axis_size << "; ";
 		   dst <<       ridx <<"++ ) {" << std::endl;
-		INDT_3 << "sum += " << expfunc() << "(input" << idxs << " - max);" << std::endl;
+		INDT_3 << "sum += " << math_func("exp") << "(input" << idxs << " - max);" << std::endl;
 		INDT_2 << "};" << std::endl;
 
 		// And last the elementwise softmax
@@ -219,8 +197,8 @@ class Softmax : public Node {
 		   dst <<       ridx << "<" << reduce_axis_size << "; ";
 		   dst <<       ridx <<"++ ) {" << std::endl;
 		INDT_3 << "output" << idxs << " = ";
-		if (is_log_softmax) dst << logfunc() << "(";
-		   dst << expfunc() << "(input" << idxs << " - max)/sum";
+		if (is_log_softmax) dst << math_func("log") << "(";
+		   dst << math_func("exp") << "(input" << idxs << " - max)/sum";
 		if (is_log_softmax) dst << ")";
 		   dst << ";" << std::endl;
 		INDT_2 << "};" << std::endl;
@@ -241,6 +219,8 @@ class Softmax : public Node {
 		rv->data_dim = get_input_tensor(0)->data_dim;
 		rv->data_type = get_input_tensor(0)->data_type;
 		register_output(rv, "output");
+
+		set_math_type( get_input_tensor(0)->data_type );
 	}
 };
 }

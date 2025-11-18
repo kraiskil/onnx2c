@@ -39,10 +39,10 @@ void Graph::fold_casts(void)
 		}
 
 
-		// Degenerate case where the graph input is directly the output.
-		// This happens in unit tests at least, but other than that, sounds like an error.
-		if( output_tensor->isIO && input_tensor->isIO ) {
-			LOG(WARNING) << "   Cast output is graph output??" << std::endl;
+		// We should not modify the type of graph inputs or outputs
+		// as this would change the graph's interface.
+		if( output_tensor->isIO || input_tensor->isIO ) {
+			LOG(WARNING) << "   Cast is input or output tensor." << std::endl;
 			continue;
 		}
 
