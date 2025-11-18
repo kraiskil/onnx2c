@@ -35,6 +35,7 @@ namespace toC {
 			name_scalar_input(7, "C_zero_point");
 
 			Tensor* a = get_input_tensor(0);
+			Tensor* a_scale = get_input_tensor(1);
 			Tensor* b = get_input_tensor(3);
 
 			std::vector<int> result_dim;
@@ -44,6 +45,8 @@ namespace toC {
 			c->data_dim = result_dim;
 			c->data_type = a->data_type;
 			register_output(c, "C");
+
+			set_math_type(a_scale->data_type);
 		}
 		
 		void print(std::ostream &dst) const override {
@@ -79,7 +82,11 @@ namespace toC {
 			}
 			dst << ";" << std::endl;
 
-			INDT_2 << c_idx << " = roundf(c / C_scale[0] + C_zero_point[0]);" << std::endl;
+			auto [lower, upper] = c->get_type_bounds();
+			INDT_2 << float_type << " rounded = " << math_func("round") << "(c / C_scale[0] + C_zero_point[0]);" << std::endl;
+			INDT_2 << "if (rounded > " << upper << ") rounded = " << upper << ";" << std::endl;
+			INDT_2 << "else if (rounded < " << lower << ") rounded = " << lower << ";" << std::endl;
+			INDT_2 << c_idx << " = rounded;" << std::endl;
 
 			INDT_1 << "}" << std::endl;
 		}

@@ -220,6 +220,36 @@ std::string Tensor::data_type_str(void) const
 	};
 }
 
+std::pair<std::string, std::string> Tensor::get_type_bounds() const
+{
+	switch( data_type )
+	{
+		case onnx::TensorProto_DataType_INT8:
+			return std::make_pair("INT8_MIN", "INT8_MAX");
+		case onnx::TensorProto_DataType_UINT8:
+			return std::make_pair("0", "UINT8_MAX");
+		case onnx::TensorProto_DataType_INT16:
+			return std::make_pair("INT16_MIN", "INT16_MAX");
+		case onnx::TensorProto_DataType_UINT16:
+			return std::make_pair("0", "UINT16_MAX");
+		case onnx::TensorProto_DataType_INT32:
+			return std::make_pair("INT32_MIN", "INT32_MAX");
+		case onnx::TensorProto_DataType_UINT32:
+			return std::make_pair("0", "UINT32_MAX");
+		case onnx::TensorProto_DataType_INT64:
+			return std::make_pair("INT64_MIN", "INT64_MAX");
+		case onnx::TensorProto_DataType_UINT64:
+			return std::make_pair("0", "UINT64_MAX");
+		case onnx::TensorProto_DataType_FLOAT:
+			return std::make_pair("-FLT_MAX", "FLT_MAX");
+		case onnx::TensorProto_DataType_DOUBLE:
+			return std::make_pair("-DBL_MAX", "DBL_MAX");
+		default:
+			ERROR("unhandled tensor data type in tensor " << name);
+			return std::make_pair("", "");
+	};
+}
+
 template <typename T>
 inline void print_float(std::ostream &dst, T value) {
 	if (std::isnan(value)) {
