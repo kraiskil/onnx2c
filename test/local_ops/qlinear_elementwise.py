@@ -8,15 +8,19 @@ import os
 np.random.seed(0)
 
 CONFIGS = {
-    "int8": {"type": onnx.TensorProto.INT8},
-    "uint8": {"type": onnx.TensorProto.UINT8}
+    "int8": {
+        "type": onnx.TensorProto.INT8,
+        "zero_point": 0
+    },
+    "uint8": {
+        "type": onnx.TensorProto.UINT8,
+        "zero_point": 128
+    }
 }
 
 def random_tensor(tensor_info):
     shape = [dim.dim_value for dim in tensor_info.type.tensor_type.shape.dim]
-    if tensor_info.type.tensor_type.elem_type == onnx.TensorProto.FLOAT:
-        return np.array(np.random.rand(*shape)).astype(np.float32)
-    elif tensor_info.type.tensor_type.elem_type == onnx.TensorProto.INT8:
+    if tensor_info.type.tensor_type.elem_type == onnx.TensorProto.INT8:
         return np.random.randint(-128, 127, size=shape, dtype=np.int8)
     elif tensor_info.type.tensor_type.elem_type == onnx.TensorProto.UINT8:
         return np.random.randint(0, 255, size=shape, dtype=np.uint8)
@@ -62,9 +66,19 @@ for op_name in ["QLinearAdd", "QLinearMul"]:
 
         check_model(model)
 
+        dtype = onnx.helper.tensor_dtype_to_np_dtype(config["type"])
+        
         inputs = {
-            input_tensor.name: random_tensor(input_tensor)
-            for input_tensor in graph.input
+            "a": random_tensor(a),
+            "b": random_tensor(b),
+
+            "a_zero_point": np.array(config["zero_point"], dtype=dtype),
+            "b_zero_point": np.array(config["zero_point"], dtype=dtype),
+            "c_zero_point": np.array(config["zero_point"], dtype=dtype),
+
+            "a_scale": np.array(np.random.rand() * 0.1).astype(np.float32),
+            "b_scale": np.array(np.random.rand() * 0.1).astype(np.float32),
+            "c_scale": np.array(np.random.rand() * 0.1).astype(np.float32)
         }
 
         sess = ort.InferenceSession(model.SerializeToString())
