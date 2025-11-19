@@ -8,17 +8,17 @@ namespace toC {
 
 class Cast : public Node {
 	public:
-	Cast() {
+	Cast()
+	{
 		op_name = "Cast";
-		to=-1;
+		to = -1;
 	}
 	int to;
 
 	std::string output_type;
 
-	virtual void parseAttributes( onnx::NodeProto &node ) override;
+	virtual void parseAttributes(onnx::NodeProto& node) override;
 	virtual void resolve(void) override;
-	virtual void print(std::ostream &dst) const override;
+	virtual void print(std::ostream& dst) const override;
 };
-} // namespace
-
+} // namespace toC

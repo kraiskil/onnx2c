@@ -1,0 +1,16 @@
+BasedOnStyle: LLVM
+
+# Indent with tabs, align with spaces.
+# These two fields are no-ops, but without them, clang-format gets confused.
+IndentWidth: 1
+TabWidth: 1
+UseTab: ForIndentation
+ColumnLimit: 0
+IndentCaseLabels: true
+
+# Classes, functions: braces on own line. Conditionals, same line
+BreakBeforeBraces: Stroustrup
+
+
+AllowShortIfStatementsOnASingleLine: true
+PointerAlignment: Left
