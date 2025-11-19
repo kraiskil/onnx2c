@@ -15,23 +15,23 @@ namespace toC {
 
 class InstanceNormalization : public Node {
 	public:
-	InstanceNormalization() {
+	InstanceNormalization()
+	{
 		op_name = "InstanceNormalization";
-		input=scale=B=output=NULL;
+		input = scale = B = output = NULL;
 		epsilon = 1e-5;
 	}
 	/* Node attributes */
 	float epsilon;
 
 	// input and output
-	const Tensor *input;
-	const Tensor *scale;
-	const Tensor *B;
-	const Tensor *output;
+	const Tensor* input;
+	const Tensor* scale;
+	const Tensor* B;
+	const Tensor* output;
 
-	virtual void print(std::ostream &dst) const override;
+	virtual void print(std::ostream& dst) const override;
 	virtual void resolve(void) override;
-	virtual void parseAttributes( onnx::NodeProto &node ) override;
+	virtual void parseAttributes(onnx::NodeProto& node) override;
 };
-}
-
+} // namespace toC

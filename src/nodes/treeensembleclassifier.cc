@@ -1,24 +1,20 @@
 #include "treeensembleclassifier.h"
 
-namespace toC
-{
+namespace toC {
 
-void TreeEnsembleClassifier::parseAttributes( onnx::NodeProto &node )
+void TreeEnsembleClassifier::parseAttributes(onnx::NodeProto& node)
 {
 	std::unordered_map<std::string, onnx::AttributeProto> nameToAttributeMap;
-	for( const auto& a : node.attribute() )
-	{
+	for (const auto& a : node.attribute()) {
 		nameToAttributeMap[a.name()] = a;
 	}
 
 	post_transform = parse_attribute_string(nameToAttributeMap["post_transform"]);
-	if( post_transform != "NONE" && post_transform != "LOGISTIC" )
-	{
+	if (post_transform != "NONE" && post_transform != "LOGISTIC") {
 		ERROR("Only NONE and LOGISTIC post_transform are supported for TreeEnsembleClassifier");
 	}
 
-	if( !nameToAttributeMap.contains("classlabels_int64s") )
-	{
+	if (!nameToAttributeMap.contains("classlabels_int64s")) {
 		ERROR("classlabels_int64 attribute is required, classlabels_strings is not supported");
 	}
 
@@ -38,17 +34,14 @@ void TreeEnsembleClassifier::parseAttributes( onnx::NodeProto &node )
 	// Check if there exists a class unused by a leaf
 	unused_class_id = -1; // Assume no class ID will be -1 (unconfirmed)
 	std::set<int64_t> class_ids_set(leaf_class_ids.begin(), leaf_class_ids.end());
-	for( int64_t class_id : class_ids )
-	{
+	for (int64_t class_id : class_ids) {
 		// Assume only one class can be unused
-		if( !class_ids_set.contains(class_id) )
-		{
+		if (!class_ids_set.contains(class_id)) {
 			unused_class_id = class_id;
 			break;
 		}
 	}
 }
-
 
 /* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 void TreeEnsembleClassifier::resolve(void)
@@ -57,11 +50,11 @@ void TreeEnsembleClassifier::resolve(void)
 
 	/* Create output tensors.
 	 * Set data dimensions and data type for the created tensors. */
-	Tensor *label_tensor = new Tensor;
+	Tensor* label_tensor = new Tensor;
 	label_tensor->data_dim.push_back(1);
 	label_tensor->data_type = onnx::TensorProto_DataType_INT64;
 
-	Tensor *probabilities_tensor = new Tensor;
+	Tensor* probabilities_tensor = new Tensor;
 	probabilities_tensor->data_dim = {static_cast<int>(class_ids.size() + 1)};
 	probabilities_tensor->data_type = onnx::TensorProto_DataType_FLOAT;
 
@@ -74,19 +67,19 @@ void TreeEnsembleClassifier::resolve(void)
 
 static std::string convertMode(std::string& mode)
 {
-	if( mode == "BRANCH_LEQ" )
+	if (mode == "BRANCH_LEQ")
 		return "<=";
-	if( mode == "BRANCH_LT" )
+	if (mode == "BRANCH_LT")
 		return "<";
-	if( mode == "BRANCH_GTE" )
+	if (mode == "BRANCH_GTE")
 		return ">=";
-	if( mode == "BRANCH_GT" )
+	if (mode == "BRANCH_GT")
 		return ">";
-	if( mode == "BRANCH_EQ" )
+	if (mode == "BRANCH_EQ")
 		return "==";
-	if( mode == "BRANCH_NEQ" )
+	if (mode == "BRANCH_NEQ")
 		return "!=";
-	if( mode == "LEAF" )
+	if (mode == "LEAF")
 		ERROR("Attempt to convert LEAF mode in TreeEnsembleClassifier");
 	ERROR("Unknown mode in TreeEnsembleClassifier");
 };
@@ -95,15 +88,13 @@ std::unordered_map<int64_t, TreeEnsembleClassifier::Tree> TreeEnsembleClassifier
 {
 	std::unordered_map<int64_t, Tree> trees;
 
-	for( size_t i = 0; i < node_tree_ids.size(); ++i )
-	{
+	for (size_t i = 0; i < node_tree_ids.size(); ++i) {
 		int64_t treeId = node_tree_ids[i];
 		int64_t nodeId = node_node_ids[i];
 		trees[treeId][nodeId] = std::make_shared<TreeNode>();
 	}
 
-	for( size_t i = 0; i < leaf_tree_ids.size(); ++i )
-	{
+	for (size_t i = 0; i < leaf_tree_ids.size(); ++i) {
 		int64_t treeId = leaf_tree_ids[i];
 		int64_t leafId = leaf_node_ids[i];
 		trees[treeId][leafId]->is_leaf = true;
@@ -113,8 +104,7 @@ std::unordered_map<int64_t, TreeEnsembleClassifier::Tree> TreeEnsembleClassifier
 
 	// This part must be done separate from creating the TreeNodes
 	// so they all exist before connections start being made.
-	for( size_t i = 0; i < node_tree_ids.size(); ++i )
-	{
+	for (size_t i = 0; i < node_tree_ids.size(); ++i) {
 		int64_t treeId = node_tree_ids[i];
 		int64_t nodeId = node_node_ids[i];
 		trees[treeId][nodeId]->child_true = trees[treeId][node_true_ids[i]];
@@ -128,59 +118,48 @@ std::unordered_map<int64_t, TreeEnsembleClassifier::Tree> TreeEnsembleClassifier
 }
 
 /* Body of the node implementing function */
-void TreeEnsembleClassifier::print(std::ostream &dst) const
+void TreeEnsembleClassifier::print(std::ostream& dst) const
 {
 	std::unordered_map<int64_t, Tree> trees = generateTreeMap();
 
-	for( int64_t class_id : class_ids )
-	{
+	for (int64_t class_id : class_ids) {
 		INDT_1 << "float result_class_" << class_id << " = 0.0f;" << std::endl;
 	}
 
-	for( auto& [tree_id, tree] : trees )
-	{
+	for (auto& [tree_id, tree] : trees) {
 		INDT_1 << "/* Tree " << tree_id << " */" << std::endl;
 		std::stack<std::shared_ptr<TreeNode>> node_stack;
 		node_stack.push(tree.at(0));
 		std::shared_ptr<TreeNode> current_node = tree.at(0);
 
-		do
-		{
-			if( !current_node )
-			{
+		do {
+			if (!current_node) {
 				current_node = node_stack.top();
 				node_stack.pop();
 			}
 
-			if( current_node->is_leaf )
-			{
-				for( size_t i = 0; i < current_node->class_ids.size(); ++i)
-				{
+			if (current_node->is_leaf) {
+				for (size_t i = 0; i < current_node->class_ids.size(); ++i) {
 					INDT(node_stack.size()) << "result_class_" << current_node->class_ids[i] << " += " << current_node->weights[i] << ";" << std::endl;
 				}
 				current_node.reset();
 			}
-			else
-			{
+			else {
 				node_stack.push(current_node);
 				std::shared_ptr<TreeNode> nextNode;
-				if (current_node->child_true)
-				{
+				if (current_node->child_true) {
 					// features[0] because the batch size is always 1
 					INDT(node_stack.size() - 1) << "if( features[0][" << current_node->feature << "] " << convertMode(current_node->mode) << " " << current_node->threshold << " ) {" << std::endl;
 					nextNode = current_node->child_true;
 					current_node->child_true.reset();
 				}
-				else if (current_node->child_false)
-				{
+				else if (current_node->child_false) {
 					INDT(node_stack.size() - 1) << "} else {" << std::endl;
 					nextNode = current_node->child_false;
 					current_node->child_false.reset();
 				}
-				else
-				{
-					if (node_stack.size() > 1)
-					{
+				else {
+					if (node_stack.size() > 1) {
 						INDT(node_stack.size() - 1) << "}" << std::endl;
 					}
 					nextNode.reset();
@@ -188,35 +167,27 @@ void TreeEnsembleClassifier::print(std::ostream &dst) const
 				}
 				current_node = nextNode;
 			}
-		}
-		while( !node_stack.empty() );
+		} while (!node_stack.empty());
 	}
 
-	for( int64_t class_id : class_ids )
-	{
-		if( unused_class_id == class_id )
-		{
+	for (int64_t class_id : class_ids) {
+		if (unused_class_id == class_id) {
 			continue;
 		}
 		INDT_1 << "probabilities[" << class_id << "] = ";
-		
-		if(post_transform == "NONE")
-		{
+
+		if (post_transform == "NONE") {
 			dst << "result_class_" << class_id << ";" << std::endl;
 		}
-		else if(post_transform == "LOGISTIC")
-		{
+		else if (post_transform == "LOGISTIC") {
 			dst << "1.0f / (1.0f + expf(result_class_" << class_id << "));" << std::endl;
 		}
 	}
 
-	if( unused_class_id != -1 )
-	{
+	if (unused_class_id != -1) {
 		INDT_1 << "probabilities[" << unused_class_id << "] = 1.0f - (";
-		for( size_t i = 0; i < class_ids.size(); ++i )
-		{
-			if( class_ids[i] == unused_class_id )
-			{
+		for (size_t i = 0; i < class_ids.size(); ++i) {
+			if (class_ids[i] == unused_class_id) {
 				continue;
 			}
 			dst << "probabilities[" << class_ids[i] << std::string("]") + (i < class_ids.size() - 1 && unused_class_id != static_cast<int64_t>(i) + 1 ? " + " : "");
@@ -233,4 +204,4 @@ void TreeEnsembleClassifier::print(std::ostream &dst) const
 	INDT_1 << "label[0] = max_class;" << std::endl;
 }
 
-}
+} // namespace toC

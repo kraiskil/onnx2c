@@ -3,19 +3,21 @@ namespace toC {
 
 class Flatten : public Node {
 	public:
-	Flatten() {
+	Flatten()
+	{
 		op_name = "Flatten";
 		axis = 1;
 	}
 	int axis;
 
-	virtual void parseAttributes( onnx::NodeProto &node ) override {
+	virtual void parseAttributes(onnx::NodeProto& node) override
+	{
 
-		for( const auto& a : node.attribute() ) {
-			if( a.name() == "axis" ) {
-				if( a.type() != onnx::AttributeProto_AttributeType_INT )
+		for (const auto& a : node.attribute()) {
+			if (a.name() == "axis") {
+				if (a.type() != onnx::AttributeProto_AttributeType_INT)
 					ERROR("Bad attribute " << a.name());
-				if( a.has_i() == false )
+				if (a.has_i() == false)
 					ERROR("Bad attribute " << a.name());
 				axis = a.i();
 			}
@@ -24,9 +26,9 @@ class Flatten : public Node {
 		}
 	}
 
-	virtual void print(std::ostream &dst) const override
+	virtual void print(std::ostream& dst) const override
 	{
-		const Tensor *input = get_input_tensor(0);
+		const Tensor* input = get_input_tensor(0);
 		std::string type = input->data_type_str();
 
 		dst << "\t/* Flatten*/" << std::endl;
@@ -39,13 +41,12 @@ class Flatten : public Node {
 		dst << std::endl;
 	}
 
-
 	virtual void resolve(void) override
 	{
-		if( get_number_of_inputs() != 1 )
+		if (get_number_of_inputs() != 1)
 			ERROR("wrong number of inputs to Flatten");
 
-		const Tensor *input = get_input_tensor(0);
+		const Tensor* input = get_input_tensor(0);
 		name_input(0, "input");
 
 		// output:
@@ -57,23 +58,23 @@ class Flatten : public Node {
 		std::vector<int> result_dim;
 
 		int count_axis = axis;
-		if( axis < 0 ) 
+		if (axis < 0)
 			count_axis = input->data_dim.size() + axis;
 
-		int dim=1;
+		int dim = 1;
 		int i;
-		for(i=0; i<count_axis; i++)
+		for (i = 0; i < count_axis; i++)
 			dim *= input->data_dim[i];
 		result_dim.push_back(dim);
 		dim = 1;
-		for(; i<(int)input->data_dim.size(); i++)
+		for (; i < (int)input->data_dim.size(); i++)
 			dim *= input->data_dim[i];
 		result_dim.push_back(dim);
 
-		Tensor *rv = new Tensor;
+		Tensor* rv = new Tensor;
 		rv->data_dim = result_dim;
 		rv->data_type = input->data_type;
 		register_output(rv, "output");
 	}
 };
-}
+} // namespace toC

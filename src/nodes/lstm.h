@@ -21,19 +21,20 @@ namespace toC {
 
 class LSTM : public Node {
 	public:
-	LSTM() {
+	LSTM()
+	{
 		op_name = "LSTM";
 		clip = -1.0;
 		hidden_size = -1;
 		input_forget = 0;
-		layout=0;
+		layout = 0;
 	}
 
 	// Attributes
 	std::vector<float> activation_alpha;
 	std::vector<float> activation_beta;
 	std::vector<std::string> activations; // in order, activations f, g, & h
-	float clip;  // negative for no clip
+	float clip;                           // negative for no clip
 	std::string direction;
 	int hidden_size;
 	int input_forget;
@@ -45,13 +46,12 @@ class LSTM : public Node {
 	int num_directions;
 	int input_size;
 
-
-	virtual void parseAttributes( onnx::NodeProto &node ) override;
+	virtual void parseAttributes(onnx::NodeProto& node) override;
 	virtual void resolve(void) override;
-	virtual void print(std::ostream &dst) const override;
+	virtual void print(std::ostream& dst) const override;
 
-	float get_activation_alpha( const std::string &a);
-	float get_activation_beta( const std::string &a);
+	float get_activation_alpha(const std::string& a);
+	float get_activation_beta(const std::string& a);
 	const Tensor* get_X(void) const { return get_input_tensor(0); }
 	const Tensor* get_W(void) const { return get_input_tensor(1); }
 	const Tensor* get_R(void) const { return get_input_tensor(2); }
@@ -64,21 +64,20 @@ class LSTM : public Node {
 	//  - named with the empty string
 	const Tensor* get_optional(unsigned N) const
 	{
-		if( get_number_of_inputs() <= N )
+		if (get_number_of_inputs() <= N)
 			return nullptr;
-		if( get_input_tensor(N)->name == "" )
+		if (get_input_tensor(N)->name == "")
 			return nullptr;
 		return get_input_tensor(N);
 	}
 	const Tensor* get_B(void) const { return get_optional(3); }
 	const Tensor* get_sequence_lens(void) const { return get_optional(4); }
-	const Tensor* get_initial_h(void) const {return get_optional(5); }
-	const Tensor* get_initial_c(void) const {return get_optional(6); }
-	const Tensor* get_P(void) const {return get_optional(7); }
+	const Tensor* get_initial_h(void) const { return get_optional(5); }
+	const Tensor* get_initial_c(void) const { return get_optional(6); }
+	const Tensor* get_P(void) const { return get_optional(7); }
 
-	void print_activation(std::ostream &dst, const std::string &activation, const std::string &var) const;
-	void print_lstm_kernel(std::ostream &dst, bool forward) const;
+	void print_activation(std::ostream& dst, const std::string& activation, const std::string& var) const;
+	void print_lstm_kernel(std::ostream& dst, bool forward) const;
 	void calculate_data_dimensions();
 };
-}
-
+} // namespace toC

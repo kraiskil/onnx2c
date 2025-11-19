@@ -20,18 +20,18 @@ namespace toC {
 
 class ConstantOfShape : public Node {
 	public:
-	ConstantOfShape() {
+	ConstantOfShape()
+	{
 		op_name = "ConstantOfShape";
-		value=NULL;
+		value = NULL;
 	}
 
 	// Attribute, not input
-	const Tensor *value;
+	const Tensor* value;
 
 	// Mandatory "API" functions towards the rest of onnx2c
-	virtual void parseAttributes( onnx::NodeProto &node ) override;
+	virtual void parseAttributes(onnx::NodeProto& node) override;
 	virtual void resolve(void) override;
-	virtual void print(std::ostream &dst) const override;
+	virtual void print(std::ostream& dst) const override;
 };
-} // namespace
-
+} // namespace toC
