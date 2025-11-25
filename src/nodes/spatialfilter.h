@@ -193,6 +193,7 @@ class SpatialFilter : public Node {
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx="") const = 0;
 	virtual void print_output_cell_calc(std::ostream &dst, const std::string &x_idx="", const std::string &w_idx="", const std::string &y_idx="") const = 0;
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx="") const = 0;
+	
 	void print_loop_with_padding_checks(std::ostream &dst) const
 	{
 		unsigned n_data_dims = get_numDataDim();
@@ -264,14 +265,30 @@ class SpatialFilter : public Node {
 		}
 
 		// check for out-of-input reading (i.e. read a pad)
+		std::vector<std::string> conds;
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string i_str = std::to_string(i);
 			INDT_4 <<  "int ii" << i_str << " = i" << i_str << "+k" << i_str <<" * " << dilations[i] <<";" << std::endl;
-			INDT_4 <<  "if( ii" << i_str << "<0) continue;" << std::endl;
-			INDT_4 <<  "if( ii" << i_str << ">=" << get_X()->data_dim[2+i] << ") continue;" << std::endl;
+			if (pads[i] > 0) {
+				conds.push_back( "ii" + i_str + " >= 0" );;
+				conds.push_back( "ii" + i_str + " < " + std::to_string( get_X()->data_dim[2+i] ) );
+			}
+		}
+
+		if (conds.size() > 0) {
+			INDT_4 << "if( ";
+			for( unsigned i = 0; i<conds.size(); i++) {
+				if( i>0 )
+					dst << " && ";
+				dst << conds[i];
+			}
+			dst << " ) {" << std::endl;
 		}
 
 		print_output_cell_calc(dst, in_kern_idxs, w_idx, y_idx);
+
+		if (conds.size() > 0)
+			INDT_4 << "} /* if valid */" << std::endl;
 
 		// close kernel loop
 		for( unsigned i = 0; i<n_data_dims; i++)
