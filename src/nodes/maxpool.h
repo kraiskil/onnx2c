@@ -96,8 +96,8 @@ class MaxPool : public Pooling {
 
 		resolve_strides();
 		resolve_dilations();
-		resolve_pads();
 		resolve_kernel_shape();
+		resolve_pads();
 
 		if( storage_order != 0 )
 			ERROR("Unimplemented: column-major storage_order");
@@ -107,8 +107,6 @@ class MaxPool : public Pooling {
 
 		rv->data_type = get_X()->data_type;
 		register_output(rv, "y");
-
-		update_pads();
 
 		// optional indices vector
 		Tensor *indices_out = new Tensor;

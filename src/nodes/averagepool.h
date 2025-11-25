@@ -56,15 +56,13 @@ class AveragePool : public Pooling {
 
 		resolve_strides();
 		resolve_dilations();
-		resolve_pads();
 		resolve_kernel_shape();
+		resolve_pads();
 
 		Tensor *rv = new Tensor;
 		rv->data_dim = resolve_output_size();
 		rv->data_type = get_X()->data_type;
 		register_output(rv, "y");
-
-		update_pads();
 
 		// optional indices vector
 		Tensor *indices_out = new Tensor;

@@ -18,6 +18,7 @@ class SpatialFilter : public Node {
 	SpatialFilter() {
 		auto_pad = "NOTSET";
 		group=1;
+		ceil_mode=0;
 	}
 
 	// Attributes
@@ -27,6 +28,7 @@ class SpatialFilter : public Node {
 	int group;
 	std::vector<int64_t> pads;
 	std::vector<int64_t> strides;
+	int ceil_mode;
 
 	const Tensor* get_X(void) const { return get_input_tensor(0); }
 	const Tensor* get_W(void) const {
@@ -52,6 +54,8 @@ class SpatialFilter : public Node {
 				pads = parse_attribute_ints(a);
 			else if( a.name() == "strides" )
 				strides = parse_attribute_ints(a);
+			else if( a.name() == "ceil_mode" )
+				ceil_mode = parse_attribute_int(a);
 		}
 	}
 
@@ -84,6 +88,7 @@ class SpatialFilter : public Node {
 			for( unsigned i=0; i< get_numDataDim(); i++ )
 				dilations.push_back(1);
 	}
+
 	void resolve_pads(void)
 	{
 		unsigned num_data_dim = get_numDataDim();
@@ -93,23 +98,34 @@ class SpatialFilter : public Node {
 				if( auto_pad == "VALID" || auto_pad == "NOTSET" ) {
 					pads[i] = 0;
 					pads[i+num_data_dim] = 0;
-				}
-				else {
-					// TODO: diations and strides might cause need for bigger paddings
-					pads[i] = kernel_shape[i] / 2;
-					pads[i+num_data_dim] = kernel_shape[i] / 2;
-					// TODO: handle case where uneven padding is needed
+				} else {
+					assert( auto_pad == "SAME_UPPER" || auto_pad == "SAME_LOWER" );
+					int input_size = get_X()->data_dim[i+2];
+					int pad_shape = (input_size - 1) * strides[i] + (( kernel_shape[i] -1) * dilations[i]+1) - input_size; 
+					pads[i] = pad_shape/2;
+					pads[i+num_data_dim] = pad_shape/2;
+					if( pad_shape & 1 ) {
+						if( auto_pad == "SAME_LOWER" )
+							pads[i]++;
+						else
+							pads[i+num_data_dim]++;
+					}
 				}
 			}
 		}
 	}
 
-	virtual std::vector<int> resolve_output_size(void)
+	std::vector<int> resolve_output_size(void)
 	{
 		std::vector<int> rv;
 		unsigned num_data_dim = get_numDataDim();
 		rv.push_back(get_X()->data_dim[0]);//batch size
-		rv.push_back(get_W()->data_dim[0]);//"number of feature maps"
+
+		if (direct_channel_map()) {
+			rv.push_back(get_X()->data_dim[1]);//channels
+		} else {
+			rv.push_back(get_W()->data_dim[0]);//"number of feature maps"
+		}
 
 		for( unsigned dim=0, xdim=2;
 		     dim < num_data_dim;
@@ -134,7 +150,10 @@ class SpatialFilter : public Node {
 				//                |kern=3|
 				// last output=7
 				int last_out = input_size - filter_size;
-				outdim = last_out / strides[dim] + 1;
+				outdim = last_out / strides[dim];
+				if (ceil_mode && (last_out % strides[dim] != 0))
+					outdim += 1;
+				outdim += 1;
 			} else {
 				ERROR("Invalid option for auto_pad attribute");
 			}
@@ -175,9 +194,9 @@ class SpatialFilter : public Node {
 			for( int s: strides)
 				dst << s << " ";
 			dst << std::endl;
+		INDT_1 << " * ceil_mode: " << ceil_mode << std::endl;
 		INDT_1 << " */" << std::endl;
 	}
-
 
 	/* Print the loops of the convolution.
 	 * This version has checks in the innermost loop for checking when
@@ -193,7 +212,7 @@ class SpatialFilter : public Node {
 	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx="") const = 0;
 	virtual void print_output_cell_calc(std::ostream &dst, const std::string &x_idx="", const std::string &w_idx="", const std::string &y_idx="") const = 0;
 	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx="") const = 0;
-	
+
 	void print_loop_with_padding_checks(std::ostream &dst) const
 	{
 		unsigned n_data_dims = get_numDataDim();
@@ -269,9 +288,10 @@ class SpatialFilter : public Node {
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string i_str = std::to_string(i);
 			INDT_4 <<  "int ii" << i_str << " = i" << i_str << "+k" << i_str <<" * " << dilations[i] <<";" << std::endl;
-			if (pads[i] > 0)
+
+			if (pads[i])
 				conds.push_back( "ii" + i_str + " >= 0" );
-			if (pads[i + get_numDataDim()] > 0)
+			if (pads[i + n_data_dims] || ceil_mode)
 				conds.push_back( "ii" + i_str + " < " + std::to_string( get_X()->data_dim[2+i] ) );
 		}
 
