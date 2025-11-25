@@ -69,8 +69,8 @@ class ConvInteger : public SpatialFilter {
 
 		resolve_strides();
 		resolve_dilations();
-		resolve_kernel_shape();
 		resolve_pads();
+		resolve_kernel_shape();
 
 		if( group != 1 )
 			ERROR("Unimplemented: ConvInteger: setting group to anything but 1");
