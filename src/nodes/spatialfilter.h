@@ -269,10 +269,10 @@ class SpatialFilter : public Node {
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string i_str = std::to_string(i);
 			INDT_4 <<  "int ii" << i_str << " = i" << i_str << "+k" << i_str <<" * " << dilations[i] <<";" << std::endl;
-			if (pads[i] > 0) {
-				conds.push_back( "ii" + i_str + " >= 0" );;
+			if (pads[i] > 0)
+				conds.push_back( "ii" + i_str + " >= 0" );
+			if (pads[i + get_numDataDim()] > 0)
 				conds.push_back( "ii" + i_str + " < " + std::to_string( get_X()->data_dim[2+i] ) );
-			}
 		}
 
 		if (conds.size() > 0) {
