@@ -269,9 +269,19 @@ class SpatialFilter : public Node {
 		for( unsigned i = 0; i<n_data_dims; i++) {
 			std::string i_str = std::to_string(i);
 			INDT_4 <<  "int ii" << i_str << " = i" << i_str << "+k" << i_str <<" * " << dilations[i] <<";" << std::endl;
-			if (pads[i] > 0)
+
+			// We only emit checks if the `ii<n>` index can be out of bounds.
+			// For this we calculate the min and max possible values of ii<n>
+			// analogous to the generated loops.
+
+			int min_ii = -pads[i];
+			if (min_ii < 0)
 				conds.push_back( "ii" + i_str + " >= 0" );
-			if (pads[i + get_numDataDim()] > 0)
+
+			int max_i = -pads[i] + (get_Y()->data_dim[2+i] - 1) * strides[i];
+			int max_k = kernel_shape[i] - 1;
+			int max_ii = max_i + max_k * dilations[i];
+			if (max_ii >= get_X()->data_dim[2+i])
 				conds.push_back( "ii" + i_str + " < " + std::to_string( get_X()->data_dim[2+i] ) );
 		}
 
