@@ -94,28 +94,7 @@ void QuantizeLinear::print(std::ostream &dst) const {
 	}
 	dst << ";" << std::endl;
 	// Saturate
-	int lower, upper;
-	switch (y->data_type) {
-		case onnx::TensorProto_DataType_INT8:
-			lower = -128;
-			upper = 127;
-			break;
-		case onnx::TensorProto_DataType_UINT8:
-			lower = 0;
-			upper = 255;
-			break;
-		case onnx::TensorProto_DataType_INT16:
-			lower = -32768;
-			upper = 32767;
-			break;
-		case onnx::TensorProto_DataType_UINT16:
-			lower = 0;
-			upper = 65535;
-			break;
-		default:
-			ERROR("Unsupported output data type for QuantizeLinear");
-			break;
-	}
+	auto [lower, upper] = y->get_type_bounds();
 	INDT_2 << "y" << index << " = (" << y->data_type_str() << ")MIN(MAX(t, " << lower << "), " << upper << ");" << std::endl;
 	INDT_1 << "}" << std::endl;
 }
