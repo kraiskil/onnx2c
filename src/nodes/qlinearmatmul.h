@@ -17,7 +17,7 @@ namespace toC {
         Tensor* get_b() const override { return get_input_tensor(3); }
 
         void print_initialize(std::ostream &dst, const std::string &y_idx) const override {
-            INDT_3 << "int32_t x " << " = 0;" << std::endl;
+            INDT_3 << "int32_t x = 0;" << std::endl;
         }
 
         void print_multiply_accumulate(std::ostream &dst,
@@ -25,15 +25,16 @@ namespace toC {
                                        const std::string &a_idx,
                                        const std::string &b_idx) const override {
 
-            INDT_4 << "x += ((int32_t)" << a_idx << " - a_zero_point[0]) * "
-                   << "((int32_t)" << b_idx << " - b_zero_point[0]);" << std::endl;
+            INDT_4 << "x += ((int32_t)" << a_idx << " - (int32_t) a_zero_point[0]) * "
+                   << "((int32_t)" << b_idx << " - (int32_t) b_zero_point[0]);" << std::endl;
         }
 
         void print_finalize(std::ostream& dst, const std::string& y_idx) const override {
             std::string float_dtype = get_input_tensor(1)->data_type_str();
-            INDT_3 << float_dtype << " scaled = ((" << float_dtype << ")x) * (a_scale[0] * b_scale[0]) / y_scale[0];" << std::endl;
-            INDT_3 << "scaled = scaled + (" << float_dtype << ")y_zero_point[0];" << std::endl;
-            INDT_3 << y_idx << " = (" << get_output_tensor(0)->data_type_str() << ") roundf(scaled);" << std::endl;
+            INDT_3 << float_dtype << " scale = (" << float_dtype << ") (a_scale[0] * b_scale[0]) / y_scale[0];" << std::endl;
+            INDT_3 << "double scaled = ((double) x) * (double) scale;" << std::endl;
+            INDT_3 << "scaled = scaled + (double) y_zero_point[0];" << std::endl;
+            INDT_3 << y_idx << " = (" << get_output_tensor(0)->data_type_str() << ") (int32_t) round(scaled);" << std::endl;
         }
 
         void name_scalar_input(unsigned input_no, std::string name) {
