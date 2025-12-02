@@ -123,7 +123,7 @@ running STM32Cube HAL with a clock speed of 84 or 96MHz. With same project and
 optimization settings (gcc -O4), measuring inference time by toggling GPIO pins,
 the STMCubeAI-generated version ran at 490us, while the onnx2c one took 20us.
 
-See Notes below for a description of the RAM optmimized version.
+See Notes below for a description of the RAM optimized version.
 
 Memory consumption was about similar:
 | platform               |text      |  data  |  bss | runtime |
@@ -145,7 +145,7 @@ The STM32L4 used by Hymel is a low-power version of the STM32F4, so the L4
 certainly should not be faster than the F4. Same versions of CubeAI were used.
 The only difference was that Hymel fed the TFL model to CubeAI, not the ONNX model
 as in the above measurement. I am not sure if this is relevant, but so far
-it is the only think I can think of that could explain the difference.
+it is the only thing I can think of that could explain the difference.
 Also the measured ONNX model was not converted from the TFL model that Hymel used,
 but re-trained using the tutorial. But this most likely is not the cause for the
 execution speed difference.
@@ -166,7 +166,7 @@ Disabling of this optimisation should be added as a command-line option to onnx2
 
 ### 16 bit Floating Point Support
 
-onnx2c supports the ONNX `flaot16` and `bfloat16` data types. `float16` is the
+onnx2c supports the ONNX `float16` and `bfloat16` data types. `float16` is the
 IEEE half-precision floating point format with 1 sign bit, 5 exponent bits and
 10 mantissa bits. `bfloat16` is the Brain Floating Point format with 1 sign bit,
 8 exponent bits and 7 mantissa bits.
