@@ -138,106 +138,57 @@ void Reduce::resolve(void)
     Tensor* x = get_input_tensor(0);
     std::string type = x->data_type_str();
 
-    std::string type_min_value;
-    std::string type_max_value;
-    std::string type_0_value;
-    std::string type_1_value;
-
-    if( type == "float" )
-    {
-        type_min_value = "-FLT_MAX";
-        type_max_value = "FLT_MAX";
-        type_0_value = "0.0";
-        type_1_value = "1.0";
-    }
-    else if( type == "double" )
-    {
-        type_min_value = "-DBL_MAX";
-        type_max_value = "DBL_MAX";
-        type_0_value = "0.0";
-        type_1_value = "1.0";
-    }
-        
-    else if( type == "int8_t" )
-    {
-        type_min_value = "INT8_MIN";
-        type_max_value = "INT8_MAX";
-        type_0_value = "0";
-        type_1_value = "1";
-    }
-    else if( type == "uint8_t" )
-    {
-        type_min_value = "0";
-        type_max_value = "UINT8_MAX";
-        type_0_value = "0";
-        type_1_value = "1";
-    }
-    else if( type == "int32_t" )
-    {
-        type_min_value = "INT32_MIN";
-        type_max_value = "INT32_MAX";
-        type_0_value = "0";
-        type_1_value = "1";
-    }
-    else if( type == "int64_t" )
-    {
-        type_min_value = "INT64_MIN";
-        type_max_value = "INT64_MAX";
-        type_0_value = "0";
-        type_1_value = "1";
-    }
-    else
-    {
-        ERROR("Unimplemented: data type " << type);
-    }
-
     if(op_name == "ReduceProd") {
         elemet_operation = [](const std::string& a, const std::string& b)
         { return a + "*=" + b;};
-        initial_value = type_1_value;
+        initial_value = "1";
     } else if (op_name == "ReduceSum"){
         elemet_operation = [](const std::string& a, const std::string& b)
         { return a + "+=" + b;};
-        initial_value = type_0_value;
+        initial_value = "0";
     }
     else if (op_name == "ReduceL1"){
         elemet_operation = [this](const std::string& a, const std::string& b)
         { return a + "+= " + math_func("fabs") + "(" + b + ")";};
-        initial_value = type_0_value;
+        initial_value = "0";
     }
     else if (op_name == "ReduceL2"){
         elemet_operation = [](const std::string& a, const std::string& b)
         { return a + "+= (" + b + "*" + b + ")";};
-        initial_value = type_0_value;
+        initial_value = "0";
     }
     else if (op_name == "ReduceLogSum"){
         elemet_operation = [](const std::string& a, const std::string& b)
         { return a + "+=" + b;};
-        initial_value = type_0_value;
+        initial_value = "0";
     }
     else if (op_name == "ReduceLogSumExp"){
         elemet_operation = [this](const std::string& a, const std::string& b)
         { return a + "+= " + math_func("exp") + "(" + b + ")";};
-        initial_value = type_0_value;
+        initial_value = "0";
     }
     else if (op_name == "ReduceMean"){
         elemet_operation = [](const std::string& a, const std::string& b)
         { return a + "+=" + b;};
-        initial_value = type_0_value;
+        initial_value = "0";
     }
     else if (op_name == "ReduceSumSquare"){
         elemet_operation = [](const std::string& a, const std::string& b)
         { return a + "+= ("+b+" * "+b+")";};
-        initial_value = type_0_value;
+        initial_value = "0";
     } 
     else if (op_name == "ReduceMax"){
         elemet_operation = [](const std::string& a, const std::string& b)
         { return a + " = MAX(" + a + ", " + b + ")";};
+        
+        auto [type_min_value, type_max_value] = x->get_type_bounds();
         initial_value = type_min_value;
     } 
     else if (op_name == "ReduceMin"){
         elemet_operation = [](const std::string& a, const std::string& b)
         { return a + " = MIN(" + a + ", " + b + ")";};
+
+        auto [type_min_value, type_max_value] = x->get_type_bounds();
         initial_value = type_max_value;
     } 
     else {
