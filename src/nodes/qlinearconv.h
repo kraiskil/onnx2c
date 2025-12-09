@@ -46,7 +46,6 @@ namespace toC {
 		}
 
 		void name_scalar_input(unsigned input_no, std::string name) {
-			// TODO: Support per-channel quantization
 			name_input(input_no, name);
 			if (!(get_input_tensor(input_no)->data_dim.size() == 0 ||
 			      (get_input_tensor(input_no)->data_dim.size() == 1 && get_input_tensor(input_no)->data_dim[0] == 1))) {
@@ -56,6 +55,9 @@ namespace toC {
 
 	
 		void resolve() override {
+			// TODO: Support per-channel quantization, by allowing non-scalar
+			// scale and zero-point tensors.
+			
 			name_input(0, "x");
 			name_scalar_input(1, "x_scale");
 			name_scalar_input(2, "x_zero_point");
