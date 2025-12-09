@@ -72,8 +72,6 @@ void Graph::print_file_frontmatter(std::ostream &dst)
 	dst << ", version " << model.producer_version() << std::endl;
 	dst << "// ONNX IR version: " << onnx_ir_version() << std::endl;
 
-	model.set_doc_string("A doc string\nwith multiple lines\nfor testing.");
-
 	if (model.doc_string().size() > 0) {
 		dst << "// Model documentation:" << std::endl;
 
