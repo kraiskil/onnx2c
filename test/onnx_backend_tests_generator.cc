@@ -171,8 +171,8 @@ int main(int argc, char *argv[])
 	// the other approach is more appropriate. (e.g. the unit tests return
 	// a constant tensor, or the nodes expect the input to be compile time
 	// constants)
-	std::cout.precision(20);
 #if defined TESTGEN_SINGLEFILE
+	std::cout.precision(20);
 	toCgraph.unionize_tensors();
 	toCgraph.print_source(std::cout);
 	std::cout << std::endl << std::endl;
@@ -188,8 +188,6 @@ int main(int argc, char *argv[])
 	std::cout << "#include <stdint.h>"<<std::endl;
 	toCgraph.print_interface_function(std::cout, false); // false==declaration
 #endif
-
-	std::cout << "#include <stdio.h>"<<std::endl;
 
 	for( auto i : inputs) {
 		std::string refname = "graphin_" + i->cname();
@@ -265,13 +263,11 @@ int main(int argc, char *argv[])
 		std::cout << "\t\t" << "for(uint64_t i = 0; i< (sizeof(" << refname << ") / sizeof("<<type<<")); i++) {" << std::endl;
 		if( type == "float" || type == "double" ) {
 			std::cout << "\t\t\t" << "if (isnan(result[i]) != isnan(reference[i]) || isinf(result[i]) != isinf(reference[i])) {" << std::endl;
-			std::cout << "\t\t\t\t" << "printf(\"Mismatch at index %lu: result is %f, reference is %f\\n\", i, result[i], reference[i]);" << std::endl;
 			std::cout << "\t\t\t\t" << "return 1;" << std::endl;
 			std::cout << "\t\t\t" << "} else if (isinf(reference[i])) {" << std::endl;
 			std::cout << "\t\t\t\t" << "if (result[i] != reference[i])" << std::endl;
 			std::cout << "\t\t\t\t\t" << "return 1;" << std::endl;
 			std::cout << "\t\t\t" << "} else if (!isnan(reference[i]) && fabs(result[i] - reference[i]) > " << test_accuracy << ") {" <<std::endl;
-			std::cout << "\t\t\t\t" << "printf(\"Mismatch at index %lu: result is %f, reference is %f\\n\", i, result[i], reference[i]);" << std::endl;
 			std::cout << "\t\t\t\t" << "return 1;" << std::endl;
 			std::cout << "\t\t\t" << "}" << std::endl;
 		}
@@ -284,10 +280,8 @@ int main(int argc, char *argv[])
 		        || type == "int64_t"
 		        || type == "uint64_t"
 			|| type == "bool" ) {
-			std::cout << "\t\t\t" << "if( result[i] != reference[i] ) {" <<std::endl;
-			std::cout << "\t\t\t\t" << "printf(\"Mismatch at index %lu: result is %lld, reference is %lld\\n\", i, (long long)result[i], (long long)reference[i]);" << std::endl;
+			std::cout << "\t\t\t" << "if( result[i] != reference[i] )" <<std::endl;
 			std::cout << "\t\t\t\t" << "return 1;" << std::endl;
-			std::cout << "\t\t\t" << "}" <<std::endl;
 			// no nan checking needed
 		}
 		else
