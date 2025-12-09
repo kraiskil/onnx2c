@@ -167,5 +167,9 @@ void parse_cmdline_options(int argc, const char *argv[])
 	if (optimizations) { store_optimization_passes( args::get(optimizations) ); }
 	if (input) { options.input_file = args::get(input); }
 	if (options.input_file == "" ) { std::cerr << "No input file given"; hint_at_help_and_exit(); }
+
+	options.command_line_args.reserve(argc);
+	for (int i = 0; i < argc; i++)
+		options.command_line_args.emplace_back(argv[i]);
 }
 

@@ -23,6 +23,13 @@ using namespace toC;
 
 struct onnx2c_opts options;
 
+const char* git_hash_str = "";
+const char* git_short_hash_str = "";
+const char* git_branch_str = "";
+const char* git_dirty_str = "";
+const char* build_time_str = "";
+const char* cpack_version_str = "";
+
 bool load_input_data(const std::string &filename, onnx::TensorProto &result)
 {
 
