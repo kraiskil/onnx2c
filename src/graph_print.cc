@@ -63,7 +63,6 @@ void Graph::print_file_frontmatter(std::ostream &dst)
 	dst << "// onnx2c" << std::endl;
 	dst << "// Git Branch: " << git_branch_str << std::endl;
 	dst << "// Git Commit: " << git_short_hash_str << std::endl;
-	dst << "// Build Time: " << build_time_str << " (UTC)" << std::endl;
 	
 	dst << std::endl;
 
