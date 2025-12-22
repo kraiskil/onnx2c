@@ -4,8 +4,10 @@
  */
 
 #pragma once
+
 #include <map>
 #include <string>
+#include <vector>
 #include <stdint.h>
 
 struct onnx2c_opts
@@ -34,6 +36,10 @@ struct onnx2c_opts
 	int logging_level=DEFAULT_LOG_LEVEL;  // Default level set by CMake. 1 in release, 4 in debug builds
 	std::string input_file;
 	std::map<std::string, uint32_t> dim_defines;
+
+	// Save the raw command line arguments such that they can be printed
+	// into the generated source file.
+	std::vector<std::string> command_line_args;
 };
 
 extern struct onnx2c_opts options;

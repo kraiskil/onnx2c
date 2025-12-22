@@ -51,6 +51,7 @@ target_compile_options(onnx2c_lib
 		-I${CMAKE_CURRENT_BINARY_DIR}
 	PRIVATE
 		-I${CMAKE_CURRENT_SOURCE_DIR}/aixlog/include
+		-I${CMAKE_CURRENT_SOURCE_DIR}/cmake_timestamp
 		-Isrc
 		-Wall
 	)
