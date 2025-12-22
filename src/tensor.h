@@ -56,6 +56,9 @@ class Tensor {
 	/* A string with the the C type for this tensor's data element. E.g. "float" */
 	std::string data_type_str(void) const;
 
+	/* Get the min and max values for this tensor's data type */ 
+	std::pair<std::string, std::string> get_type_bounds() const;
+
 	/* Fill this Tensor from the ONNX TensorProto */
 	/* TODO: would this not be nicer as a constructor? :) */
 	void parse_onnx_tensor(const onnx::TensorProto &tensor);
