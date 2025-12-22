@@ -8,17 +8,16 @@
 
 using namespace toC;
 
-void ScatterND::parseAttributes( onnx::NodeProto &node )
+void ScatterND::parseAttributes(onnx::NodeProto& node)
 {
-	for( const auto& a : node.attribute() ) {
+	for (const auto& a : node.attribute()) {
 		LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
-		if( a.name() == "reduction" )
+		if (a.name() == "reduction")
 			reduction = parse_attribute_string(a);
 		else
 			LOG(ERROR) << "Ignoring attribute " << a.name() << " for node ScatterND/" << onnx_name << std::endl;
 	}
 }
-
 
 void ScatterND::resolve(void)
 {
@@ -29,27 +28,25 @@ void ScatterND::resolve(void)
 	name_input(1, "indices");
 	name_input(2, "updates");
 
-	const Tensor *data = get_input_tensor(0);
-	Tensor *t = new Tensor;
+	const Tensor* data = get_input_tensor(0);
+	Tensor* t = new Tensor;
 	t->data_dim = data->data_dim;
 	t->data_type = data->data_type;
 	register_output(t, "output");
 }
 
-
-void ScatterND::print(std::ostream &dst) const
+void ScatterND::print(std::ostream& dst) const
 {
-	const Tensor *data = get_input_tensor(0);
-	const Tensor *indices = get_input_tensor(1);
-	const Tensor *output = get_output_tensor(0);
+	const Tensor* data = get_input_tensor(0);
+	const Tensor* indices = get_input_tensor(1);
+	const Tensor* output = get_output_tensor(0);
 
-	unsigned k = indices->data_dim[indices->rank()-1];
-	std::string data_op="=";
-	if( reduction == "add" )
+	unsigned k = indices->data_dim[indices->rank() - 1];
+	std::string data_op = "=";
+	if (reduction == "add")
 		data_op = "+=";
-	else if( reduction == "mul" )
+	else if (reduction == "mul")
 		data_op = "*=";
-
 
 	INDT_1 << "/* ScatterND */" << std::endl;
 
@@ -62,42 +59,41 @@ void ScatterND::print(std::ostream &dst) const
 
 	// Create the first part of u_idxs
 	unsigned i;
-	for( i=0; i< indices->rank()-1 ; i++) {
-		std::string idxstr = "idx"+std::to_string(i);
-		INDT_1 << "for(uint64_t " <<idxstr<<" = 0; ";
-		  dst  << idxstr << " < " << indices->data_dim[i] << "; ";
-                  dst  << idxstr <<"++) {" << std::endl;
+	for (i = 0; i < indices->rank() - 1; i++) {
+		std::string idxstr = "idx" + std::to_string(i);
+		INDT_1 << "for(uint64_t " << idxstr << " = 0; ";
+		dst << idxstr << " < " << indices->data_dim[i] << "; ";
+		dst << idxstr << "++) {" << std::endl;
 
-		u_idxs += "["+idxstr+"]";
+		u_idxs += "[" + idxstr + "]";
 	}
 
 	// Create the indirect indexing (into 'output') variables
-	for( i=0; i< k ; i++) {
-		std::string istr=std::to_string(i);
-		o_idxs += "[p" + istr + "]";   // start of index string to "output"
+	for (i = 0; i < k; i++) {
+		std::string istr = std::to_string(i);
+		o_idxs += "[p" + istr + "]"; // start of index string to "output"
 		INDT_2 << "unsigned p" << istr << " = indices" << u_idxs << "[" + istr + "];" << std::endl;
 	}
 
 	// Create the latter parts of the indexing strings + loops
-	for( ; i<data->rank(); i++) {
+	for (; i < data->rank(); i++) {
 		std::string i_str = std::to_string(i);
 		std::string i_idx;
-		std::string o_idx = "o" + i_str+"";
+		std::string o_idx = "o" + i_str + "";
 
 		u_idxs += "[" + o_idx + "]";
 		o_idxs += "[" + o_idx + "]";
 
 		INDT_2 << "for( uint32_t " << o_idx << "=0; ";
-		   dst <<       o_idx << "<" << output->data_dim[i] << "; ";
-		   dst <<       o_idx <<"++) {" << std::endl;
+		dst << o_idx << "<" << output->data_dim[i] << "; ";
+		dst << o_idx << "++) {" << std::endl;
 	}
 
-	INDT_3 << "output"<< o_idxs << data_op << " updates" << u_idxs << ";" << std::endl;
+	INDT_3 << "output" << o_idxs << data_op << " updates" << u_idxs << ";" << std::endl;
 
-	for( i = 0; i<indices->rank()-1; i++)
+	for (i = 0; i < indices->rank() - 1; i++)
 		INDT_2 << "}" << std::endl;
 
-	for(i=k ; i < data->rank(); i++)
+	for (i = k; i < data->rank(); i++)
 		INDT_1 << "}" << std::endl;
 }
-

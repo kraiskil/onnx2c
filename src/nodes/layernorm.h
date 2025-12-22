@@ -1,7 +1,7 @@
 /* This file is part of onnx2c.
  *
  * LayerNormalization node.
- * 
+ *
  */
 
 #include "node.h"
@@ -10,7 +10,8 @@ namespace toC {
 
 class LayerNormalization : public Node {
 	public:
-	LayerNormalization() {
+	LayerNormalization()
+	{
 		op_name = "LayerNormalization";
 		axis = -1;
 		epsilon = 1e-5;
@@ -22,29 +23,30 @@ class LayerNormalization : public Node {
 	float epsilon;
 	int stash_type;
 
-	virtual void parseAttributes(onnx::NodeProto &node) override;
+	virtual void parseAttributes(onnx::NodeProto& node) override;
 	virtual void resolve(void) override;
-	virtual void print(std::ostream &dst) const override;
+	virtual void print(std::ostream& dst) const override;
 };
 
-
-void LayerNormalization::parseAttributes( onnx::NodeProto &node ) {
-	for( const auto& a : node.attribute() ) {
+void LayerNormalization::parseAttributes(onnx::NodeProto& node)
+{
+	for (const auto& a : node.attribute()) {
 		LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
-		if( a.name() == "axis" )
+		if (a.name() == "axis")
 			axis = parse_attribute_int(a);
-		else if( a.name() == "epsilon" )
+		else if (a.name() == "epsilon")
 			epsilon = parse_attribute_float(a);
-		else if( a.name() == "stash_type" )
+		else if (a.name() == "stash_type")
 			stash_type = parse_attribute_int(a);
 		else
 			LOG(ERROR) << "Ignoring attribute " << a.name() << " for node LayerNormalization/" << onnx_name << std::endl;
 	}
 }
 
-void LayerNormalization::resolve(void) {
-	Tensor *x = get_input_tensor(0);
-	
+void LayerNormalization::resolve(void)
+{
+	Tensor* x = get_input_tensor(0);
+
 	name_input(0, "x");
 	name_input(1, "scale");
 	if (get_number_of_inputs() == 3) {
@@ -57,12 +59,12 @@ void LayerNormalization::resolve(void) {
 
 	assert(stash_type == 1);
 
-	Tensor *y = new Tensor;
+	Tensor* y = new Tensor;
 	y->data_dim = x->data_dim;
 	y->data_type = x->data_type;
 	register_output(y, "y");
 
-	Tensor *mean = new Tensor;
+	Tensor* mean = new Tensor;
 	mean->data_dim = std::vector<int>(x->data_dim.begin(), x->data_dim.begin() + axis);
 	for (int i = axis; i < (int)x->data_dim.size(); i++) {
 		mean->data_dim.push_back(1);
@@ -71,17 +73,18 @@ void LayerNormalization::resolve(void) {
 	register_output(mean, "mean");
 
 	// Same as mean
-	Tensor *inv_std_dev = new Tensor;
+	Tensor* inv_std_dev = new Tensor;
 	inv_std_dev->data_dim = mean->data_dim;
 	inv_std_dev->data_type = mean->data_type;
 	register_output(inv_std_dev, "inv_std_dev");
 }
 
-void LayerNormalization::print(std::ostream &dst) const {
+void LayerNormalization::print(std::ostream& dst) const
+{
 	INDT_1 << "/* LayerNormalization */" << std::endl;
 
-	Tensor *x = get_input_tensor(0);
-	Tensor *scale = get_input_tensor(1);
+	Tensor* x = get_input_tensor(0);
+	Tensor* scale = get_input_tensor(1);
 
 	std::string stash_type_str = "float";
 
@@ -107,7 +110,7 @@ void LayerNormalization::print(std::ostream &dst) const {
 	}
 
 	INDT_3 << "mean_value += x" << idx << " / (" << stash_type_str << ")" << inner_element_count << ";" << std::endl;
-	
+
 	// Compute variance
 	INDT_2 << stash_type_str << " variance_value = 0;" << std::endl;
 	for (int i = axis; i < (int)x->data_dim.size(); i++) {
@@ -123,7 +126,7 @@ void LayerNormalization::print(std::ostream &dst) const {
 	}
 	INDT_3 << "y" << idx << " = (x" << idx << " - mean_value) * inv_std_dev_value * " << broadcast(scale, "scale", x->rank());
 	if (get_number_of_inputs() == 3) {
-		Tensor *b = get_input_tensor(2);
+		Tensor* b = get_input_tensor(2);
 		dst << " + " << broadcast(b, "b", x->rank());
 	}
 	dst << ";" << std::endl;
@@ -139,5 +142,4 @@ void LayerNormalization::print(std::ostream &dst) const {
 	INDT_1 << "}" << std::endl;
 }
 
-} // namespace
-
+} // namespace toC

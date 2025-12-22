@@ -14,39 +14,40 @@ namespace toC {
 
 class ConvInteger : public SpatialFilter {
 	public:
-	ConvInteger() {
+	ConvInteger()
+	{
 		op_name = "ConvInteger";
 		auto_pad = "NOTSET";
 		group = 1;
 	}
 
-	virtual void print_output_cell_init(std::ostream &dst, const std::string &y_idx) const override
+	virtual void print_output_cell_init(std::ostream& dst, const std::string& y_idx) const override
 	{
 		INDT_3 << "y" << y_idx << " = 0;" << std::endl;
 	}
 
 	virtual void print_output_cell_calc(
-		std::ostream &dst,
-		const std::string &x_idx,
-		const std::string &w_idx,
-		const std::string &y_idx) const override
+	    std::ostream& dst,
+	    const std::string& x_idx,
+	    const std::string& w_idx,
+	    const std::string& y_idx) const override
 	{
-		std::string x_zero="0";
-		if( get_number_of_inputs() >= 3 ) // x_zero_point is optional, 3rd input
-			x_zero = constant_acces_code( "x_zero_point[0]");
+		std::string x_zero = "0";
+		if (get_number_of_inputs() >= 3) // x_zero_point is optional, 3rd input
+			x_zero = constant_acces_code("x_zero_point[0]");
 
-		std::string w_zero="0";
-		if( get_number_of_inputs() >= 4 ) // w_zero_point is optional, 4th input
-			w_zero = constant_acces_code( "w_zero_point[0]");
+		std::string w_zero = "0";
+		if (get_number_of_inputs() >= 4) // w_zero_point is optional, 4th input
+			w_zero = constant_acces_code("w_zero_point[0]");
 
 		INDT_4 << "y" << y_idx << " += (x " << x_idx << "  - " << x_zero << ") * (w" << w_idx << " -" << w_zero << ");" << std::endl;
 	}
 
-	virtual void print_output_cell_finalize(std::ostream &dst, const std::string &y_idx) const override
+	virtual void print_output_cell_finalize(std::ostream& dst, const std::string& y_idx) const override
 	{
 	}
 
-	virtual void print(std::ostream &dst) const override
+	virtual void print(std::ostream& dst) const override
 	{
 		print_header_info_comment(dst);
 		print_loop_with_padding_checks(dst);
@@ -57,32 +58,31 @@ class ConvInteger : public SpatialFilter {
 		name_input(0, "x");
 		name_input(1, "w");
 
-		if( get_number_of_inputs() > 2 )
+		if (get_number_of_inputs() > 2)
 			name_input(2, "x_zero_point");
-		if( get_number_of_inputs() > 3 ){
+		if (get_number_of_inputs() > 3) {
 			name_input(3, "w_zero_point");
 		}
 
-		if( get_X()->data_dim.size() != 4 )
+		if (get_X()->data_dim.size() != 4)
 			ERROR("Unimplemented: ConvInteger for non 2D images");
-
 
 		resolve_strides();
 		resolve_dilations();
 		resolve_pads();
 		resolve_kernel_shape();
 
-		if( group != 1 )
+		if (group != 1)
 			ERROR("Unimplemented: ConvInteger: setting group to anything but 1");
 
-		for( int d : dilations )
-			if( d != 1 )
+		for (int d : dilations)
+			if (d != 1)
 				ERROR("Unimplemented: ConvInteger: dilations other than 1");
 
-		Tensor *rv = new Tensor;
+		Tensor* rv = new Tensor;
 		rv->data_dim = resolve_output_size();
 		rv->data_type = onnx::TensorProto_DataType_INT32;
 		register_output(rv, "y");
 	}
 };
-}
+} // namespace toC

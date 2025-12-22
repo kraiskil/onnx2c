@@ -4,19 +4,19 @@
 #include "error.h"
 #include "graph.h"
 #include "options.h"
-#include "util.h"
 #include "timestamp.h"
+#include "util.h"
 
 #include <iostream>
 
 using namespace toC;
 
-void Graph::print_header(std::ostream &dst)
+void Graph::print_header(std::ostream& dst)
 {
 	print_file_frontmatter(dst);
 }
 
-void Graph::print_source(std::ostream &dst)
+void Graph::print_source(std::ostream& dst)
 {
 	print_file_frontmatter(dst);
 	dst << std::endl;
@@ -29,7 +29,7 @@ void Graph::print_source(std::ostream &dst)
 	print_interface_function(dst);
 }
 
-void Graph::print_initialization(std::ostream &dst)
+void Graph::print_initialization(std::ostream& dst)
 {
 	print_file_frontmatter(dst);
 	dst << std::endl;
@@ -37,17 +37,15 @@ void Graph::print_initialization(std::ostream &dst)
 	dst << std::endl;
 
 	LOG(TRACE) << "printing initializers" << std::endl;
-	for( auto t : tensors )
-	{
+	for (auto t : tensors) {
 		LOG(TRACE) << "\t" << t->print_trace_dump() << std::endl;
-		if( t->union_no < 0
-		 && t->generate && t->initialize)
+		if (t->union_no < 0 && t->generate && t->initialize)
 			print_tensor(t, dst);
 	}
 	LOG(TRACE) << "(done printing initializers)" << std::endl;
 }
 
-void Graph::print_file_frontmatter(std::ostream &dst)
+void Graph::print_file_frontmatter(std::ostream& dst)
 {
 	// TODO: Validate inputs, especially check for newlines
 
@@ -63,7 +61,7 @@ void Graph::print_file_frontmatter(std::ostream &dst)
 	dst << "// onnx2c" << std::endl;
 	dst << "// Git Branch: " << git_branch_str << std::endl;
 	dst << "// Git Commit: " << git_short_hash_str << std::endl;
-	
+
 	dst << std::endl;
 
 	dst << "// ONNX Model" << std::endl;
@@ -85,31 +83,32 @@ void Graph::print_file_frontmatter(std::ostream &dst)
 	}
 }
 
-void Graph::print_tensor(const Tensor *t, std::ostream &dst)
+void Graph::print_tensor(const Tensor* t, std::ostream& dst)
 {
-	if( t->generate == false )
+	if (t->generate == false)
 		return;
-	if( t->name == "" )
+	if (t->name == "")
 		return;
 	// This case has been seen in the wild. Not sure why it happens
-	if( t->data_dim.size() == 1 && t->data_dim[0]==0 ){
+	if (t->data_dim.size() == 1 && t->data_dim[0] == 0) {
 		LOG(WARNING) << "Tensor " << t->name << " has size of 0. Skipping it" << std::endl;
 		return;
 	}
 
-	if( t->union_no < 0 ) {
+	if (t->union_no < 0) {
 		if (options.extern_init && t->initialize) {
 			dst << "extern ";
-		} else if (!options.only_init) {
+		}
+		else if (!options.only_init) {
 			dst << "static ";
 		}
 	}
 
 	dst << t->print_tensor_definition();
-	if( t->initialize ) {
-		if( options.target_avr && t->isConst )
+	if (t->initialize) {
+		if (options.target_avr && t->isConst)
 			dst << " PROGMEM";
-		
+
 		if (!options.extern_init) {
 			dst << " = " << std::endl;
 			t->print_tensor_initializer(dst);
@@ -118,41 +117,37 @@ void Graph::print_tensor(const Tensor *t, std::ostream &dst)
 	dst << ";" << std::endl;
 }
 
-void Graph::print_global_tensors(std::ostream &dst)
+void Graph::print_global_tensors(std::ostream& dst)
 {
 	// ununionized tensors
 	LOG(TRACE) << "printing global tensors - ununionized " << std::endl;
-	for( auto t : tensors )
-	{
+	for (auto t : tensors) {
 		LOG(TRACE) << "\t" << t->print_trace_dump() << std::endl;
-		if( t->union_no < 0
-		 && t->generate)
+		if (t->union_no < 0 && t->generate)
 			this->print_tensor(t, dst);
 	}
 
 	LOG(TRACE) << "printing global tensors - unionized " << std::endl;
-	for( unsigned u=0; u<tensor_unions.size(); u++ )
-	{
+	for (unsigned u = 0; u < tensor_unions.size(); u++) {
 		dst << "union tensor_union_" << u << " {" << std::endl;
-		for( auto t : tensors )
-		{
-			if( t->union_no == static_cast<int32_t>(u))
+		for (auto t : tensors) {
+			if (t->union_no == static_cast<int32_t>(u))
 				this->print_tensor(t, dst);
 		}
-		dst << "};" <<std::endl;
-		if (!no_globals)
-		{
-			dst << "static union tensor_union_" << u << " tu" << u << ";" << std::endl <<std::endl;
+		dst << "};" << std::endl;
+		if (!no_globals) {
+			dst << "static union tensor_union_" << u << " tu" << u << ";" << std::endl
+			    << std::endl;
 		}
 	}
-	LOG(TRACE) << "(done printing global tensors)"<< std::endl;
+	LOG(TRACE) << "(done printing global tensors)" << std::endl;
 }
 
-void Graph::print_functions(std::ostream &dst)
+void Graph::print_functions(std::ostream& dst)
 {
-	for( auto n : nodes ) {
+	for (auto n : nodes) {
 		// handle meta-nodes separately
-		if( n->op_name == "graph_io" )
+		if (n->op_name == "graph_io")
 			continue;
 		dst << "/*" << std::endl;
 		dst << " * Operand:           " << n->op_name << std::endl;
@@ -162,15 +157,17 @@ void Graph::print_functions(std::ostream &dst)
 		dst << n->c_name() << "( ";
 		n->print_function_parameters_definition(dst);
 		dst << " )";
-		dst <<  std::endl << "{" << std::endl;
+		dst << std::endl
+		    << "{" << std::endl;
 
 		n->print(dst);
 
-		dst << "}" << std::endl << std::endl;
+		dst << "}" << std::endl
+		    << std::endl;
 	}
 }
 
-void Graph::print_includes(std::ostream &dst)
+void Graph::print_includes(std::ostream& dst)
 {
 	dst << "#include <float.h>" << std::endl;
 	dst << "#include <math.h>" << std::endl;
@@ -185,32 +182,32 @@ void Graph::print_includes(std::ostream &dst)
 	dst << "#define CLIP(X,L) ( MAX(MIN(X,L), -L) )" << std::endl;
 	dst << std::endl;
 
- 	// 'inline' functions are a C99 addition.
+	// 'inline' functions are a C99 addition.
 	dst << "#if __STDC_VERSION__ < 199901L" << std::endl;
 	dst << "#define FUNC_PREFIX" << std::endl;
 	dst << "#else" << std::endl;
 	dst << "#define FUNC_PREFIX static inline" << std::endl;
 	dst << "#endif" << std::endl;
 
-	if( options.target_avr ) {
+	if (options.target_avr) {
 		dst << "#include <avr/pgmspace.h>" << std::endl;
 		dst << "#define RD_PROGMEM(x) pgm_read_byte(&(x));" << std::endl;
 	}
 }
 
-void Graph::print_interface_function(std::ostream &dst, bool definition)
+void Graph::print_interface_function(std::ostream& dst, bool definition)
 {
 	bool isfirst = true;
 	// TODO: take the interface function name from the ONNX file name
-	dst << "void entry(" ;
-	for ( auto i : model.graph().input() ) {
+	dst << "void entry(";
+	for (auto i : model.graph().input()) {
 		/* TODO: FIXME: separate input tensors that are initialized
 		 * or re-initializable (and therefore count as input), from
 		 * the "actual" input data */
-		Tensor *t=findTensor(i.name());
+		Tensor* t = findTensor(i.name());
 
-		if( t && t->isIO ) {
-			if(!isfirst)
+		if (t && t->isIO) {
+			if (!isfirst)
 				dst << ", ";
 			else
 				isfirst = false;
@@ -224,16 +221,15 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 
 	// find the graph output node
 	// loop through the output nodes' inputs, printing them
-	Node *graph_out_node = findNodeByName("graph_output");
-	if( graph_out_node == nullptr )
+	Node* graph_out_node = findNodeByName("graph_output");
+	if (graph_out_node == nullptr)
 		ERROR("internal onnx2c error: no graph_output node");
 
-	for( unsigned o=0; o<graph_out_node->get_number_of_inputs(); o++)
-	{
-		Tensor *t = graph_out_node->get_input_tensor(o);
+	for (unsigned o = 0; o < graph_out_node->get_number_of_inputs(); o++) {
+		Tensor* t = graph_out_node->get_input_tensor(o);
 
-		if( t ) {
-			if(!isfirst)
+		if (t) {
+			if (!isfirst)
 				dst << ", ";
 			else
 				isfirst = false;
@@ -246,7 +242,7 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 	}
 
 	dst << ")";
-	if( !definition ) { // not definition, i.e. decalaration
+	if (!definition) { // not definition, i.e. decalaration
 		dst << ";" << std::endl;
 		return;
 	}
@@ -255,10 +251,8 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 	dst << "{" << std::endl;
 
 	// Print tensors here if no globals
-	if( no_globals )
-	{
-		for( unsigned u=0; u<tensor_unions.size(); u++ )
-		{
+	if (no_globals) {
+		for (unsigned u = 0; u < tensor_unions.size(); u++) {
 			INDT_1 << "union tensor_union_" << u << " tu" << u << ";" << std::endl;
 		}
 		dst << std::endl;
@@ -267,10 +261,9 @@ void Graph::print_interface_function(std::ostream &dst, bool definition)
 	// since nodes were resolved from graph inputs in the order there were
 	// node inputs resolved, the nodes vector is now sorted in order so that
 	// we don't need to check dependancies :)
-	for( auto n : nodes )
-	{
+	for (auto n : nodes) {
 		// handle meta-nodes separately
-		if( n->op_name == "graph_io" )
+		if (n->op_name == "graph_io")
 			continue;
 
 		dst << "\t" << n->c_name() << "( ";
