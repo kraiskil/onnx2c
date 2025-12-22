@@ -123,7 +123,6 @@ void parse_cmdline_options(int argc, const char *argv[])
 	args::ValueFlag<int> loglevel(parser, "level", "Logging verbosity. 0(none)-4(all)", {'l',"log"});
 	args::ValueFlag<std::string> optimizations(parser, "opt[,opt]...", "Specify optimization passes to run. ('help' to list available)", {'p', "optimizations"});
 	args::Flag help(parser, "help", "Print this help text.", {'h',"help"});
-	args::Flag quantize(parser, "quantize", "Quantize network (EXPERIMENTAL!)", {'q', "quantize"});
 	args::Flag version(parser, "version", "Print onnx2c version", {'v', "version"});
 	args::Positional<std::string> input(parser, "input", "ONNX file to process");
 	try
@@ -154,7 +153,6 @@ void parse_cmdline_options(int argc, const char *argv[])
 	// initialize logging as soon as possible, so logging is available in parsing the options too
 	initialize_logging();
 
-	if (quantize) { options.quantize = true; }
 	if (avr) { options.target_avr = true; }
 	if (noGlobals) { options.no_globals = true; }
 	if (externInit) { options.extern_init = true; }

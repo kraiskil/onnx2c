@@ -81,11 +81,7 @@ class ConvInteger : public SpatialFilter {
 
 		Tensor *rv = new Tensor;
 		rv->data_dim = resolve_output_size();
-		// ONNX specs say int32. local quantization is non conformant
-		if( options.quantize )
-			rv->data_type = onnx::TensorProto_DataType_INT8;
-		else
-			rv->data_type = onnx::TensorProto_DataType_INT32;
+		rv->data_type = onnx::TensorProto_DataType_INT32;
 		register_output(rv, "y");
 	}
 };

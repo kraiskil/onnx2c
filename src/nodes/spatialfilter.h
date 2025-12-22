@@ -218,10 +218,6 @@ class SpatialFilter : public Node {
 		 * output channels (M). Othervise input channels==outputchannels, and it is named C
 		 */
 		INDT_1 << "for( uint32_t b=0; b<" << batch_size << "; b++ ) {" << std::endl;
-		if( options.quantize ) {
-			INDT_2 << "int32_t batch_min = INT32_MAX;" << std::endl;
-			INDT_2 << "int32_t batch_max = INT32_MIN;" << std::endl;
-		}
 		if( direct_channel_map() )
 			INDT_1 << "for( uint32_t m=0, c=0; m<" << maps << "; m++, c=m) {" << std::endl;
 		else if( get_W() && group > 1 ) {

@@ -17,8 +17,6 @@ class Tensor {
 	                 // IO tensors still get initialized e.g. in the test suite
 	bool isRecursive;// tensor that one node uses both output and input.
 	                 // may additionally be used as input for other nodes
-	Tensor *quantizedCopy; // non-NULL if there is a quantized version of this
-	bool isQuantized;  // is this a quantized copy
 	std::vector<int> data_dim;
 	onnx::TensorProto_DataType data_type;
 	void *data_buffer;// if initialized, contains the initialization data
@@ -34,8 +32,6 @@ class Tensor {
 		isConst(false),
 		isIO(false),
 		isRecursive(false),
-		quantizedCopy(NULL),
-		isQuantized(false),
 		data_buffer(NULL),
 		union_no(-1)
 	{}
@@ -102,8 +98,6 @@ class Tensor {
 
 	/* Format dimensions into a string */
 	std::string str_dimensions(void) const;
-
-	Tensor* make_quantized_copy(void);
 
 	/* Node definitions include the concept of optional inputs/outputs.
 	 * This function tells wether a given tensor must be included or if it can be left out.
