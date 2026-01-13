@@ -789,6 +789,11 @@ ONNX_backend_node_test_singlefile(resize_upsample_sizes_nearest_round_prefer_cei
 local_node_test(resize_downsample_sizes_linear_1D)
 local_node_test(resize_downsample_sizes_linear_1D_align)
 
+local_node_test(qlinearadd_int8)
+local_node_test(qlinearadd_uint8)
+local_node_test(qlinearmul_int8)
+local_node_test(qlinearmul_uint8)
+
 ONNX_backend_node_test_singlefile(quantizelinear)
 ONNX_backend_node_test_singlefile(quantizelinear_axis)
 

@@ -24,6 +24,8 @@ mnist.simplified.onnx: mnist.onnx
 #  - using floating point arithmetic
 #  - using quantized 8bit integer arithmetic
 #  - 8bit integer arithmetic, with AVR specifics to store consts in instruction memory
+#
+# NB: the quantization option was removed, so the avr step does not work anymore.
 generated_float.c: mnist.simplified.onnx
 	../../onnx2c mnist.simplified.onnx > generated_float.c
 generated_int.c: mnist.simplified.onnx

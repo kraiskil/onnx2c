@@ -8,16 +8,16 @@ namespace toC {
 
 class ScatterND : public Node {
 	public:
-	ScatterND() {
+	ScatterND()
+	{
 		op_name = "ScatterND";
-		reduction="";
+		reduction = "";
 	}
 	std::string reduction;
 
-	virtual void parseAttributes( onnx::NodeProto &node ) override;
+	virtual void parseAttributes(onnx::NodeProto& node) override;
 	virtual void resolve(void) override;
-	virtual void print(std::ostream &dst) const override;
+	virtual void print(std::ostream& dst) const override;
 };
 
-}
-
+} // namespace toC

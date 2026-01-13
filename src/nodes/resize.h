@@ -9,7 +9,8 @@ namespace toC {
 
 class Resize : public Node {
 	public:
-	Resize() {
+	Resize()
+	{
 		op_name = "Resize";
 		coordinate_transformation_mode = "half_pixel";
 		cubic_coeff_a = -0.75;
@@ -26,59 +27,59 @@ class Resize : public Node {
 	std::string mode;
 	std::string nearest_mode;
 
-	std::vector<float>dim_scales; // 'scales' value when calculating coordinate transforms
+	std::vector<float> dim_scales; // 'scales' value when calculating coordinate transforms
 
 	/* Parse attributes, if this node has them. */
-	virtual void parseAttributes( onnx::NodeProto &node ) override {
-		for( const auto& a : node.attribute() ) {
+	virtual void parseAttributes(onnx::NodeProto& node) override
+	{
+		for (const auto& a : node.attribute()) {
 			LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
-			if( a.name() == "coordinate_transformation_mode" )
+			if (a.name() == "coordinate_transformation_mode")
 				coordinate_transformation_mode = parse_attribute_string(a);
-			else if( a.name() == "cubic_coeff_a" )
+			else if (a.name() == "cubic_coeff_a")
 				cubic_coeff_a = parse_attribute_float(a);
-			else if( a.name() == "exclude_outside" )
+			else if (a.name() == "exclude_outside")
 				exclude_outside = parse_attribute_int(a);
-			else if( a.name() == "extrapolation_value" )
+			else if (a.name() == "extrapolation_value")
 				extrapolation_value = parse_attribute_float(a);
-			else if( a.name() == "mode" )
+			else if (a.name() == "mode")
 				mode = parse_attribute_string(a);
-			else if( a.name() == "nearest_mode" )
+			else if (a.name() == "nearest_mode")
 				nearest_mode = parse_attribute_string(a);
 			else
 				ERROR("Unknown attribute in node Resize");
 		}
 	}
 
-	const Tensor *get_roi(void) const
+	const Tensor* get_roi(void) const
 	{
-		if(get_number_of_inputs() > 1 && get_input_tensor(1)->is_used() )
+		if (get_number_of_inputs() > 1 && get_input_tensor(1)->is_used())
 			return get_input_tensor(1);
 		else
 			return nullptr;
 	}
-	const Tensor *get_scales(void) const
+	const Tensor* get_scales(void) const
 	{
-		if(get_number_of_inputs() > 2 && get_input_tensor(2)->is_used() )
+		if (get_number_of_inputs() > 2 && get_input_tensor(2)->is_used())
 			return get_input_tensor(2);
 		else
 			return nullptr;
 	}
-	const Tensor *get_sizes(void) const
+	const Tensor* get_sizes(void) const
 	{
-		if(get_number_of_inputs() > 3)
+		if (get_number_of_inputs() > 3)
 			return get_input_tensor(3);
 		else
 			return nullptr;
 	}
 
-
 	/* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 	virtual void resolve(void) override
 	{
-		const Tensor *X = get_input_tensor(0);
-		const Tensor *roi = get_roi();
-		const Tensor *scales = get_scales();
-		const Tensor *sizes = get_sizes();
+		const Tensor* X = get_input_tensor(0);
+		const Tensor* roi = get_roi();
+		const Tensor* scales = get_scales();
+		const Tensor* sizes = get_sizes();
 
 		name_input(0, "X");
 		if (roi)
@@ -94,78 +95,75 @@ class Resize : public Node {
 		if (scales != NULL && sizes != NULL)
 			ERROR("Resize node cannot have both optional input tensors 'scales' or 'sizes' given");
 
-		if( sizes && sizes->isConst == false )
+		if (sizes && sizes->isConst == false)
 			ERROR("Unimplemented: Resize 'sizes' input is not a compile-time constant");
 
-
 		std::vector<int64_t> output_size;
-		if( sizes ) {
-			for( int d=0; d<sizes->data_num_elem(); d++ ) {
+		if (sizes) {
+			for (int d = 0; d < sizes->data_num_elem(); d++) {
 				int64_t size = sizes->get_data_element(d);
 				output_size.push_back(size);
-				dim_scales.push_back( (float)size/X->data_dim[d]);
+				dim_scales.push_back((float)size / X->data_dim[d]);
 			}
 		}
 		else {
-			for( int d=0; d<scales->data_num_elem(); d++ ) {
+			for (int d = 0; d < scales->data_num_elem(); d++) {
 				float scale = scales->get_data_element_float(d);
 				float size = scale * X->data_dim[d];
-				output_size.push_back( floor(size) );
+				output_size.push_back(floor(size));
 				dim_scales.push_back(scale);
 			}
 		}
 
 		/* Create output tensors.
 		 * Set data dimensions and data type for the created tensors. */
-		Tensor *t = new Tensor;
-		for( auto s : output_size )
+		Tensor* t = new Tensor;
+		for (auto s : output_size)
 			t->data_dim.push_back(s);
 		t->data_type = onnx::TensorProto_DataType_FLOAT;
 		register_output(t, "Y");
-
 	}
 
-
 	/* Print the coordinate transform algorithm, without integer roundings. */
-	std::string coordinate_transformation( int dim, std::string y_coordinate) const
+	std::string coordinate_transformation(int dim, std::string y_coordinate) const
 	{
-		const Tensor *X = get_input_tensor(0);
-		const Tensor *Y = get_output_tensor(0);
+		const Tensor* X = get_input_tensor(0);
+		const Tensor* Y = get_output_tensor(0);
 		std::string scale = std::to_string(dim_scales[dim]);
 		std::string x_dimsize = std::to_string(X->data_dim[dim]);
 		std::string y_dimsize = std::to_string(Y->data_dim[dim]);
 
 		std::string tf = "";
-		if( coordinate_transformation_mode == "half_pixel" ) {
+		if (coordinate_transformation_mode == "half_pixel") {
 			// x_original = (x_resized + 0.5) / scale - 0.5
 			// last "-0.5001" is a hack around rounding rules and floating point accuracies
-			tf+= "(" + y_coordinate + " + 0.5" + ")/";
-			tf+=     scale + "-0.500001";
+			tf += "(" + y_coordinate + " + 0.5" + ")/";
+			tf += scale + "-0.500001";
 		}
-		else if (coordinate_transformation_mode == "tf_half_pixel_for_nn" ) {
+		else if (coordinate_transformation_mode == "tf_half_pixel_for_nn") {
 			// These coordinate calculation algorithms are insanely labile.
 			// I'm not at sure if the hack of 0.4999==0.5 is the correct one,
 			// but it makes the backend tests pass
-			tf+= "(" + y_coordinate + "+0.49999)/" + scale;
+			tf += "(" + y_coordinate + "+0.49999)/" + scale;
 		}
-		else if( coordinate_transformation_mode == "asymmetric" ) {
+		else if (coordinate_transformation_mode == "asymmetric") {
 			// x_original = x_resized / scale
-			tf+= y_coordinate + "/" + scale;
+			tf += y_coordinate + "/" + scale;
 		}
-		else if( coordinate_transformation_mode == "align_corners" ) {
+		else if (coordinate_transformation_mode == "align_corners") {
 			// x_original = x_resized * (length_original - 1) / (length_resized - 1)
 			// this hack is not in the specs, but seems to make sense
-			if( y_dimsize == "1" )
-				tf+= "0";
+			if (y_dimsize == "1")
+				tf += "0";
 			else
-				tf+= y_coordinate + "*("+ x_dimsize + "-1)/(" + y_dimsize + "-1)";
+				tf += y_coordinate + "*(" + x_dimsize + "-1)/(" + y_dimsize + "-1)";
 		}
-		else if( coordinate_transformation_mode == "pytorch_half_pixel" ) {
+		else if (coordinate_transformation_mode == "pytorch_half_pixel") {
 			// x_original = length_resized > 1 ? (x_resized + 0.5) / scale - 0.5 : 0
-			if( Y->data_dim[dim] > 1 )
+			if (Y->data_dim[dim] > 1)
 				tf += "(" + y_coordinate + " +0.5)/" + scale + " - 0.5";
 			else
-				tf+= "0";
+				tf += "0";
 		}
 		else
 			ERROR("Resize: unimplemented coordinate_transformation_mode. Sorry. Patches welcome :)");
@@ -174,9 +172,9 @@ class Resize : public Node {
 	}
 
 	/* For the mode 'nearest', calculate the rounding of x_resized to indexes */
-	std::string x_coord_nearest( int dim) const
+	std::string x_coord_nearest(int dim) const
 	{
-		const Tensor *X = get_input_tensor(0);
+		const Tensor* X = get_input_tensor(0);
 		std::string x_dimsize = std::to_string(X->data_dim[dim]);
 		std::string x_resized = "x_orig_" + std::to_string(dim);
 		// Apply rounding
@@ -188,15 +186,15 @@ class Resize : public Node {
 		// pixels, AND someone thought they would be needing this exact
 		// rounding form. So much that it is the default.
 		std::string roundf;
-		if( nearest_mode == "round_prefer_floor" ) {
+		if (nearest_mode == "round_prefer_floor") {
 			LOG(WARNING) << "The selected nearest_mode rounding implementation is not fully accurate" << std::endl;
 			roundf = "roundf";
 		}
-		else if( nearest_mode == "round_prefer_ceil" )
+		else if (nearest_mode == "round_prefer_ceil")
 			roundf = "roundf";
-		else if( nearest_mode == "floor")
+		else if (nearest_mode == "floor")
 			roundf = "floor";
-		else if( nearest_mode == "ceil")
+		else if (nearest_mode == "ceil")
 			roundf = "ceil";
 		else
 			ERROR("Unkown nearest_mode");
@@ -207,82 +205,78 @@ class Resize : public Node {
 		return rv;
 	}
 
-	void print_calc_nearest(std::ostream &dst) const
+	void print_calc_nearest(std::ostream& dst) const
 	{
-		const Tensor *Y = get_output_tensor(0);
+		const Tensor* Y = get_output_tensor(0);
 		std::string out = "Y";
 		std::string in = "X";
 		unsigned n_data_dims = Y->rank();
-		for( unsigned i = 0; i<n_data_dims; i++) {
-			INDT_2 << "uint32_t x"<<i << " = " << x_coord_nearest( i ) << ";" << std::endl;
+		for (unsigned i = 0; i < n_data_dims; i++) {
+			INDT_2 << "uint32_t x" << i << " = " << x_coord_nearest(i) << ";" << std::endl;
 			out += "[o" + std::to_string(i) + "]";
 			in += "[x" + std::to_string(i) + "]";
 		}
 		INDT_2 << out << " = " << in << ";" << std::endl;
 	}
-	
-	void print_calc_linear(std::ostream &dst) const
+
+	void print_calc_linear(std::ostream& dst) const
 	{
-		const Tensor *X = get_input_tensor(0);
-		const Tensor *Y = get_output_tensor(0);
+		const Tensor* X = get_input_tensor(0);
+		const Tensor* Y = get_output_tensor(0);
 		std::string out = "Y";
 		std::string in = "X";
 		std::vector<int> interpolate_dims;
 		unsigned n_data_dims = Y->rank();
 		unsigned resized_dims = 0;
-		for( unsigned i = 0; i<n_data_dims; i++) {
+		for (unsigned i = 0; i < n_data_dims; i++) {
 			std::string i_str = std::to_string(i);
 			// TODO: or if Xi == Yi. No interpolation
-			out+="[o" + i_str + "]";
-			if( X->data_dim[i] == 1 ){
+			out += "[o" + i_str + "]";
+			if (X->data_dim[i] == 1) {
 				continue;
 			}
 			interpolate_dims.push_back(i);
 
 			resized_dims++;
-			if( resized_dims > 2 )
+			if (resized_dims > 2)
 				ERROR("Resize over more than 2 dimensions is not implemented");
 		}
 
+		if (interpolate_dims.size() == 1) {
 
-		if( interpolate_dims.size() == 1 )
-		{
-
-			for( unsigned i = 0; i<n_data_dims; i++) {
-				if( X->data_dim[i] == 1 ) {
-					in+="[0]";
+			for (unsigned i = 0; i < n_data_dims; i++) {
+				if (X->data_dim[i] == 1) {
+					in += "[0]";
 					continue;
 				}
 
 				INDT_2 << "unsigned a = floor(x_orig_" << i << ");" << std::endl;
 				INDT_2 << "unsigned b = MIN(ceil(x_orig_" << i << "), ";
-				   dst << X->data_dim[i] << "-1);" << std::endl;
+				dst << X->data_dim[i] << "-1);" << std::endl;
 				INDT_2 << "float w = x_orig_" << i << "-a;" << std::endl;
 				in += "[c]";
 			}
 			INDT_2 << "unsigned c;" << std::endl;
-			INDT_2 << "c=a; float A="<<in<<";"<<std::endl;
-			INDT_2 << "c=b; float B="<<in<<";"<<std::endl;
+			INDT_2 << "c=a; float A=" << in << ";" << std::endl;
+			INDT_2 << "c=b; float B=" << in << ";" << std::endl;
 
 			INDT_2 << out << " = A*(1-w) + B*w;" << std::endl;
 		}
 
 		// TODO: this most likely could be generalized to N-D interpolation
-		else if( interpolate_dims.size() == 2 )
-		{
+		else if (interpolate_dims.size() == 2) {
 			bool second_dim = false;
-			for( unsigned i = 0; i<n_data_dims; i++) {
-				if( X->data_dim[i] == 1 ) {
-					in+="[0]";
+			for (unsigned i = 0; i < n_data_dims; i++) {
+				if (X->data_dim[i] == 1) {
+					in += "[0]";
 					continue;
 				}
 
 				// The "inner dimension" of the bilinear interpolation
-				if( second_dim )
-				{
+				if (second_dim) {
 					INDT_2 << "unsigned y1 = MAX(floor(x_orig_" << i << "), 0);" << std::endl;
 					INDT_2 << "unsigned y2 = MIN(ceil(x_orig_" << i << "), ";
-					   dst << X->data_dim[i] << "-1);" << std::endl;
+					dst << X->data_dim[i] << "-1);" << std::endl;
 					INDT_2 << "float w_y = x_orig_" << i << "-y1;" << std::endl;
 					in += "[y]";
 				}
@@ -291,7 +285,7 @@ class Resize : public Node {
 				else {
 					INDT_2 << "unsigned x1 = MAX(floor(x_orig_" << i << "), 0);" << std::endl;
 					INDT_2 << "unsigned x2 = MIN(ceil(x_orig_" << i << "), ";
-					   dst << X->data_dim[i] << "-1);" << std::endl;
+					dst << X->data_dim[i] << "-1);" << std::endl;
 					INDT_2 << "float w_x = x_orig_" << i << "-x1;" << std::endl;
 					in += "[x]";
 				}
@@ -299,10 +293,10 @@ class Resize : public Node {
 			}
 			// Figure with these names here: https://chao-ji.github.io/jekyll/update/2018/07/19/BilinearResize.html
 			INDT_2 << "unsigned x,y;" << std::endl;
-			INDT_2 << "x=x1; y=y1; float A="<<in<<";"<<std::endl;
-			INDT_2 << "x=x2; y=y1; float B="<<in<<";"<<std::endl;
-			INDT_2 << "x=x1; y=y2; float C="<<in<<";"<<std::endl;
-			INDT_2 << "x=x2; y=y2; float D="<<in<<";"<<std::endl;
+			INDT_2 << "x=x1; y=y1; float A=" << in << ";" << std::endl;
+			INDT_2 << "x=x2; y=y1; float B=" << in << ";" << std::endl;
+			INDT_2 << "x=x1; y=y2; float C=" << in << ";" << std::endl;
+			INDT_2 << "x=x2; y=y2; float D=" << in << ";" << std::endl;
 			INDT_2 << "float AB = A*(1-w_x) + B*w_x;" << std::endl;
 			INDT_2 << "float CD = C*(1-w_x) + D*w_x;" << std::endl;
 			INDT_2 << "float ABCD = AB*(1-w_y) + CD*w_y;" << std::endl;
@@ -311,23 +305,22 @@ class Resize : public Node {
 
 		else
 			ERROR("Resize. Only 1D and 2D interpolation implemented");
-
 	}
-	
-	void print_calc_output(std::ostream &dst) const
+
+	void print_calc_output(std::ostream& dst) const
 	{
-		if ( mode == "nearest" )
+		if (mode == "nearest")
 			print_calc_nearest(dst);
-		else if( mode == "linear" )
+		else if (mode == "linear")
 			print_calc_linear(dst);
-		else if( mode == "cubic" )
+		else if (mode == "cubic")
 			ERROR("Unimplemented: cubic interpolation in resize");
 		else
 			ERROR("Unknown interpolation mode");
 	}
 
 	/* Body of the node implementing function */
-	virtual void print(std::ostream &dst) const override
+	virtual void print(std::ostream& dst) const override
 	{
 
 		INDT_1 << "/* Resize" << std::endl;
@@ -340,31 +333,30 @@ class Resize : public Node {
 		INDT_1 << " * nearest_mode: " << nearest_mode << std::endl;
 		INDT_1 << " *" << std::endl;
 		INDT_1 << " * dimension scaling factors:" << std::endl;
-		for( auto s : dim_scales )
+		for (auto s : dim_scales)
 			INDT_1 << " * " << s << std::endl;
 		INDT_1 << " */" << std::endl;
 
-		const Tensor *Y = get_output_tensor(0);
+		const Tensor* Y = get_output_tensor(0);
 		unsigned n_data_dims = Y->rank();
 
 		// loop over output
-		for( unsigned i = 0; i<n_data_dims; i++) {
+		for (unsigned i = 0; i < n_data_dims; i++) {
 			std::string i_str = std::to_string(i);
 			std::string o_idx = "o" + i_str;
 			INDT_1 << "for( uint32_t " << o_idx << "=0; ";
-			   dst <<       o_idx << "<" << Y->data_dim[i] << "; ";
-			   dst <<       o_idx <<"++) {" << std::endl;
+			dst << o_idx << "<" << Y->data_dim[i] << "; ";
+			dst << o_idx << "++) {" << std::endl;
 
-			INDT_2 << "float x_orig_" << i_str << " = (float)" << coordinate_transformation( i, o_idx ) <<";" << std::endl;
+			INDT_2 << "float x_orig_" << i_str << " = (float)" << coordinate_transformation(i, o_idx) << ";" << std::endl;
 		}
 
 		print_calc_output(dst);
 
 		// close the loops over output
-		for( unsigned i = 0; i<n_data_dims; i++) {
+		for (unsigned i = 0; i < n_data_dims; i++) {
 			INDT_1 << "}" << std::endl;
 		}
 	}
 };
-}
-
+} // namespace toC

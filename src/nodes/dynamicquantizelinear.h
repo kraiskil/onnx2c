@@ -4,25 +4,26 @@
  * Quantizes a tensor from float to uint8_t.
  * Additional outputs are the scale and zeropoint
  * so that y = x / scale + zeropoint
- */ 
+ */
 namespace toC {
 
 class DynamicQuantizeLinear : public Node {
 	public:
-	DynamicQuantizeLinear() {
+	DynamicQuantizeLinear()
+	{
 		op_name = "DynamicQuantizeLinear";
 	}
 
-	virtual void parseAttributes( onnx::NodeProto &node ) override {
-		for( const auto& a : node.attribute() ) {
+	virtual void parseAttributes(onnx::NodeProto& node) override
+	{
+		for (const auto& a : node.attribute()) {
 			ERROR("DynamicQuantizeLinear should not have attributes, found" << a.name());
 		}
 	}
 
-
-	virtual void print(std::ostream &dst) const override
+	virtual void print(std::ostream& dst) const override
 	{
-		const Tensor *x = get_input_tensor(0);
+		const Tensor* x = get_input_tensor(0);
 		int n_el = x->data_num_elem();
 
 		INDT_1 << "/* DynamicQuantizeLinear */" << std::endl;
@@ -34,9 +35,9 @@ class DynamicQuantizeLinear : public Node {
 		INDT_1 << "float min, max; min=max=0.0;" << std::endl;
 
 		INDT_1 << "for (int i=0; i<" << n_el << "; i++ ) {" << std::endl;
-			INDT_2 << "float xi = in_data[i];" << std::endl;
-			INDT_2 << "min = xi<min ? xi : min;" << std::endl;
-			INDT_2 << "max = xi>max ? xi : max;" << std::endl;
+		INDT_2 << "float xi = in_data[i];" << std::endl;
+		INDT_2 << "min = xi<min ? xi : min;" << std::endl;
+		INDT_2 << "max = xi>max ? xi : max;" << std::endl;
 		INDT_1 << "}" << std::endl;
 
 		// TODO: assert output is uint8. Reading between the lines says this will change in the future
@@ -53,22 +54,20 @@ class DynamicQuantizeLinear : public Node {
 		INDT_1 << "fl_zero_point = fl_zero_point > 255 ? 255 : fl_zero_point;" << std::endl;
 		INDT_1 << "*y_zero_point_ = round(fl_zero_point);" << std::endl;
 
-
 		INDT_1 << "for (int i=0; i<" << n_el << "; i++ ) {" << std::endl;
-			INDT_2 << "float scaled = in_data[i]/ *y_scale + *y_zero_point;" << std::endl;
-			INDT_2 << "scaled = scaled < 0 ? 0 : scaled;" << std::endl;
-			INDT_2 << "scaled = scaled > 255 ? 255 : scaled;" << std::endl;
-			INDT_2 << "out_data[i] = round(scaled);" << std::endl;
+		INDT_2 << "float scaled = in_data[i]/ *y_scale + *y_zero_point;" << std::endl;
+		INDT_2 << "scaled = scaled < 0 ? 0 : scaled;" << std::endl;
+		INDT_2 << "scaled = scaled > 255 ? 255 : scaled;" << std::endl;
+		INDT_2 << "out_data[i] = round(scaled);" << std::endl;
 		INDT_1 << "}" << std::endl;
 	}
 
-
 	virtual void resolve(void) override
 	{
-		const Tensor *x = get_input_tensor(0);
+		const Tensor* x = get_input_tensor(0);
 		name_input(0, "x");
 
-		Tensor *t = new Tensor;
+		Tensor* t = new Tensor;
 		t->data_dim = x->data_dim;
 		t->data_type = onnx::TensorProto_DataType_UINT8;
 		register_output(t, "y");
@@ -82,5 +81,4 @@ class DynamicQuantizeLinear : public Node {
 		register_output(t, "y_zero_point");
 	}
 };
-}
-
+} // namespace toC
