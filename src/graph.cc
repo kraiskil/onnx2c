@@ -512,7 +512,7 @@ Node* Graph::createNode(const onnx::NodeProto& onnx_node)
 	if (opName == "Pow") return new Elementwise_2("Pow");
 	if (opName == "PRelu") return new Elementwise_2("PRelu");
 	if (opName == "QLinearAdd") return new QLinearElementwise("QLinearAdd");
-  if (opName == "QLinearMatMul") return new QLinearMatMul;
+	if (opName == "QLinearMatMul") return new QLinearMatMul;
 	if (opName == "QLinearMul") return new QLinearElementwise("QLinearMul");
 	if (opName == "QuantizeLinear") return new QuantizeLinear;
 	if (opName == "RandomUniform") return new RandomUniform;
