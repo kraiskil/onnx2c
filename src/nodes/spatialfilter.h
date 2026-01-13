@@ -30,8 +30,9 @@ class SpatialFilter : public Node {
 	std::vector<int64_t> strides;
 
 	virtual const Tensor* get_X(void) const { return get_input_tensor(0); }
-	virtual const Tensor* get_W(void) const {
-		if( get_number_of_inputs() > 1 )
+	virtual const Tensor* get_W(void) const
+	{
+		if (get_number_of_inputs() > 1)
 			return get_input_tensor(1);
 		else
 			return nullptr;
