@@ -15,7 +15,8 @@ namespace toC {
 
 class TreeEnsembleClassifier : public Node {
 	public:
-	TreeEnsembleClassifier() {
+	TreeEnsembleClassifier()
+	{
 		op_name = "TreeEnsembleClassifier";
 	}
 
@@ -49,14 +50,12 @@ class TreeEnsembleClassifier : public Node {
 	using Tree = std::unordered_map<int64_t, std::shared_ptr<TreeNode>>;
 
 	// Mandatory "API" functions towards the rest of onnx2c
-	virtual void parseAttributes( onnx::NodeProto &node ) override;
+	virtual void parseAttributes(onnx::NodeProto& node) override;
 	virtual void resolve(void) override;
-	virtual void print(std::ostream &dst) const override;
+	virtual void print(std::ostream& dst) const override;
 
 	private:
 	std::unordered_map<int64_t, Tree> generateTreeMap() const;
 };
 
-
-}
-
+} // namespace toC

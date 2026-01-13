@@ -2,13 +2,14 @@ namespace toC {
 
 class GlobalMaxPool : public Node {
 	public:
-	GlobalMaxPool() {
+	GlobalMaxPool()
+	{
 		op_name = "GlobalMaxPool";
 	}
 
-	virtual void print(std::ostream &dst) const override
+	virtual void print(std::ostream& dst) const override
 	{
-		const Tensor *X=get_input_tensor(0);
+		const Tensor* X = get_input_tensor(0);
 		int batch_size = X->data_dim[0];
 		int num_channels = X->data_dim[1];
 
@@ -19,18 +20,18 @@ class GlobalMaxPool : public Node {
 		// Initialize max_value to a very small value
 		dst << "\t\tfloat max_value = -FLT_MIN;" << std::endl;
 
-		std::string in_idx_string = "input[b][c]";  // Start of input element access
+		std::string in_idx_string = "input[b][c]";   // Start of input element access
 		std::string out_idx_string = "output[b][c]"; // Output tensor index
 
 		// Iterate over spatial dimensions
-		for( unsigned dim = 2; dim < X->data_dim.size(); dim ++ ) {
+		for (unsigned dim = 2; dim < X->data_dim.size(); dim++) {
 			int dim_size = X->data_dim[dim];
-			std::string dim_var = "d" + std::to_string(dim-2);
+			std::string dim_var = "d" + std::to_string(dim - 2);
 			in_idx_string += "[" + dim_var + "]";
 			out_idx_string += "[0]";
 
-			dst << "\t\tfor( int32_t " << dim_var << " = 0; " 
-			    << dim_var << " < " << dim_size << "; " 
+			dst << "\t\tfor( int32_t " << dim_var << " = 0; "
+			    << dim_var << " < " << dim_size << "; "
 			    << dim_var << "++ ) {" << std::endl;
 		}
 
@@ -38,7 +39,7 @@ class GlobalMaxPool : public Node {
 		dst << "\t\t\tmax_value = MAX(max_value, " << in_idx_string << ");" << std::endl;
 
 		// Close loops for spatial dimensions
-		for( unsigned dim = 2; dim < X->data_dim.size(); dim ++ ) {
+		for (unsigned dim = 2; dim < X->data_dim.size(); dim++) {
 			dst << "\t\t}" << std::endl;
 		}
 
@@ -52,20 +53,20 @@ class GlobalMaxPool : public Node {
 
 	virtual void resolve(void) override
 	{
-		const Tensor *X = get_input_tensor(0);
+		const Tensor* X = get_input_tensor(0);
 		name_input(0, "input");
-		if(  typeConstraint_plainFloatingPoints(X) == false )
-			ERROR("Incorrect input for node"); 
+		if (typeConstraint_plainFloatingPoints(X) == false)
+			ERROR("Incorrect input for node");
 
 		/* Create output tensors */
-		Tensor *rv = new Tensor;
+		Tensor* rv = new Tensor;
 		rv->data_dim.push_back(X->data_dim[0]); // Batch dimension
 		rv->data_dim.push_back(X->data_dim[1]); // Channel dimension
-		for( unsigned i=2; i<X->data_dim.size(); i++)
-			rv->data_dim.push_back(1);  // Reduce spatial dimensions to 1
+		for (unsigned i = 2; i < X->data_dim.size(); i++)
+			rv->data_dim.push_back(1); // Reduce spatial dimensions to 1
 		rv->data_type = X->data_type;
 		register_output(rv, "output");
 	}
 };
 
-}
+} // namespace toC

@@ -1,0 +1,20 @@
+BasedOnStyle: LLVM
+
+# Indent with tabs, align with spaces.
+# These two fields are required for clang-format's internal functioning.
+# When long lines are broken up (e.g. macros), the value is still visible
+# so use here the One True Value for tab sizes - 99% of the code should still look
+# with Wrong Values for tab sizes.
+IndentWidth: 8
+TabWidth: 8
+UseTab: ForIndentation
+ColumnLimit: 0
+IndentCaseLabels: true
+AccessModifierOffset: 0
+
+# Classes, functions: braces on own line. Conditionals, same line
+BreakBeforeBraces: Stroustrup
+
+
+AllowShortIfStatementsOnASingleLine: true
+PointerAlignment: Left

@@ -11,10 +11,11 @@ namespace toC {
 
 class Gemm : public Node {
 	public:
-	Gemm() {
+	Gemm()
+	{
 		op_name = "Gemm";
-		alpha=beta=1;
-		transA=transB=0;
+		alpha = beta = 1;
+		transA = transB = 0;
 	}
 
 	/* Node attributes */
@@ -24,39 +25,40 @@ class Gemm : public Node {
 	int transB;
 
 	/* Parse attributes, if this node has them. */
-	virtual void parseAttributes( onnx::NodeProto &node ) override {
-		for( const auto& a : node.attribute() ) {
+	virtual void parseAttributes(onnx::NodeProto& node) override
+	{
+		for (const auto& a : node.attribute()) {
 			LOG(TRACE) << "Parsing attribute " << a.name() << std::endl;
 
-			if( a.name() == "alpha" )
+			if (a.name() == "alpha")
 				alpha = parse_attribute_float(a);
-			else if ( a.name() == "beta" )
+			else if (a.name() == "beta")
 				beta = parse_attribute_float(a);
-			else if ( a.name() == "transA" )
+			else if (a.name() == "transA")
 				transA = parse_attribute_int(a);
-			else if ( a.name() == "transB" )
+			else if (a.name() == "transB")
 				transB = parse_attribute_int(a);
 			else
 				ERROR("unknown attribute: " << a.name());
 		}
 	}
 
-
 	/* Body of the node implementing function */
-	virtual void print(std::ostream &dst) const override
+	virtual void print(std::ostream& dst) const override
 	{
-		const Tensor *A  = get_input_tensor(0);
-		const Tensor *B  = get_input_tensor(1);
-		const Tensor *C  = get_number_of_inputs() > 2 ? get_input_tensor(2):nullptr;
-		//int A1 = A->data_dim[1];
-		int C0,C1; C0=C1=0;
-		if( C && C->is_scalar()==false) {
+		const Tensor* A = get_input_tensor(0);
+		const Tensor* B = get_input_tensor(1);
+		const Tensor* C = get_number_of_inputs() > 2 ? get_input_tensor(2) : nullptr;
+		//	int A1 = A->data_dim[1];
+		int C0, C1;
+		C0 = C1 = 0;
+		if (C && C->is_scalar() == false) {
 			C0 = C->data_dim[0];
-			if ( C->rank() > 1 ) {
+			if (C->rank() > 1) {
 				C1 = C->data_dim[1];
 			}
 		}
-	
+
 		int M = transA ? A->data_dim[1] : A->data_dim[0]; // row
 		int K = transA ? A->data_dim[0] : A->data_dim[1]; // inner
 		int N = transB ? B->data_dim[0] : B->data_dim[1]; // column
@@ -83,50 +85,48 @@ class Gemm : public Node {
 		// Cast optional C matrix to generated variable
 		// "C_[M][N]"
 		std::string C_idx;
-		if( C  ) {
+		if (C) {
 			C_idx = "";
 			int dim;
-			switch (C->rank())
-			{
+			switch (C->rank()) {
 				case 0:
-					C0=C1=0;
+					C0 = C1 = 0;
 					break;
 				case 1:
 					dim = C->data_dim[0];
-					if( dim == M ){
-						C0=M;
-						C1=1;
+					if (dim == M) {
+						C0 = M;
+						C1 = 1;
 					}
-					else if ( dim == N ) {
-						C0=1;
-						C1=N;
+					else if (dim == N) {
+						C0 = 1;
+						C1 = N;
 					}
-					else if ( dim == 1 ) {
-						C0=1;
-						C1=1;
+					else if (dim == 1) {
+						C0 = 1;
+						C1 = 1;
 					}
 					else {
 						ERROR("C dimension mismatch in Gemm");
 					}
 					break;
 				case 2:
-					C0=C->data_dim[0];
-					C1=C->data_dim[1];
+					C0 = C->data_dim[0];
+					C1 = C->data_dim[1];
 					break;
 				default:
 					ERROR("C has too many dimensions in Gemm");
 			}
-			if( C0 <= 1 )
+			if (C0 <= 1)
 				C_idx += "[0]";
 			else
 				C_idx += "[r]";
-			if( C1 <= 1 )
+			if (C1 <= 1)
 				C_idx += "[0]";
 			else
 				C_idx += "[c]";
-			INDT_1 << type << " (*C_)["<<C1<<"]  = (" << type << "(*)["<<C1<<"])C;" << std::endl;
+			INDT_1 << type << " (*C_)[" << C1 << "]  = (" << type << "(*)[" << C1 << "])C;" << std::endl;
 		}
-
 
 		// Now genereate the calculation source code
 
@@ -135,32 +135,17 @@ class Gemm : public Node {
 		INDT_2 << "for( uint32_t c=0; c<N; c++ ) {" << std::endl;
 
 		/* Calculate the matrix muliplication dot inner dot product */
-		if( options.quantize ) {
-			INDT_3 << "int32_t ABrc = 0;" << std::endl;
-		}
-		else {
-			INDT_3 << type <<" ABrc = 0;" << std::endl;
-		}
+		INDT_3 << type << " ABrc = 0;" << std::endl;
 		INDT_3 << "for( uint32_t i=0; i<K; i++ ) {" << std::endl;
-		INDT_4 <<   B->data_type_str() << " B_el = " << constant_acces_code( "B" + B_idx ) << ";" << std::endl;
-		INDT_4 <<   "ABrc += " << A_el << " * B_el;" << std::endl;
+		INDT_4 << B->data_type_str() << " B_el = " << constant_acces_code("B" + B_idx) << ";" << std::endl;
+		INDT_4 << "ABrc += " << A_el << " * B_el;" << std::endl;
 		INDT_3 << "}" << std::endl;
 
-
 		/* Add scale & bias, store result in output */
-		if( options.quantize )
-			INDT_3 << "int32_t tmp = ABrc * alpha;" << std::endl;
-		else
-			INDT_3 << type <<" tmp = ABrc * alpha;" << std::endl;
+		INDT_3 << type << " tmp = ABrc * alpha;" << std::endl;
 
-		if( C ) {
+		if (C) {
 			INDT_3 << "tmp += C_" << C_idx << " * beta;" << std::endl;
-		}
-
-		if( options.quantize ) {
-			INDT_3 << "tmp = tmp/(K*16);" << std::endl;
-			INDT_3 << "tmp = tmp > 127?127:tmp;" << std::endl;
-			INDT_3 << "tmp = tmp < -127?-127:tmp;" << std::endl;
 		}
 
 		INDT_3 << "Y[r][c] = tmp;" << std::endl;
@@ -168,15 +153,14 @@ class Gemm : public Node {
 		INDT_1 << "}" << std::endl;
 	}
 
-
 	/* Assign input tensors, resolve output tensor shapes, allocate output tensors */
 	virtual void resolve(void) override
 	{
 		if (get_number_of_inputs() < 2)
 			ERROR("Not enough inputs");
 
-		const Tensor *A  = get_input_tensor(0);
-		const Tensor *B  = get_input_tensor(1);
+		const Tensor* A = get_input_tensor(0);
+		const Tensor* B = get_input_tensor(1);
 		name_input(0, "A");
 		name_input(1, "B");
 
@@ -190,12 +174,11 @@ class Gemm : public Node {
 
 		/* Create output tensors.
 		 * Set data dimensions and data type for the created tensors. */
-		Tensor *t = new Tensor;
+		Tensor* t = new Tensor;
 		t->data_dim.push_back(M);
 		t->data_dim.push_back(N);
 		t->data_type = A->data_type;
 		register_output(t, "Y");
 	}
 };
-}
-
+} // namespace toC
