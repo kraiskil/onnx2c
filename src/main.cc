@@ -39,6 +39,6 @@ int main(int argc, const char* argv[])
 		toCgraph.print_initialization(std::cout);
 	}
 	else {
-		toCgraph.print_source(std::cout);
+		toCgraph.print_source(std::cout, options.interface_func_name);
 	}
 }

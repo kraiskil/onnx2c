@@ -16,8 +16,8 @@ class Graph {
 	    std::vector<Tensor*> inputs = {});
 
 	/* print the entire .h and .cc file contents */
-	void print_header(std::ostream& destination);
-	void print_source(std::ostream& destination);
+	void print_header(std::ostream& destination, const std::string& interface_func_name);
+	void print_source(std::ostream& destination, const std::string& interface_func_name);
 	void print_initialization(std::ostream& destination);
 
 	/* print individual parts of the file */
@@ -26,7 +26,7 @@ class Graph {
 	void print_tensor(const Tensor*, std::ostream& dst);
 	void print_functions(std::ostream& destination);
 	void print_includes(std::ostream& dst);
-	void print_interface_function(std::ostream& dst, bool print_definition = true);
+	void print_interface_function(std::ostream& dst, bool print_definition = true, const std::string& func_name = "entry");
 
 	/* Create the onnx2c graph elements from the ONNX graph */
 	void processGraph(
