@@ -11,12 +11,12 @@
 
 using namespace toC;
 
-void Graph::print_header(std::ostream& dst)
+void Graph::print_header(std::ostream& dst, const std::string& interface_func_name)
 {
 	print_file_frontmatter(dst);
 }
 
-void Graph::print_source(std::ostream& dst)
+void Graph::print_source(std::ostream& dst, const std::string& interface_func_name)
 {
 	print_file_frontmatter(dst);
 	dst << std::endl;
@@ -26,7 +26,7 @@ void Graph::print_source(std::ostream& dst)
 	dst << std::endl;
 	print_functions(dst);
 	dst << std::endl;
-	print_interface_function(dst);
+	print_interface_function(dst, /*print_definition=*/true, interface_func_name);
 }
 
 void Graph::print_initialization(std::ostream& dst)
@@ -195,11 +195,11 @@ void Graph::print_includes(std::ostream& dst)
 	}
 }
 
-void Graph::print_interface_function(std::ostream& dst, bool definition)
+void Graph::print_interface_function(std::ostream& dst, bool definition, const std::string& func_name)
 {
 	bool isfirst = true;
 	// TODO: take the interface function name from the ONNX file name
-	dst << "void entry(";
+	dst << "void " << func_name << "(";
 	for (auto i : model.graph().input()) {
 		/* TODO: FIXME: separate input tensors that are initialized
 		 * or re-initializable (and therefore count as input), from

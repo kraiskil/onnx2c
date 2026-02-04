@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 #if defined TESTGEN_SINGLEFILE
 	std::cout.precision(20);
 	toCgraph.unionize_tensors();
-	toCgraph.print_source(std::cout);
+	toCgraph.print_source(std::cout, "entry");
 	std::cout << std::endl << std::endl;
 	std::cout << "/////////////////////////////////////"<<std::endl;
 	std::cout << "// End of compiled graph."<<std::endl;
