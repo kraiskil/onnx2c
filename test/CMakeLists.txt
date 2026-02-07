@@ -651,6 +651,15 @@ ONNX_backend_node_test(pow_types_int32_int32)
 ONNX_backend_node_test(prelu_broadcast)
 ONNX_backend_node_test(prelu_example)
 
+ONNX_backend_node_test(qlinearmatmul_2D_int8_float16)
+ONNX_backend_node_test(qlinearmatmul_2D_int8_float32)
+ONNX_backend_node_test(qlinearmatmul_2D_uint8_float16)
+ONNX_backend_node_test(qlinearmatmul_2D_uint8_float32)
+ONNX_backend_node_test(qlinearmatmul_3D_int8_float16)
+ONNX_backend_node_test(qlinearmatmul_3D_int8_float32)
+ONNX_backend_node_test(qlinearmatmul_3D_uint8_float16)
+ONNX_backend_node_test(qlinearmatmul_3D_uint8_float32)
+
 ONNX_backend_node_test(or2d)
 ONNX_backend_node_test(or4d)
 ONNX_backend_node_test(or_bcast3v2d)
@@ -922,8 +931,6 @@ ONNX_backend_node_test(xor3d)
 ONNX_backend_node_test(xor_bcast3v1d)
 ONNX_backend_node_test(xor_bcast4v2d)
 ONNX_backend_node_test(xor_bcast4v4d)
-
-
 
 add_subdirectory(old_onnx_backend)
 
