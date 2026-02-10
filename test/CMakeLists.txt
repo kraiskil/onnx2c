@@ -653,6 +653,15 @@ ONNX_backend_node_test(prelu_example)
 
 ONNX_backend_node_test(qlinearconv)
 
+ONNX_backend_node_test(qlinearmatmul_2D_int8_float16)
+ONNX_backend_node_test(qlinearmatmul_2D_int8_float32)
+ONNX_backend_node_test(qlinearmatmul_2D_uint8_float16)
+ONNX_backend_node_test(qlinearmatmul_2D_uint8_float32)
+ONNX_backend_node_test(qlinearmatmul_3D_int8_float16)
+ONNX_backend_node_test(qlinearmatmul_3D_int8_float32)
+ONNX_backend_node_test(qlinearmatmul_3D_uint8_float16)
+ONNX_backend_node_test(qlinearmatmul_3D_uint8_float32)
+
 ONNX_backend_node_test(or2d)
 ONNX_backend_node_test(or4d)
 ONNX_backend_node_test(or_bcast3v2d)
