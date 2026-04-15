@@ -39,9 +39,9 @@ class QLinearAveragePool : public Pooling {
 	}
 
 	void print_output_cell_calc(std::ostream& dst,
-	                           const std::string& x_idx,
-	                           const std::string&,
-	                           const std::string&) const override
+	                            const std::string& x_idx,
+	                            const std::string&,
+	                            const std::string&) const override
 	{
 		INDT_4 << "num += 1;" << std::endl;
 		INDT_4 << "sum += (int64_t)((int32_t)x" << x_idx << " - (int32_t)x_zero_point[0]);" << std::endl;
