@@ -800,6 +800,9 @@ local_node_test(resize_downsample_sizes_linear_1D_align)
 
 local_node_test(qlinearadd_int8)
 local_node_test(qlinearadd_uint8)
+local_node_test(qlinearsoftmax_int8_2d)
+local_node_test(qlinearsoftmax_uint8_2d)
+local_node_test(qlinearsoftmax_uint8_3d_last_axis)
 local_node_test(qlinearmul_int8)
 local_node_test(qlinearmul_uint8)
 
