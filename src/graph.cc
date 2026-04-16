@@ -415,9 +415,10 @@ int64_t Graph::onnx_ir_version(void)
 #include "nodes/matmulinteger.h"
 #include "nodes/maxpool.h"
 #include "nodes/pad.h"
+#include "nodes/qlinearaveragepool.h"
+#include "nodes/qlinearconv.h"
 #include "nodes/qlinearelementwise.h"
 #include "nodes/qlinearmatmul.h"
-#include "nodes/qlinearconv.h"
 #include "nodes/quantizelinear.h"
 #include "nodes/randomuniform.h"
 #include "nodes/range.h"
@@ -516,6 +517,7 @@ Node* Graph::createNode(const onnx::NodeProto& onnx_node)
 	if (opName == "QLinearConv") return new QLinearConv;
 	if (opName == "QLinearMatMul") return new QLinearMatMul;
 	if (opName == "QLinearMul") return new QLinearElementwise("QLinearMul");
+	if (opName == "QLinearAveragePool") return new QLinearAveragePool;
 	if (opName == "QuantizeLinear") return new QuantizeLinear;
 	if (opName == "RandomUniform") return new RandomUniform;
 	if (opName == "Range") return new Range;
