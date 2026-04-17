@@ -17,6 +17,7 @@ struct onnx2c_opts {
 	bool only_init = false;
 	bool opt_unionize = true;
 	bool opt_fold_casts = true;
+	int output_precision = 20;
 /*
  * logging levels are
  * cmd line     aixlog     Use
