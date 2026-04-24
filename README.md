@@ -88,6 +88,9 @@ Onnx2c has a few optimization passes that modify the generated output:
  - Removing `Cast` nodes, by modifying their predecessor node's output tensor.
  - Optimization for AVR processors to put constants into instruction memory.
 
+Floating-point output precision can be configured with `--precision N`.
+If omitted, onnx2c uses a precision of `20`.
+
 `./onnx2c -h` prints out all available command line options.
 
 onnx2c prints a log on stdout. Log level can be given with the `-l N` command line option.
