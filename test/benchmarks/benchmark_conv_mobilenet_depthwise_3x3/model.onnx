@@ -1,0 +1,27 @@
+onnx2c-benchmark-generator:€
+
+X
+wYsclbl-onnx-node1"Conv*
+	dilations@@ *
+group  *
+kernel_shape@@ *
+pads@@@@ *
+strides@@ &benchmark_conv_mobilenet_depthwise_3x3Z
+X
+
+
+ 
+p
+pZ
+w
+
+ 
+
+
+b
+Y
+
+
+ 
+p
+pB

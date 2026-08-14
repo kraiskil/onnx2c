@@ -1,5 +1,7 @@
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src)
+include(CheckCCompilerFlag)
+check_c_compiler_flag("-Wno-stringop-overread" ONNX2C_C_COMPILER_SUPPORTS_WNO_STRINGOP_OVERREAD)
 set(ONNX_BACKEND_TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../onnx/onnx/backend/test/data/)
 set(ONNX_NODE_TEST_DATA_DIR ${ONNX_BACKEND_TEST_DATA_DIR}/node/)
 
@@ -22,6 +24,11 @@ target_compile_options(testgen_singlefile
 		-I${CMAKE_CURRENT_SOURCE_DIR}/../aixlog/include
 		-DTESTGEN_SINGLEFILE
 	)
+
+add_test(
+	NAME im2col_heuristic_selection
+	COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/im2col_heuristic_test.py $<TARGET_FILE:onnx2c> ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks
+)
 
 
 function( compile_onnx onnx_file c_file )
@@ -111,10 +118,15 @@ function( ONNXtype_test_singlefile node_name data_dir test_ctest_name accuracy t
 			-Wall -Werror
 			#TODO: space for output tensor is generated, but not used.
 			-Wno-unused-variable
-			#False positive when passing a zero size array as a parameter
-			-Wno-stringop-overread
 		)
 	target_link_libraries( ${testbin} m )
+	if(ONNX2C_C_COMPILER_SUPPORTS_WNO_STRINGOP_OVERREAD)
+		target_compile_options( ${testbin}
+			PRIVATE
+				#False positive when passing a zero size array as a parameter
+				-Wno-stringop-overread
+			)
+	endif()
 
 	# register with CTest
 	add_test( ${test_ctest_name}

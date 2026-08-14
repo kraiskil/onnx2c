@@ -20,53 +20,55 @@ include_directories(${Protobuf_INCLUDE_DIRS})
 include_directories(src)
 
 add_custom_command(
-	OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc ${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.h
-	COMMAND protoc --proto_path=${CMAKE_CURRENT_SOURCE_DIR}/onnx/onnx/ --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/onnx/onnx/onnx.proto
-	MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/onnx/onnx/onnx.proto
-	)
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc ${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.h
+    COMMAND protoc --proto_path=${CMAKE_CURRENT_SOURCE_DIR}/onnx/onnx/ --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/onnx/onnx/onnx.proto
+    MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/onnx/onnx/onnx.proto
+)
 
 
 add_library(onnx2c_lib STATIC
-	src/graph.cc
-	src/graph_print.cc
-	src/node.cc
-	src/tensor.cc
-	src/util.cc
-	src/optimization_passes/fold_casts.cpp
-	src/optimization_passes/unionize_tensors.cpp
-	${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc
-	src/nodes/cast.cc
-	src/nodes/constantofshape.cc
-	src/nodes/convtranspose.cc
-	src/nodes/expand.cc
-	src/nodes/instancenorm.cc
-	src/nodes/lstm.cc
-	src/nodes/pad.cc
-	src/nodes/reduce.cc
-	src/nodes/scatternd.cc
-	src/nodes/treeensembleclassifier.cc
+    src/graph.cc
+    src/graph_print.cc
+    src/node.cc
+    src/tensor.cc
+    src/util.cc
+    src/optimization_passes/fold_casts.cpp
+    src/optimization_passes/unionize_tensors.cpp
+    src/optimization_passes/im2col.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc
+    src/nodes/cast.cc
+    src/nodes/constantofshape.cc
+    src/nodes/convtranspose.cc
+    src/nodes/expand.cc
+    src/nodes/instancenorm.cc
+    src/nodes/lstm.cc
+    src/nodes/im2col.cc
+    src/nodes/pad.cc
+    src/nodes/reduce.cc
+    src/nodes/scatternd.cc
+    src/nodes/treeensembleclassifier.cc
 )
 target_compile_options(onnx2c_lib
-	PUBLIC
-		-I${CMAKE_CURRENT_BINARY_DIR}
-	PRIVATE
-		-I${CMAKE_CURRENT_SOURCE_DIR}/aixlog/include
-		-I${CMAKE_CURRENT_SOURCE_DIR}/cmake_timestamp
-		-Isrc
-		-Wall
-	)
+    PUBLIC
+        -I${CMAKE_CURRENT_BINARY_DIR}
+    PRIVATE
+        -I${CMAKE_CURRENT_SOURCE_DIR}/aixlog/include
+        -I${CMAKE_CURRENT_SOURCE_DIR}/cmake_timestamp
+        -Isrc
+        -Wall
+)
 
 add_executable( onnx2c
-	src/main.cc
-	src/options.cc
-	)
+    src/main.cc
+    src/options.cc
+)
 target_compile_options(onnx2c
-	PRIVATE
-		-Isrc
-		-I${CMAKE_CURRENT_SOURCE_DIR}/aixlog/include
-		-I${CMAKE_CURRENT_SOURCE_DIR}/args
-		-Wall
-	)
+    PRIVATE
+        -Isrc
+        -I${CMAKE_CURRENT_SOURCE_DIR}/aixlog/include
+        -I${CMAKE_CURRENT_SOURCE_DIR}/args
+        -Wall
+)
 target_link_libraries(onnx2c onnx2c_lib ${Protobuf_LIBRARIES} timestamp)
 
 enable_testing()

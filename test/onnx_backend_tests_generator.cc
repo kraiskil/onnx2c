@@ -160,7 +160,10 @@ int main(int argc, char *argv[])
 	std::vector <Tensor *> tensors_to_parser;
 	for( auto i : inputs) tensors_to_parser.push_back(i);
 
-	onnx_model.ParseFromIstream(&model_ifs);
+	if (!onnx_model.ParseFromIstream(&model_ifs)) {
+		std::cerr << "Error parsing model file: " << model_fn << std::endl;
+		exit(1);
+	}
 	Graph toCgraph(onnx_model, tensors_to_parser);
 
 	// Optionally, genrerate the network into the same file as the test harness.
@@ -294,4 +297,3 @@ int main(int argc, char *argv[])
 	std::cout << "}" << std::endl;
 	return 0;
 }
-

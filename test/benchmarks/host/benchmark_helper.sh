@@ -30,6 +30,7 @@ ONNX2C_BENCHMARK_BIN=onnx2c_benchmark
 
 echo current dir is $PWD
 ./$ONNX2C_BENCHMARK_BIN --benchmark_out_format=json --benchmark_out=$ONNX2C_BRANCH.json
+python3 $SCRIPT_LOCATION/summarize_im2col_policies.py $ONNX2C_BRANCH.json $ONNX2C_BRANCH.im2col_policies.csv
 
 if [[ $ONNX2C_BRANCH == master ]]
 then
@@ -38,10 +39,9 @@ fi
 # "else" run compare against master.json
 if [[ ! -e master.json ]]
 then
-	echo  ERROR: no master.json file found. Benchmark has not been run from master branch!
-	echo  Nothing to compare against.
-	exit 1
+	echo  WARNING: no master.json file found. Benchmark has not been run from master branch.
+	echo  Skipping branch-vs-master comparison.
+	exit 0
 fi
 
 python3 $ONNX2C_REPO/benchmark/tools/compare.py benchmarks master.json $ONNX2C_BRANCH.json
-

@@ -95,3 +95,6 @@ endfunction()
 
 simple_test_fp( fp_float16 )
 simple_test_fp( fp_bfloat16 )
+
+# im2col optimization pass tests
+add_subdirectory(im2col)
