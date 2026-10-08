@@ -441,6 +441,7 @@ local_node_test(gemm_CMxN_transA_transB)
 local_node_test(gemm_C1xN_transA_transB)
 local_node_test(gemm_CMx1_transA_transB)
 local_node_test(gemm_CN_transA_transB)
+local_node_test(gemm_CN_square_transB)
 
 # Regression tests for the fold_casts optimisation pass (consumer list
 # maintenance and single deletion of the folded Cast output).
