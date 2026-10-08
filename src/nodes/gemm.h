@@ -94,13 +94,15 @@ class Gemm : public Node {
 					break;
 				case 1:
 					dim = C->data_dim[0];
-					if (dim == M) {
-						C0 = M;
-						C1 = 1;
-					}
-					else if (dim == N) {
+					// ONNX broadcasting is trailing-aligned: a size-N vector
+					// maps to the columns even when M == N.
+					if (dim == N) {
 						C0 = 1;
 						C1 = N;
+					}
+					else if (dim == M) {
+						C0 = M;
+						C1 = 1;
 					}
 					else if (dim == 1) {
 						C0 = 1;

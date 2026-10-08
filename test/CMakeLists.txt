@@ -441,6 +441,7 @@ local_node_test(gemm_CMxN_transA_transB)
 local_node_test(gemm_C1xN_transA_transB)
 local_node_test(gemm_CMx1_transA_transB)
 local_node_test(gemm_CN_transA_transB)
+local_node_test(gemm_CN_square_transB)
 
 local_node_test(matmul_2x3_3x4)
 local_node_test(matmul_5x2x3_5x3x4)
