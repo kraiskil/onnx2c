@@ -462,6 +462,11 @@ local_node_test(matmul_2x3x3x4_1x4x5)
 ONNX_backend_node_test(globalaveragepool)
 ONNX_backend_node_test(globalaveragepool_precomputed)
 
+ONNX_backend_node_test(gru_batchwise)
+ONNX_backend_node_test(gru_defaults)
+ONNX_backend_node_test(gru_seq_length)
+ONNX_backend_node_test(gru_with_initial_bias)
+
 ONNX_backend_node_test(greater)
 ONNX_backend_node_test(greater_equal)
 #ONNX_backend_node_test(greater_equal_bcast_expanded)
@@ -524,6 +529,12 @@ ONNX_backend_node_test(log_example)
 
 ONNX_backend_node_test_with_accuracy(lrn 0.005)
 ONNX_backend_node_test_with_accuracy(lrn_default 0.005)
+
+local_node_test(gru_bidirectional)
+local_node_test(gru_lbr1_initial_h)
+local_node_test(gru_layout1_initial_h)
+local_node_test(gru_reverse)
+local_node_test(gru_y_only)
 
 ONNX_backend_node_test(lstm_batchwise)
 ONNX_backend_node_test(lstm_defaults)

@@ -39,6 +39,7 @@ add_library(onnx2c_lib STATIC
 	src/nodes/constantofshape.cc
 	src/nodes/convtranspose.cc
 	src/nodes/expand.cc
+	src/nodes/gru.cc
 	src/nodes/instancenorm.cc
 	src/nodes/lstm.cc
 	src/nodes/pad.cc
