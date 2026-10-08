@@ -63,10 +63,21 @@ void Graph::fold_casts(void)
 			if( !replaced ) {
 				LOG(FATAL) << output_tensor->name << " was not replaced" << std::endl;
 			}
-			else {
-				std::erase(tensors, output_tensor);
-				delete output_tensor;
-			}
+			// The consumer now reads the predecessor's output.
+			// Keep its consumer list in sync, otherwise the
+			// unionize liveness analysis misses these readers
+			// and may reuse the union while it is still live.
+			input_tensor->consumers.push_back(cn);
+		}
+		// The Cast node was the predecessor output's only
+		// consumer; it is now bypassed. Drop the dangling entry.
+		std::erase(input_tensor->consumers, n);
+
+		// The Cast output is no longer referenced by any node.
+		// Delete it once, after all consumers were rewired.
+		if( !output_tensor->consumers.empty() ) {
+			std::erase(tensors, output_tensor);
+			delete output_tensor;
 		}
 
 		// Mark the now orphaned Cast node for removal

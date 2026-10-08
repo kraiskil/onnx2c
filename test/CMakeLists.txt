@@ -442,6 +442,13 @@ local_node_test(gemm_C1xN_transA_transB)
 local_node_test(gemm_CMx1_transA_transB)
 local_node_test(gemm_CN_transA_transB)
 
+# Regression tests for the fold_casts optimisation pass (consumer list
+# maintenance and single deletion of the folded Cast output).
+# These use ONNX_type_test (model compiled by the onnx2c binary):
+# testgen_singlefile does not run fold_casts.
+ONNX_type_test(foldcast_transpose ${ONNX_LOCAL_NODE_TEST_DATA_DIR}/test_foldcast_transpose local_node_foldcast_transpose 0.00002 0)
+ONNX_type_test(foldcast_two_consumers ${ONNX_LOCAL_NODE_TEST_DATA_DIR}/test_foldcast_two_consumers local_node_foldcast_two_consumers 0.00002 0)
+
 local_node_test(matmul_2x3_3x4)
 local_node_test(matmul_5x2x3_5x3x4)
 local_node_test(matmul_4x5x2x3_4x5x3x4)
