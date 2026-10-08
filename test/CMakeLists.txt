@@ -512,6 +512,13 @@ ONNX_backend_node_test(less_bcast)
 ONNX_backend_node_test(less_equal_bcast)
 #ONNX_backend_node_test(less_equal_expanded)
 
+local_node_test(linearclassifier_binary_int)
+local_node_test(linearclassifier_binary_logistic)
+local_node_test(linearclassifier_multiclass)
+local_node_test(linearclassifier_multiclass_logistic)
+local_node_test(linearclassifier_multiclass_softmax)
+local_node_test(linearclassifier_multiclass_softmax_zero)
+
 ONNX_backend_node_test(log)
 ONNX_backend_node_test(log_example)
 
