@@ -91,7 +91,7 @@ void Node::print_parameters(std::ostream& dst, bool not_callsite) const
 		if (not_callsite)
 			params.push_back(t->print_tensor_as_const(name));
 		else
-			params.push_back(t->print_tensor_callsite());
+			params.push_back(t->print_tensor_callsite_const());
 	}
 	for (auto o : output_params) {
 		Tensor* t = std::get<0>(o);

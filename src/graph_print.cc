@@ -8,6 +8,7 @@
 #include "util.h"
 
 #include <iostream>
+#include <set>
 
 using namespace toC;
 
@@ -25,8 +26,21 @@ void Graph::print_source(std::ostream& dst, const std::string& interface_func_na
 	print_global_tensors(dst);
 	dst << std::endl;
 	print_functions(dst);
+	if (uses_tensor_arena()) {
+		dst << std::endl;
+		for (auto t : tensors) {
+			if (t->storage_kind == TensorStorageKind::Arena)
+				dst << t->print_arena_alias() << std::endl;
+		}
+	}
 	dst << std::endl;
 	print_interface_function(dst, /*print_definition=*/true, interface_func_name);
+	if (uses_tensor_arena()) {
+		for (auto t : tensors) {
+			if (t->storage_kind == TensorStorageKind::Arena)
+				dst << "#undef " << t->cname() << std::endl;
+		}
+	}
 }
 
 void Graph::print_initialization(std::ostream& dst)
@@ -39,7 +53,7 @@ void Graph::print_initialization(std::ostream& dst)
 	LOG(TRACE) << "printing initializers" << std::endl;
 	for (auto t : tensors) {
 		LOG(TRACE) << "\t" << t->print_trace_dump() << std::endl;
-		if (t->union_no < 0 && t->generate && t->initialize)
+		if (t->storage_kind == TensorStorageKind::Dedicated && t->generate && t->initialize)
 			print_tensor(t, dst);
 	}
 	LOG(TRACE) << "(done printing initializers)" << std::endl;
@@ -89,13 +103,15 @@ void Graph::print_tensor(const Tensor* t, std::ostream& dst)
 		return;
 	if (t->name == "")
 		return;
+	if (t->storage_kind == TensorStorageKind::Arena)
+		return;
 	// This case has been seen in the wild. Not sure why it happens
 	if (t->data_dim.size() == 1 && t->data_dim[0] == 0) {
 		LOG(WARNING) << "Tensor " << t->name << " has size of 0. Skipping it" << std::endl;
 		return;
 	}
 
-	if (t->union_no < 0) {
+	if (t->storage_kind == TensorStorageKind::Dedicated) {
 		if (options.extern_init && t->initialize) {
 			dst << "extern ";
 		}
@@ -119,11 +135,11 @@ void Graph::print_tensor(const Tensor* t, std::ostream& dst)
 
 void Graph::print_global_tensors(std::ostream& dst)
 {
-	// ununionized tensors
-	LOG(TRACE) << "printing global tensors - ununionized " << std::endl;
+	// dedicated tensors
+	LOG(TRACE) << "printing global tensors - dedicated " << std::endl;
 	for (auto t : tensors) {
 		LOG(TRACE) << "\t" << t->print_trace_dump() << std::endl;
-		if (t->union_no < 0 && t->generate)
+		if (t->storage_kind == TensorStorageKind::Dedicated && t->generate)
 			this->print_tensor(t, dst);
 	}
 
@@ -131,7 +147,7 @@ void Graph::print_global_tensors(std::ostream& dst)
 	for (unsigned u = 0; u < tensor_unions.size(); u++) {
 		dst << "union tensor_union_" << u << " {" << std::endl;
 		for (auto t : tensors) {
-			if (t->union_no == static_cast<int32_t>(u))
+			if (t->storage_kind == TensorStorageKind::Union && t->union_no == static_cast<int32_t>(u))
 				this->print_tensor(t, dst);
 		}
 		dst << "};" << std::endl;
@@ -140,7 +156,34 @@ void Graph::print_global_tensors(std::ostream& dst)
 			    << std::endl;
 		}
 	}
+
+	if (uses_tensor_arena() && !no_globals) {
+		dst << "static union {" << std::endl;
+		print_arena_storage_members(dst);
+		dst << "} tensor_arena_storage;" << std::endl;
+	}
 	LOG(TRACE) << "(done printing global tensors)" << std::endl;
+}
+
+void Graph::print_arena_storage_members(std::ostream& dst)
+{
+	std::set<std::string> members;
+	for (auto t : tensors) {
+		if (t->storage_kind == TensorStorageKind::Arena)
+			members.insert(t->arena_storage_member());
+	}
+	for (const std::string& member : members) {
+		std::string type = member.substr(5);
+		size_t element_size = 1;
+		for (auto t : tensors) {
+			if (t->storage_kind == TensorStorageKind::Arena && t->arena_storage_member() == member) {
+				element_size = static_cast<size_t>(t->data_elem_size());
+				break;
+			}
+		}
+		size_t element_count = (tensor_arena_plan.arena_size + element_size - 1) / element_size;
+		INDT_2 << type << " " << member << "[" << element_count << "];" << std::endl;
+	}
 }
 
 void Graph::print_functions(std::ostream& dst)
@@ -254,6 +297,11 @@ void Graph::print_interface_function(std::ostream& dst, bool definition, const s
 	if (no_globals) {
 		for (unsigned u = 0; u < tensor_unions.size(); u++) {
 			INDT_1 << "union tensor_union_" << u << " tu" << u << ";" << std::endl;
+		}
+		if (uses_tensor_arena()) {
+			INDT_1 << "union {" << std::endl;
+			print_arena_storage_members(dst);
+			INDT_1 << "} tensor_arena_storage;" << std::endl;
 		}
 		dst << std::endl;
 	}

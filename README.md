@@ -83,10 +83,17 @@ Call that from your main program to run inference. Function parameters are named
 Using the compiler `-ffast-math` (or equivalent) when compiling onnx2c-generated code increases computation speed.
 See the [GCC wiki on floating point maths](https://gcc.gnu.org/wiki/FloatingPointMath) for details.
 
+
 Onnx2c has a few optimization passes that modify the generated output:
  - Tensor unionization to wrap intermediate tensors in unions to help the compiler re-use the heap memory.
  - Removing `Cast` nodes, by modifying their predecessor node's output tensor.
  - Optimization for AVR processors to put constants into instruction memory.
+
+#### Tensor Arena Memory
+Intermediate tensors use one compile-time arena planned from their lifetimes; no runtime allocator is used.
+Use `--tensor-memory=union|arena|none`; arena mode keeps the smaller valid union fallback and supports `--no-globals`.
+With `--arena-strategy=memory-schedule`, a deterministic offline scheduler may finish one branch before starting another; otherwise the original order is retained.
+Constants and graph I/O remain outside the arena.
 
 Floating-point output precision can be configured with `--precision N`.
 If omitted, onnx2c uses a precision of `20`.

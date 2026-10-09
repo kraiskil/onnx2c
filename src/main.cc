@@ -31,8 +31,24 @@ int main(int argc, const char* argv[])
 	toC::Graph toCgraph(onnx_model);
 	if (options.opt_fold_casts)
 		toCgraph.fold_casts();
-	if (options.opt_unionize)
-		toCgraph.unionize_tensors();
+	switch (options.tensor_memory) {
+		case tensor_memory_strategy::default_mode:
+			if (options.opt_unionize)
+				toCgraph.assign_tensor_memory_union();
+			else
+				toCgraph.assign_tensor_memory_none();
+			break;
+		case tensor_memory_strategy::union_mode:
+			toCgraph.assign_tensor_memory_union();
+			break;
+		case tensor_memory_strategy::arena_mode:
+			toCgraph.assign_tensor_memory_arena();
+			break;
+		case tensor_memory_strategy::none_mode:
+			toCgraph.assign_tensor_memory_none();
+			break;
+	}
+
 	toCgraph.set_no_globals(options.no_globals);
 
 	if (options.only_init) {

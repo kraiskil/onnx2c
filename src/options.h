@@ -10,6 +10,13 @@
 #include <string>
 #include <vector>
 
+enum class tensor_memory_strategy {
+	default_mode,
+	union_mode,
+	arena_mode,
+	none_mode,
+};
+
 struct onnx2c_opts {
 	bool target_avr = false;
 	bool no_globals = false;
@@ -35,6 +42,8 @@ struct onnx2c_opts {
 	int logging_level = DEFAULT_LOG_LEVEL; // Default level set by CMake. 1 in release, 4 in debug builds
 	std::string input_file;
 	std::string interface_func_name = "entry";
+	tensor_memory_strategy tensor_memory = tensor_memory_strategy::default_mode;
+	std::string arena_strategy = "first-fit";
 	std::map<std::string, uint32_t> dim_defines;
 
 	// Save the raw command line arguments such that they can be printed
