@@ -86,7 +86,30 @@ See the [GCC wiki on floating point maths](https://gcc.gnu.org/wiki/FloatingPoin
 Onnx2c has a few optimization passes that modify the generated output:
  - Tensor unionization to wrap intermediate tensors in unions to help the compiler re-use the heap memory.
  - Removing `Cast` nodes, by modifying their predecessor node's output tensor.
+ - `im2col` optimization for convolution layers.
  - Optimization for AVR processors to put constants into instruction memory.
+
+The convolution `im2col` pass lowers supported `Conv`-like nodes to an
+im2col-ordered computation. The default and forced-all production paths are
+implicit/fused: they generate im2col-style loop ordering without materializing
+an extra im2col matrix. An explicit/materialized mode is also available for
+benchmarking floating-point `Conv` nodes and allocates temporary workspace
+proportional to the im2col matrix size.
+
+Available im2col policies are:
+
+ - `im2col`, `im2col_heuristic`, or `im2col_implicit_heuristic`: enable the
+   default per-layer heuristic, selecting between direct Conv and
+   implicit/fused im2col per layer.
+ - `im2col_all` or `im2col_implicit_all`: force implicit/fused im2col for
+   every supported convolution layer.
+ - `im2col_explicit_heuristic`: use the per-layer heuristic, but emit
+   explicit/materialized im2col for selected supported floating-point `Conv`
+   layers.
+ - `im2col_explicit_all`: force explicit/materialized im2col for supported
+   floating-point `Conv` layers. Quantized Conv-like nodes continue to use the
+   implicit path.
+ - `none`: keep convolution layers on the direct generated Conv path.
 
 Floating-point output precision can be configured with `--precision N`.
 If omitted, onnx2c uses a precision of `20`.

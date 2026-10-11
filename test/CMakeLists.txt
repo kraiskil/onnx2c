@@ -22,6 +22,22 @@ target_compile_options(testgen_singlefile
 		-I${CMAKE_CURRENT_SOURCE_DIR}/../aixlog/include
 		-DTESTGEN_SINGLEFILE
 	)
+# Same as testgen_singlefile, but runs the graph through the im2col optimization
+# pass before printing. Used to re-run the existing Conv tests with im2col.
+add_executable( testgen_singlefile_im2col
+	onnx_backend_tests_generator.cc)
+target_link_libraries(testgen_singlefile_im2col onnx2c_lib ${Protobuf_LIBRARIES})
+target_compile_options(testgen_singlefile_im2col
+	PRIVATE
+		-I${CMAKE_CURRENT_SOURCE_DIR}/../aixlog/include
+		-DTESTGEN_SINGLEFILE
+		-DTESTGEN_IM2COL
+	)
+
+add_test(
+	NAME im2col_heuristic_selection
+	COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/im2col_heuristic_test.py $<TARGET_FILE:onnx2c> ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks
+)
 
 
 function( compile_onnx onnx_file c_file )
@@ -42,7 +58,7 @@ function( ONNX_type_test_build node_name data_dir accuracy test_data_set)
 	set( gen_c  ${node_name}_${test_data_set}_genc.c )
 	set( test_c ${node_name}_${test_data_set}_test.c )
 	set( bin    ${node_name}_${test_data_set}_test )
-	compile_onnx( ${data_dir}/model.onnx ${gen_c})
+	compile_onnx( ${data_dir}/model.onnx ${gen_c} ${ARGN})
 	add_custom_command(
 		OUTPUT
 		${test_c}
@@ -81,7 +97,7 @@ endfunction()
 # The input files are read by testgen, and a single executable with the network, inputs, references
 # and test harness is produced.
 function( ONNX_type_test node_name data_dir test_ctest_name accuracy test_data_set)
-	ONNX_type_test_build(${node_name} ${data_dir} ${accuracy} ${test_data_set})
+	ONNX_type_test_build(${node_name} ${data_dir} ${accuracy} ${test_data_set} ${ARGN})
 	# register with CTest
 	add_test( ${test_ctest_name}
 		${node_name}_${test_data_set}_test
@@ -90,6 +106,12 @@ endfunction()
 
 # Same as ONNX_type_test, but does the .onnx -> .c conversion using testgen, not onnx2c
 function( ONNXtype_test_singlefile node_name data_dir test_ctest_name accuracy test_data_set)
+	# Optional 6th argument: the singlefile generator binary to use. Defaults to
+	# testgen_singlefile; pass testgen_singlefile_im2col to run through im2col.
+	set( generator testgen_singlefile )
+	if(ARGC GREATER 5)
+		set( generator ${ARGV5} )
+	endif()
 
 	set( test_c  ${node_name}_${test_data_set}_test.c )
 	set( testbin ${node_name}_${test_data_set}_test )
@@ -97,10 +119,10 @@ function( ONNXtype_test_singlefile node_name data_dir test_ctest_name accuracy t
 		OUTPUT
 		${test_c}
 		COMMAND
-		testgen_singlefile ${data_dir} ${accuracy} ${test_data_set} > ${test_c}
+		${generator} ${data_dir} ${accuracy} ${test_data_set} > ${test_c}
 		DEPENDS
 		#TODO also depends on test data -> don't depend, always run
-		testgen_singlefile
+		${generator}
 		)
 
 	add_executable( ${testbin}
@@ -150,6 +172,31 @@ function( ONNX_backend_pytorch_converted_test node_name)
 		ONNX_backend_${node_name}
 		0.00002
 		0
+	)
+endfunction()
+
+# Re-run an existing ONNX backend node test with the im2col pass enabled,
+# forcing the fused/implicit im2col implementation on all supported Conv nodes.
+function( ONNX_backend_node_test_im2col node_name)
+	ONNX_type_test(
+		${node_name}_im2col
+		${ONNX_NODE_TEST_DATA_DIR}/test_${node_name}
+		ONNX_backend_${node_name}_im2col
+		0.00002
+		0
+		-p im2col_all
+	)
+endfunction()
+
+# Same as ONNX_backend_pytorch_converted_test, but generated through im2col.
+function( ONNX_backend_pytorch_converted_test_im2col node_name)
+	ONNXtype_test_singlefile(
+		${node_name}_im2col
+		${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-converted/test_${node_name}
+		ONNX_backend_${node_name}_im2col
+		0.00002
+		0
+		testgen_singlefile_im2col
 	)
 endfunction()
 
@@ -296,7 +343,11 @@ ONNX_backend_node_test(cosh_example)
 ONNX_backend_node_test(conv_with_strides_no_padding)
 ONNX_backend_node_test(conv_with_strides_padding)
 ONNX_backend_node_test(conv_with_strides_and_asymmetric_padding)
+ONNX_backend_node_test_im2col(conv_with_strides_no_padding)
+ONNX_backend_node_test_im2col(conv_with_strides_padding)
+ONNX_backend_node_test_im2col(conv_with_strides_and_asymmetric_padding)
 ONNX_type_test(operator_conv ${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-operator/test_operator_conv ONNX_backend_pytorch_conv 0.00001 0)
+ONNX_type_test(operator_conv_im2col ${ONNX_BACKEND_TEST_DATA_DIR}/pytorch-operator/test_operator_conv ONNX_backend_pytorch_conv_im2col 0.00001 0 -p im2col_all)
 
 ONNX_backend_pytorch_converted_test(Conv1d)
 ONNX_backend_pytorch_converted_test(Conv1d_groups)
@@ -319,6 +370,18 @@ ONNX_backend_pytorch_converted_test(Conv2d_no_bias)
 ONNX_backend_pytorch_converted_test(Conv2d_padding)
 ONNX_backend_pytorch_converted_test(Conv2d_strided)
 
+ONNX_backend_pytorch_converted_test_im2col(Conv2d)
+ONNX_backend_pytorch_converted_test_im2col(Conv2d_depthwise)
+ONNX_backend_pytorch_converted_test_im2col(Conv2d_depthwise_padded)
+ONNX_backend_pytorch_converted_test_im2col(Conv2d_depthwise_strided)
+ONNX_backend_pytorch_converted_test_im2col(Conv2d_depthwise_with_multiplier)
+ONNX_backend_pytorch_converted_test_im2col(Conv2d_dilated)
+ONNX_backend_pytorch_converted_test_im2col(Conv2d_groups)
+ONNX_backend_pytorch_converted_test_im2col(Conv2d_groups_thnn)
+ONNX_backend_pytorch_converted_test_im2col(Conv2d_no_bias)
+ONNX_backend_pytorch_converted_test_im2col(Conv2d_padding)
+ONNX_backend_pytorch_converted_test_im2col(Conv2d_strided)
+
 ONNX_backend_pytorch_converted_test(Conv3d)
 ONNX_backend_pytorch_converted_test(Conv3d_dilated_strided)
 ONNX_backend_pytorch_converted_test(Conv3d_no_bias)
@@ -328,6 +391,7 @@ ONNX_backend_pytorch_converted_test(Conv3d_groups)
 ONNX_backend_pytorch_converted_test(Conv3d_stride)
 
 ONNX_backend_node_test(convinteger_with_padding)
+ONNX_backend_node_test_im2col(convinteger_with_padding)
 
 ONNX_backend_node_test(convtranspose)
 ONNX_backend_node_test(convtranspose_autopad_same)
@@ -678,6 +742,7 @@ ONNX_backend_node_test(prelu_broadcast)
 ONNX_backend_node_test(prelu_example)
 
 ONNX_backend_node_test(qlinearconv)
+ONNX_backend_node_test_im2col(qlinearconv)
 
 ONNX_backend_node_test(qlinearmatmul_2D_int8_float16)
 ONNX_backend_node_test(qlinearmatmul_2D_int8_float32)
