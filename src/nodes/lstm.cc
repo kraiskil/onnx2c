@@ -37,9 +37,6 @@ void LSTM::parseAttributes(onnx::NodeProto& node)
 				direction = "forward";
 			else if (direction != "forward" && direction != "reverse" && direction != "bidirectional")
 				ERROR("Bad value (" << direction << ") for direction attribute");
-			// The specification is not quite clear - need test case
-			if (direction == "reverse")
-				LOG(WARNING) << "Reverse LSTM might be buggy" << std::flush;
 		}
 		else if (a.name() == "hidden_size")
 			hidden_size = parse_attribute_int(a);
@@ -96,47 +93,35 @@ void LSTM::print_activation(std::ostream& dst, const std::string& activation, co
 }
 
 /* Print the C code for the core LSTM kernel, inside of the "sequences" loop.
- * The code is almost identical for forward and backwards nodes */
-void LSTM::print_lstm_kernel(std::ostream& dst, bool forward) const
+ * The code is almost identical for the forward and backward lanes.
+ * dir is the direction index into the W/R/B/Y[_h/Y_c] tensors (0 = forward,
+ * 1 = backward lane of a bidirectional node).
+ * si is the C expression used for the sequence (time) index: the backward
+ * lane walks the sequence in reverse order. */
+void LSTM::print_lstm_kernel(std::ostream& dst, int dir, const std::string& si) const
 {
 	const Tensor* B = get_B();
 	const Tensor* P = get_P();
 
-	int dir;   // direction index into tensors that separate forward and backward (W,B,Y,...)
-	int f_act; // indexes for the activation functions in activations[]
-	int g_act;
-	int h_act;
-	std::string di;
+	int f_act = 3 * dir; // indexes for the activation functions in activations[]
+	int g_act = 3 * dir + 1;
+	int h_act = 3 * dir + 2;
 	std::string X_sbi;  // input data, indexed with s(equence), b(atch), i(input)
 	std::string Yh_dbh; // Y_h, indexed with direction, batch, hidden
 	std::string Yh_dbk; // Same, but use k for indexing hidden size (used in inner matmul loops)
 	std::string Yc_dbh; // Y_h, indexed with direction, batch, hidden
 	std::string Y_snbh; // Y, indexed with sequence, numdir, batch, hidden
-	if (forward) {
-		dir = 0;
-		f_act = 0;
-		g_act = 1;
-		h_act = 2;
-		di = "i";
-	}
-	else {
-		dir = 1;
-		f_act = 3;
-		g_act = 4;
-		h_act = 5;
-		di = "ds-1-i";
-	}
 
 	if (layout == 0) {
-		X_sbi = "X[s][b][" + di + "]";
-		Y_snbh = "Y[s][" + std::to_string(dir) + "][b][h]";
+		X_sbi = "X[" + si + "][b][i]";
+		Y_snbh = "Y[" + si + "][" + std::to_string(dir) + "][b][h]";
 		Yh_dbh = "Y_h[" + std::to_string(dir) + "][b][h]";
 		Yh_dbk = "Y_h[" + std::to_string(dir) + "][b][k]";
 		Yc_dbh = "Y_c[" + std::to_string(dir) + "][b][h]";
 	}
 	else { //	layout==1
-		X_sbi = "X[b][s][" + di + "]";
-		Y_snbh = "Y[b][s][" + std::to_string(dir) + "][h]";
+		X_sbi = "X[b][" + si + "][i]";
+		Y_snbh = "Y[b][" + si + "][" + std::to_string(dir) + "][h]";
 		Yh_dbh = "Y_h[b][" + std::to_string(dir) + "][h]";
 		Yh_dbk = "Y_h[b][" + std::to_string(dir) + "][k]";
 		Yc_dbh = "Y_c[b][" + std::to_string(dir) + "][h]";
@@ -311,13 +296,20 @@ void LSTM::print(std::ostream& dst) const
 	/* Loop over sequences */
 	INDT_1 << "for( int s=0; s<sequence_lenght; s++) {" << std::endl;
 	dst << std::endl;
-	INDT_2 << "/* Forward lane */" << std::endl;
-	print_lstm_kernel(dst, /* forward= */ true);
 
-	if (direction == "bidirectional") {
-		dst << std::endl;
+	if (direction == "reverse") {
 		INDT_2 << "/* Backward lane */" << std::endl;
-		print_lstm_kernel(dst, /* forward= */ false);
+		print_lstm_kernel(dst, /* dir= */ 0, /* si= */ "sequence_lenght-1-s");
+	}
+	else {
+		INDT_2 << "/* Forward lane */" << std::endl;
+		print_lstm_kernel(dst, /* dir= */ 0, /* si= */ "s");
+
+		if (direction == "bidirectional") {
+			dst << std::endl;
+			INDT_2 << "/* Backward lane */" << std::endl;
+			print_lstm_kernel(dst, /* dir= */ 1, /* si= */ "sequence_lenght-1-s");
+		}
 	}
 	INDT_1 << "} /* sequences */" << std::endl;
 }
