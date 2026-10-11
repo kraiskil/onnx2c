@@ -4,7 +4,7 @@
 Runs onnx2c once per ``--tensor-memory`` mode (``none``, ``union``, ``arena``)
 on the same model, captures stdout/stderr, parses the planner-reported
 memory metrics and prints one compact table. Machine-readable output can be
-written with ``--csv`` and/or ``--json``.
+written with ``--csv``.
 
 The intermediate-memory numbers come from the onnx2c "Tensor arena planner"
 metrics block - the script does not re-derive the allocations itself:
@@ -21,7 +21,6 @@ script finishes, unless an explicit output directory is requested.
 import argparse
 import csv
 import io
-import json
 import os
 import re
 import shutil
@@ -211,16 +210,6 @@ def write_csv(path, row):
             stream.close()
 
 
-def write_json(path, data):
-    stream = sys.stdout if path == "-" else open(path, "w")
-    try:
-        json.dump(data, stream, indent=2)
-        stream.write("\n")
-    finally:
-        if stream is not sys.stdout:
-            stream.close()
-
-
 def main(argv=None):
     parser = argparse.ArgumentParser(
         prog="benchmark_tensor_memory.py",
@@ -244,11 +233,6 @@ def main(argv=None):
     parser.add_argument(
         "--arena-strategies",
         help="also benchmark first-fit or memory-schedule (comma-separated)",
-    )
-    parser.add_argument(
-        "--json",
-        metavar="FILE",
-        help="write machine-readable results as JSON to FILE ('-' for stdout)",
     )
     args = parser.parse_args(argv)
 
@@ -317,24 +301,6 @@ def main(argv=None):
             row.update(planner)
             row.update(derived)
             write_csv(args.csv, row)
-        if args.json:
-            write_json(
-                args.json,
-                {
-                    "model": model.name,
-                    "onnx2c": str(onnx2c),
-                    "metrics": dict(planner),
-                    "modes": {
-                        "none": {"memory_bytes": derived["none_bytes"]},
-                        "union": {"memory_bytes": derived["union_bytes"]},
-                        "arena": {"memory_bytes": derived["arena_bytes"]},
-                    },
-                    "arena_vs_union_bytes": derived["arena_vs_union_bytes"],
-                    "arena_vs_union_pct": derived["arena_vs_union_pct"],
-                    "arena_gap_to_lower_bound_bytes": derived["arena_gap_to_lower_bound_bytes"],
-                    "arena_gap_to_lower_bound_pct": derived["arena_gap_to_lower_bound_pct"],
-                },
-            )
     except RuntimeError as exc:
         print(f"benchmark_tensor_memory: error: {exc}", file=sys.stderr)
         return 1
