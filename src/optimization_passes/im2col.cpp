@@ -9,6 +9,7 @@
 #include "graph.h"
 #include "nodes/spatialfilter.h"
 #include "options.h"
+#include "util.h"
 
 #include <algorithm>
 #include <cmath>
@@ -39,43 +40,18 @@ static void replace_consumer(Tensor* tensor, Node* old_consumer, Node* new_consu
 	tensor->consumers.push_back(new_consumer);
 }
 
-static bool is_arithmetic_type(onnx::TensorProto_DataType t)
-{
-	return t == onnx::TensorProto_DataType_FLOAT ||
-	       t == onnx::TensorProto_DataType_DOUBLE ||
-	       t == onnx::TensorProto_DataType_FLOAT16 ||
-	       t == onnx::TensorProto_DataType_BFLOAT16 ||
-	       t == onnx::TensorProto_DataType_INT8 ||
-	       t == onnx::TensorProto_DataType_UINT8 ||
-	       t == onnx::TensorProto_DataType_INT16 ||
-	       t == onnx::TensorProto_DataType_UINT16 ||
-	       t == onnx::TensorProto_DataType_INT32 ||
-	       t == onnx::TensorProto_DataType_UINT32 ||
-	       t == onnx::TensorProto_DataType_INT64 ||
-	       t == onnx::TensorProto_DataType_UINT64;
-}
-
-static bool is_native_float_type(onnx::TensorProto_DataType t)
-{
-	return t == onnx::TensorProto_DataType_FLOAT ||
-	       t == onnx::TensorProto_DataType_DOUBLE;
-}
-
 static bool can_use_explicit_materialized_im2col(Tensor* X, Tensor* W, Tensor* Y)
 {
-	return is_native_float_type(X->data_type) &&
-	       is_native_float_type(W->data_type) &&
-	       is_native_float_type(Y->data_type);
+	// Keep materialized im2col limited to portable C types: FLOAT16 and
+	// BFLOAT16 are emitted as compiler-specific _Float16 and __bf16.
+	return isFloat(X->data_type) &&
+	       isFloat(W->data_type) &&
+	       isFloat(Y->data_type);
 }
 
 static bool can_be_im2col(SpatialFilter* conv, Tensor* X, Tensor* W, Tensor* Y)
 {
 	if (X->rank() != 4 || W->rank() != 4 || Y->rank() != 4)
-		return false;
-
-	if (!is_arithmetic_type(X->data_type) ||
-	    !is_arithmetic_type(W->data_type) ||
-	    !is_arithmetic_type(Y->data_type))
 		return false;
 
 	if (conv->group <= 0)
@@ -97,6 +73,8 @@ struct Im2ColHeuristicParams {
 };
 
 enum class ConvImplementation {
+	// Direct keeps the original Conv node; Implicit computes patches through
+	// indexing in fused loops; Explicit first materializes an x_col matrix.
 	Direct,
 	Implicit,
 	Explicit,
