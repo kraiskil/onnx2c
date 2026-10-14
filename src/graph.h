@@ -106,7 +106,7 @@ class Graph {
 
 	Tensor* findTensor(const std::string& name) const;
 	ArenaPlan build_union_baseline_arena_plan(const std::vector<TensorLifetime>& lifetimes) const;
-	void log_tensor_arena_metrics(void) const;
+	void log_tensor_memory_metrics(void) const;
 	void schedule_nodes_for_memory();
 
 	// counter for naming anonymous nodes with a number

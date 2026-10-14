@@ -43,7 +43,7 @@ void Graph::assign_tensor_memory_none(void)
 	tensor_memory_metrics.peak_live_lower_bound = compute_peak_live_bytes(lifetimes);
 	tensor_memory_metrics.allocated_bytes = tensor_memory_metrics.total_intermediate_bytes;
 	tensor_memory_metrics.placement_strategy = "none";
-	log_tensor_arena_metrics();
+	log_tensor_memory_metrics();
 }
 
 void Graph::assign_tensor_memory_union(void)
@@ -58,7 +58,7 @@ void Graph::assign_tensor_memory_union(void)
 	tensor_memory_metrics.peak_live_lower_bound = compute_peak_live_bytes(lifetimes);
 	tensor_memory_metrics.allocated_bytes = baseline.arena_size;
 	tensor_memory_metrics.placement_strategy = "unionize";
-	log_tensor_arena_metrics();
+	log_tensor_memory_metrics();
 }
 
 std::vector<TensorLifetime> Graph::analyze_tensor_lifetimes(void) const
@@ -106,7 +106,7 @@ ArenaPlan Graph::build_union_baseline_arena_plan(const std::vector<TensorLifetim
 	return plan;
 }
 
-void Graph::log_tensor_arena_metrics(void) const
+void Graph::log_tensor_memory_metrics(void) const
 {
 	LOG(INFO) << "Tensor memory allocation:" << std::endl;
 	LOG(INFO) << "  eligible tensors:          " << tensor_memory_metrics.eligible_tensor_count << std::endl;
@@ -211,7 +211,7 @@ void Graph::assign_tensor_memory_arena(void)
 	}
 	tensor_memory_metrics.peak_live_lower_bound = compute_peak_live_bytes(original_lifetimes);
 	if (original_lifetimes.empty()) {
-		log_tensor_arena_metrics();
+		log_tensor_memory_metrics();
 		return;
 	}
 
@@ -255,7 +255,7 @@ void Graph::assign_tensor_memory_arena(void)
 	tensor_memory_metrics.allocated_bytes = tensor_arena_plan.arena_size;
 	tensor_memory_metrics.placement_strategy = "tensor_arena/" + best_metrics.placement_strategy;
 	tensor_memory_metrics.schedule_strategy = best_metrics.schedule_strategy;
-	log_tensor_arena_metrics();
+	log_tensor_memory_metrics();
 }
 
 void Graph::processGraph(

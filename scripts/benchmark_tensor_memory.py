@@ -29,7 +29,7 @@ from pathlib import Path
 MODES = ("none", "union", "arena")
 ARENA_STRATEGIES = ("first-fit", "memory-schedule")
 
-# Log block emitted by toC::Graph::log_tensor_arena_metrics(), and the metric
+# Log block emitted by toC::Graph::log_tensor_memory_metrics(), and the metric
 # labels -> result keys it contains.
 PLANNER_BLOCK_HEADER = "Tensor memory allocation:"
 PLANNER_METRICS = {
