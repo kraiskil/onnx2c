@@ -30,6 +30,7 @@ ONNX2C_BENCHMARK_BIN=onnx2c_benchmark
 
 echo current dir is $PWD
 ./$ONNX2C_BENCHMARK_BIN --benchmark_out_format=json --benchmark_out=$ONNX2C_BRANCH.json
+python3 $SCRIPT_LOCATION/summarize_im2col_policies.py $ONNX2C_BRANCH.json $ONNX2C_BRANCH.im2col_policies.csv
 
 if [[ $ONNX2C_BRANCH == master ]]
 then

@@ -173,6 +173,13 @@ int main(int argc, char *argv[])
 	// constants)
 #if defined TESTGEN_SINGLEFILE
 	std::cout.precision(20);
+#if defined TESTGEN_IM2COL
+	// Run the existing ONNX backend Conv tests through the im2col pass, forcing
+	// the fused/implicit implementation for every supported Conv-like node.
+	options.opt_im2col = true;
+	options.opt_im2col_mode = im2col_mode::IMPLICIT;
+	toCgraph.im2col();
+#endif
 	toCgraph.unionize_tensors();
 	toCgraph.print_source(std::cout, "entry");
 	std::cout << std::endl << std::endl;

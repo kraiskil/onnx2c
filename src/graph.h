@@ -41,6 +41,9 @@ class Graph {
 	/* Optimization step: Fold Cast-nodes to their predecessor. */
 	void fold_casts(void);
 
+	/* Optimization step: lower Conv-like nodes to im2col. */
+	void im2col(void);
+
 	/* Set print options */
 	void set_no_globals(bool ng) { no_globals = ng; }
 

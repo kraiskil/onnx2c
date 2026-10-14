@@ -1,1 +1,3 @@
 build/
+test/resnet/resnet18-v2-7.onnx
+test/im2col_benchmarks/*.onnx

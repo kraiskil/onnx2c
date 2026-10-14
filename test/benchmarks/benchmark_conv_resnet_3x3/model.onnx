@@ -1,0 +1,27 @@
+onnx2c-benchmark-generator:ó
+
+X
+wYsclbl-onnx-node1"Conv*
+	dilations@@ *
+group *
+kernel_shape@@ *
+pads@@@@ *
+strides@@ benchmark_conv_resnet_3x3Z
+X
+
+
+@
+8
+8Z
+w
+
+@
+@
+
+b
+Y
+
+
+@
+8
+8B
