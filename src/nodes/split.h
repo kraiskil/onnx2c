@@ -186,12 +186,15 @@ class Split : public Node {
 			}
 		}
 		else {
-			// Opset 18: split into equal parts. The number of parts is given
-			// by the 'num_outputs' attribute or, when it is absent, by the
-			// number of outputs the node declares in the graph.
-			int64_t n = num_outputs_attr;
-			if (n <= 0)
+			int64_t n;
+			if (onnx_ir_version < 18) {
+				// Split-1 through Split-13 infer equal parts from the variadic output count.
 				n = (int64_t)get_number_of_declared_outputs();
+			}
+			else {
+				// Split-18 requires num_outputs when the split input is absent.
+				n = num_outputs_attr;
+			}
 			if (n <= 0)
 				ERROR("Split node without a 'split' input or a 'num_outputs' attribute");
 
@@ -202,9 +205,9 @@ class Split : public Node {
 					split_sizes.push_back(dim / n);
 			}
 			else {
-				// Follow the ONNX reference implementation: each part gets
-				// floor(dim/n)+1 elements and the last part absorbs the
-				// remainder, making it the smaller one.
+				if (onnx_ir_version < 18)
+					ERROR("Split input is not evenly divisible by its output count");
+				// Split-18 permits a smaller final part when num_outputs does not divide the axis.
 				int64_t chunk = dim / n + 1;
 				for (int64_t i = 0; i < n; i++)
 					split_sizes.push_back(chunk);
