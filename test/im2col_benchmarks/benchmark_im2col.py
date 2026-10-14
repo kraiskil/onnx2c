@@ -287,7 +287,8 @@ def generate_c(onnx2c: Path, model: Path, output: Path, *, im2col_mode: str | No
 
 
 def generated_c_uses_im2col(source: Path) -> bool:
-    return "Fused Im2Col + MatMul" in source.read_text()
+    text = source.read_text()
+    return "Implicit/Fused Im2Col Conv" in text or "Explicit/Materialized Im2Col Conv" in text
 
 
 def compile_binary(gcc: str, source: Path, wrapper: Path, binary: Path, meta: ModelMeta) -> None:

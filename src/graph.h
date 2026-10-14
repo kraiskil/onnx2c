@@ -41,7 +41,7 @@ class Graph {
 	/* Optimization step: Fold Cast-nodes to their predecessor. */
 	void fold_casts(void);
 
-	/* Optimization step: Transform Conv-like nodes to MatMul using im2col. */
+	/* Optimization step: lower Conv-like nodes to im2col. */
 	void im2col(void);
 
 	/* Set print options */
