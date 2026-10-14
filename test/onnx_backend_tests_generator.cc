@@ -60,11 +60,12 @@ bool load_input_data(const std::string &filename, onnx::TensorProto &result)
 
 void apply_tensor_memory_strategy(Graph& graph, const std::string& strategy)
 {
-	if (strategy == "arena") {
+	if (strategy.find("tensor_arena") != std::string::npos) {
+		options.opt_memory_schedule = strategy.find("memory_schedule") != std::string::npos;
 		graph.assign_tensor_memory_arena();
 		return;
 	}
-	if (strategy == "none") {
+	if (strategy == "none" || strategy == "fold_casts") {
 		graph.assign_tensor_memory_none();
 		return;
 	}
@@ -171,7 +172,7 @@ int main(int argc, char *argv[])
 	// can mark IO tensors as 'initialized'.
 	// This helps with unittests where the node expects input to be
 	// a compile time constant (e.g. Unsqueeze)
-	std::string tensor_memory_strategy = argc >= 5 ? argv[4] : "union";
+	std::string tensor_memory_strategy = argc >= 5 ? argv[4] : "unionize,fold_casts";
 
 	std::vector <Tensor *> tensors_to_parser;
 	for( auto i : inputs) tensors_to_parser.push_back(i);

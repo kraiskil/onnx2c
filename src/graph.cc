@@ -41,6 +41,8 @@ void Graph::assign_tensor_memory_none(void)
 	for (const TensorLifetime& lifetime : lifetimes)
 		tensor_memory_metrics.total_intermediate_bytes += lifetime.size_bytes;
 	tensor_memory_metrics.peak_live_lower_bound = compute_peak_live_bytes(lifetimes);
+	tensor_memory_metrics.allocated_bytes = tensor_memory_metrics.total_intermediate_bytes;
+	tensor_memory_metrics.placement_strategy = "none";
 	log_tensor_arena_metrics();
 }
 
@@ -54,7 +56,8 @@ void Graph::assign_tensor_memory_union(void)
 	for (const TensorLifetime& lifetime : lifetimes)
 		tensor_memory_metrics.total_intermediate_bytes += lifetime.size_bytes;
 	tensor_memory_metrics.peak_live_lower_bound = compute_peak_live_bytes(lifetimes);
-	tensor_memory_metrics.union_baseline_bytes = baseline.arena_size;
+	tensor_memory_metrics.allocated_bytes = baseline.arena_size;
+	tensor_memory_metrics.placement_strategy = "unionize";
 	log_tensor_arena_metrics();
 }
 
@@ -105,22 +108,17 @@ ArenaPlan Graph::build_union_baseline_arena_plan(const std::vector<TensorLifetim
 
 void Graph::log_tensor_arena_metrics(void) const
 {
-	LOG(INFO) << "Tensor arena planner:" << std::endl;
+	LOG(INFO) << "Tensor memory allocation:" << std::endl;
 	LOG(INFO) << "  eligible tensors:          " << tensor_memory_metrics.eligible_tensor_count << std::endl;
 	LOG(INFO) << "  total intermediate bytes:  " << tensor_memory_metrics.total_intermediate_bytes << std::endl;
 	LOG(INFO) << "  peak-live lower bound:     " << tensor_memory_metrics.peak_live_lower_bound << std::endl;
-	LOG(INFO) << "  union baseline bytes:      " << tensor_memory_metrics.union_baseline_bytes << std::endl;
-	LOG(INFO) << "  arena bytes:               " << tensor_memory_metrics.arena_bytes << std::endl;
+	LOG(INFO) << "  allocated bytes:           " << tensor_memory_metrics.allocated_bytes << std::endl;
 	if (!tensor_memory_metrics.placement_strategy.empty()) {
 		LOG(INFO) << "  strategy:                  " << tensor_memory_metrics.placement_strategy << std::endl;
 		if (!tensor_memory_metrics.schedule_strategy.empty()) LOG(INFO) << "  schedule:                  " << tensor_memory_metrics.schedule_strategy << std::endl;
 	}
-	if (tensor_memory_metrics.union_baseline_bytes > 0) {
-		double savings = 100.0 * static_cast<double>(tensor_memory_metrics.union_baseline_bytes - tensor_memory_metrics.arena_bytes) / static_cast<double>(tensor_memory_metrics.union_baseline_bytes);
-		LOG(INFO) << "  savings vs union:          " << std::fixed << std::setprecision(2) << savings << "%" << std::endl;
-	}
 	if (tensor_memory_metrics.peak_live_lower_bound > 0) {
-		double gap = 100.0 * static_cast<double>(tensor_memory_metrics.arena_bytes - tensor_memory_metrics.peak_live_lower_bound) / static_cast<double>(tensor_memory_metrics.peak_live_lower_bound);
+		double gap = 100.0 * (static_cast<double>(tensor_memory_metrics.allocated_bytes) / static_cast<double>(tensor_memory_metrics.peak_live_lower_bound) - 1.0);
 		LOG(INFO) << "  gap to lower bound:        " << std::fixed << std::setprecision(2) << gap << "%" << std::endl;
 	}
 }
@@ -217,14 +215,9 @@ void Graph::assign_tensor_memory_arena(void)
 		return;
 	}
 
-	unionize_tensors();
-	ArenaPlan union_plan = build_union_baseline_arena_plan(original_lifetimes);
 	std::string validation_error;
-	if (!validate_arena_plan(union_plan, original_lifetimes, &validation_error)) ERROR("invalid union baseline arena plan: " << validation_error);
-	arena_strategy requested = parse_arena_strategy(options.arena_strategy);
 	std::vector<int> schedules{0};
-	if (requested == arena_strategy::memory_schedule) schedules = {0, 1};
-	arena_strategy packing = arena_strategy::first_fit;
+	if (options.opt_memory_schedule) schedules = {0, 1};
 	ArenaPlan best_plan;
 	TensorArenaMetrics best_metrics;
 	std::vector<TensorLifetime> best_lifetimes;
@@ -236,7 +229,7 @@ void Graph::assign_tensor_memory_arena(void)
 		std::vector<TensorLifetime> lifetimes = analyze_tensor_lifetimes();
 		TensorArenaMetrics candidate_metrics;
 		TensorArenaPlanner planner;
-		ArenaPlan candidate = planner.plan(lifetimes, packing, &candidate_metrics);
+		ArenaPlan candidate = planner.plan(lifetimes, &candidate_metrics);
 		if (!validate_arena_plan(candidate, lifetimes, &validation_error)) ERROR("invalid tensor arena plan: " << validation_error);
 		bool better_schedule = !have_plan || compute_peak_live_bytes(lifetimes) < compute_peak_live_bytes(best_lifetimes);
 		if (better_schedule) {
@@ -259,18 +252,8 @@ void Graph::assign_tensor_memory_arena(void)
 	for (const auto& life : best_lifetimes)
 		tensor_memory_metrics.total_intermediate_bytes += life.size_bytes;
 	tensor_memory_metrics.peak_live_lower_bound = compute_peak_live_bytes(best_lifetimes);
-	tensor_memory_metrics.union_baseline_bytes = union_plan.arena_size;
-	if (union_plan.arena_size < tensor_arena_plan.arena_size) {
-		nodes = original_nodes;
-		tensor_arena_plan = union_plan;
-		tensor_memory_metrics.peak_live_lower_bound = compute_peak_live_bytes(original_lifetimes);
-		tensor_memory_metrics.schedule_strategy = "original";
-		tensor_arena_enabled = true;
-		for (const auto& allocation : tensor_arena_plan.allocations)
-			allocation.tensor->assign_arena(allocation.offset, allocation.size, allocation.alignment);
-	}
-	tensor_memory_metrics.arena_bytes = tensor_arena_plan.arena_size;
-	tensor_memory_metrics.placement_strategy = best_metrics.placement_strategy;
+	tensor_memory_metrics.allocated_bytes = tensor_arena_plan.arena_size;
+	tensor_memory_metrics.placement_strategy = "tensor_arena/" + best_metrics.placement_strategy;
 	tensor_memory_metrics.schedule_strategy = best_metrics.schedule_strategy;
 	log_tensor_arena_metrics();
 }

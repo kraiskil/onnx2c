@@ -91,8 +91,8 @@ Onnx2c has a few optimization passes that modify the generated output:
 
 #### Tensor Arena Memory
 Intermediate tensors use one compile-time arena planned from their lifetimes; no runtime allocator is used.
-Use `--tensor-memory=union|arena|none`; arena mode keeps the smaller valid union fallback and supports `--no-globals`.
-With `--arena-strategy=memory-schedule`, a deterministic offline scheduler may finish one branch before starting another; otherwise the original order is retained.
+Enable it with `--optimizations=fold_casts,tensor_arena`; the existing `unionize` pass remains the default, and `--optimizations=none` uses separate intermediate arrays.
+Add `memory_schedule` to the optimization list to let a deterministic offline scheduler finish one branch before starting another. `unionize` and `tensor_arena` are alternative allocation passes and cannot be enabled together.
 Constants and graph I/O remain outside the arena.
 
 Floating-point output precision can be configured with `--precision N`.

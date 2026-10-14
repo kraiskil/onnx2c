@@ -163,27 +163,13 @@ ArenaPlan pack(const std::vector<TensorLifetime>& lifetimes)
 
 } // namespace
 
-arena_strategy parse_arena_strategy(const std::string& value)
-{
-	if (value == "first-fit") return arena_strategy::first_fit;
-	if (value == "memory-schedule") return arena_strategy::memory_schedule;
-	ERROR("bad command line argument for '--arena-strategy': " << value);
-}
-
-const char* arena_strategy_name(arena_strategy strategy)
-{
-	return strategy == arena_strategy::memory_schedule ? "memory-schedule" : "first-fit";
-}
-
 ArenaPlan TensorArenaPlanner::plan(const std::vector<TensorLifetime>& lifetimes) const
 {
 	return pack(lifetimes);
 }
 
-ArenaPlan TensorArenaPlanner::plan(const std::vector<TensorLifetime>& lifetimes, arena_strategy strategy, TensorArenaMetrics* metrics) const
+ArenaPlan TensorArenaPlanner::plan(const std::vector<TensorLifetime>& lifetimes, TensorArenaMetrics* metrics) const
 {
-	if (strategy != arena_strategy::first_fit && strategy != arena_strategy::memory_schedule)
-		ERROR("arena planner only supports first-fit placement");
 	ArenaPlan result = pack(lifetimes);
 	if (metrics) {
 		metrics->placement_strategy = "first-fit";

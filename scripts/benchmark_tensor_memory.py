@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 """Benchmark the onnx2c tensor-memory strategies on a single ONNX model.
 
-Runs onnx2c once per ``--tensor-memory`` mode (``none``, ``union``, ``arena``)
+Runs onnx2c once per activation-memory optimization (none, unionize, tensor arena)
 on the same model, captures stdout/stderr, parses the planner-reported
 memory metrics and prints one compact table. Machine-readable output can be
 written with ``--csv``.
 
-The intermediate-memory numbers come from the onnx2c "Tensor arena planner"
-metrics block - the script does not re-derive the allocations itself:
+The intermediate-memory numbers come from each run's "Tensor memory allocation"
+metrics block; the script does not re-derive allocations.
 
-* ``none``   -> sum of the eligible intermediate tensor sizes (the planner's
-  ``total intermediate bytes``).
-* ``union`   -> the planner's ``union baseline bytes``.
-* ``arena``  -> the planner's ``arena bytes``.
+Each mode reports the bytes allocated by the selected strategy.
 
 Generated C code is kept in a temporary directory that is removed when the
 script finishes, unless an explicit output directory is requested.
@@ -20,7 +17,6 @@ script finishes, unless an explicit output directory is requested.
 
 import argparse
 import csv
-import io
 import os
 import re
 import shutil
@@ -35,13 +31,12 @@ ARENA_STRATEGIES = ("first-fit", "memory-schedule")
 
 # Log block emitted by toC::Graph::log_tensor_arena_metrics(), and the metric
 # labels -> result keys it contains.
-PLANNER_BLOCK_HEADER = "Tensor arena planner:"
+PLANNER_BLOCK_HEADER = "Tensor memory allocation:"
 PLANNER_METRICS = {
     "eligible tensors": "eligible_tensor_count",
     "total intermediate bytes": "total_intermediate_bytes",
     "peak-live lower bound": "peak_live_lower_bound",
-    "union baseline bytes": "union_baseline_bytes",
-    "arena bytes": "arena_bytes",
+    "allocated bytes": "allocated_bytes",
 }
 
 # Columns for the --csv output. Percentages are kept at full precision.
@@ -62,7 +57,7 @@ CSV_COLUMNS = (
 
 
 def parse_planner_metrics(text):
-    """Extract the 'Tensor arena planner:' metrics block from log text.
+    """Extract the 'Tensor memory allocation:' metrics block from log text.
 
     Returns a dict mapping metric result keys (see PLANNER_METRICS) to ints.
     Returns an empty dict when no planner block is present. Parsing is robust
@@ -88,12 +83,11 @@ def parse_planner_metrics(text):
     return metrics
 
 
-def derive_metrics(planner):
+def derive_metrics(planner, allocations):
     """Combine the planner metrics into the per-mode and comparison numbers."""
-    total = planner.get("total_intermediate_bytes", 0)
     peak = planner.get("peak_live_lower_bound", 0)
-    union = planner.get("union_baseline_bytes", 0)
-    arena = planner.get("arena_bytes", 0)
+    union = allocations["union"]
+    arena = allocations["arena"]
 
     arena_vs_union = arena - union
     arena_vs_union_pct = 100.0 * arena_vs_union / union if union else 0.0
@@ -101,9 +95,7 @@ def derive_metrics(planner):
     gap_pct = 100.0 * gap / peak if peak else 0.0
 
     return {
-        # none: there is no dedicated metric yet, so report the sum of the
-        # eligible intermediate tensor sizes.
-        "none_bytes": total,
+        "none_bytes": allocations["none"],
         "union_bytes": union,
         "arena_bytes": arena,
         "arena_vs_union_bytes": arena_vs_union,
@@ -177,15 +169,20 @@ def run_mode(onnx2c, model, mode, workdir, arena_strategy=None):
     suffix = f"_{arena_strategy}" if arena_strategy else ""
     c_file = workdir / f"{model.stem}_{mode}{suffix}.c"
     log_file = workdir / f"{model.stem}_{mode}{suffix}.log"
-    command = [str(onnx2c), "-l2", f"--tensor-memory={mode}"]
-    if arena_strategy:
-        command.append(f"--arena-strategy={arena_strategy}")
+    optimizations = {
+        "none": "fold_casts",
+        "union": "fold_casts,unionize",
+        "arena": "fold_casts,tensor_arena",
+    }[mode]
+    if arena_strategy == "memory-schedule":
+        optimizations += ",memory_schedule"
+    command = [str(onnx2c), "-l2", f"--optimizations={optimizations}"]
     command.append(str(model))
     try:
         with open(c_file, "w") as c_stream, open(log_file, "w") as log_stream:
             result = subprocess.run(command, stdout=c_stream, stderr=log_stream)
     except OSError as exc:
-        raise RuntimeError(f"failed to run onnx2c for --tensor-memory={mode}: {exc}")
+        raise RuntimeError(f"failed to run onnx2c in {mode} mode: {exc}")
     if result.returncode != 0:
         tail = ""
         try:
@@ -193,7 +190,7 @@ def run_mode(onnx2c, model, mode, workdir, arena_strategy=None):
         except OSError:
             pass
         raise RuntimeError(
-            f"onnx2c --tensor-memory={mode} exited with code {result.returncode}\n"
+            f"onnx2c {mode} mode exited with code {result.returncode}\n"
             f"stderr tail:\n" + "\n".join(tail)
         )
     return c_file.read_text() + log_file.read_text()
@@ -261,23 +258,13 @@ def main(argv=None):
             output = run_mode(onnx2c, model, mode, workdir)
             metrics_by_mode[mode] = parse_planner_metrics(output)
 
+        incomplete = [mode for mode, metrics in metrics_by_mode.items()
+                      if len(metrics) != len(PLANNER_METRICS)]
+        if incomplete:
+            raise RuntimeError("incomplete tensor-memory metrics for: " + ", ".join(incomplete))
         planner = metrics_by_mode["arena"]
-        if len(planner) != len(PLANNER_METRICS):
-            raise RuntimeError(
-                "no complete 'Tensor arena planner:' metrics block found in the "
-                "arena-run output; this onnx2c build may not support "
-                "--tensor-memory=arena"
-            )
-        derived = derive_metrics(planner)
-
-        # Prefer per-run metrics when a future onnx2c version emits them for
-        # the mode itself; otherwise fall back to the arena-run planner values.
-        none_metrics = metrics_by_mode["none"]
-        union_metrics = metrics_by_mode["union"]
-        if "total_intermediate_bytes" in none_metrics:
-            derived["none_bytes"] = none_metrics["total_intermediate_bytes"]
-        if "union_baseline_bytes" in union_metrics:
-            derived["union_bytes"] = union_metrics["union_baseline_bytes"]
+        allocations = {mode: metrics["allocated_bytes"] for mode, metrics in metrics_by_mode.items()}
+        derived = derive_metrics(planner, allocations)
 
         print(format_report(model.name, planner, derived))
         if args.arena_strategies:
@@ -292,9 +279,9 @@ def main(argv=None):
                 output = run_mode(onnx2c, model, "arena", workdir, strategy)
                 metrics = parse_planner_metrics(output)
                 if len(metrics) != len(PLANNER_METRICS):
-                    raise RuntimeError(f"incomplete metrics for --arena-strategy={strategy}")
-                delta = metrics["arena_bytes"] - baseline
-                print(f"{strategy:<21}{format_bytes(metrics['peak_live_lower_bound']):<16}{format_bytes(metrics['arena_bytes']):<12}{format_bytes(delta)}")
+                    raise RuntimeError(f"incomplete metrics for arena strategy {strategy}")
+                delta = metrics["allocated_bytes"] - baseline
+                print(f"{strategy:<21}{format_bytes(metrics['peak_live_lower_bound']):<16}{format_bytes(metrics['allocated_bytes']):<12}{format_bytes(delta)}")
 
         if args.csv:
             row = {"model": model.name, "onnx2c": str(onnx2c)}

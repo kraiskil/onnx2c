@@ -27,16 +27,10 @@ struct TensorArenaMetrics {
 	size_t eligible_tensor_count = 0;
 	size_t total_intermediate_bytes = 0;
 	size_t peak_live_lower_bound = 0;
-	size_t union_baseline_bytes = 0;
-	size_t arena_bytes = 0;
+	size_t allocated_bytes = 0;
 	std::string placement_strategy;
 	std::string schedule_strategy;
 };
-
-enum class arena_strategy { first_fit,
-	                    memory_schedule };
-arena_strategy parse_arena_strategy(const std::string& value);
-const char* arena_strategy_name(arena_strategy strategy);
 
 size_t align_up(size_t value, size_t alignment);
 bool address_ranges_overlap(size_t offset_a, size_t size_a, size_t offset_b, size_t size_b);
@@ -46,7 +40,7 @@ bool validate_arena_plan(const ArenaPlan& plan, const std::vector<TensorLifetime
 class TensorArenaPlanner {
 	public:
 	ArenaPlan plan(const std::vector<TensorLifetime>& lifetimes) const;
-	ArenaPlan plan(const std::vector<TensorLifetime>& lifetimes, arena_strategy strategy, TensorArenaMetrics* metrics = nullptr) const;
+	ArenaPlan plan(const std::vector<TensorLifetime>& lifetimes, TensorArenaMetrics* metrics) const;
 };
 
 } // namespace toC

@@ -4,7 +4,6 @@
 #include "options.h"
 #include "args.hxx"
 #include "error.h"
-#include "optimization_passes/tensor_arena_planner.h"
 #include "timestamp.h"
 
 #include <iostream>
@@ -78,6 +77,8 @@ void print_optimization_passes(void)
 {
 	std::cout << "Available optimization passes:" << std::endl;
 	std::cout << " - 'unionize' (defaut:on)" << std::endl;
+	std::cout << " - 'tensor_arena' (default:off)" << std::endl;
+	std::cout << " - 'memory_schedule' (default:off, requires tensor_arena)" << std::endl;
 	std::cout << " - 'fold_casts' (defaut:on)" << std::endl;
 	std::cout << " - 'none' (disable all optimization passes)" << std::endl;
 }
@@ -89,6 +90,8 @@ void store_optimization_passes(const std::string& opt)
 	// disable all optimizations (i.e. override the default settings)
 	// then enable those that were requested
 	options.opt_unionize = false;
+	options.opt_tensor_arena = false;
+	options.opt_memory_schedule = false;
 	options.opt_fold_casts = false;
 	if (opt == "none") {
 		LOG(TRACE) << "Disabling all optimizations: " << opt << std::endl;
@@ -107,6 +110,14 @@ void store_optimization_passes(const std::string& opt)
 			LOG(DEBUG) << "Enabling 'Unionize tensors' optimization pass" << std::endl;
 			options.opt_unionize = true;
 		}
+		else if (item == "tensor_arena") {
+			LOG(DEBUG) << "Enabling 'Tensor arena' optimization pass" << std::endl;
+			options.opt_tensor_arena = true;
+		}
+		else if (item == "memory_schedule") {
+			LOG(DEBUG) << "Enabling 'Memory schedule' optimization pass" << std::endl;
+			options.opt_memory_schedule = true;
+		}
 		else if (item == "fold_casts") {
 			LOG(DEBUG) << "Enabling 'Fold casts' optimization pass" << std::endl;
 			options.opt_fold_casts = true;
@@ -115,24 +126,11 @@ void store_optimization_passes(const std::string& opt)
 			LOG(WARNING) << "Optimization pass " << item << " does not exist" << std::endl;
 		}
 	}
+	if (options.opt_unionize && options.opt_tensor_arena)
+		ERROR("'unionize' and 'tensor_arena' are alternative memory allocation passes");
+	if (options.opt_memory_schedule && !options.opt_tensor_arena)
+		ERROR("'memory_schedule' requires 'tensor_arena'");
 	LOG(TRACE) << "That was all optimizations" << std::endl;
-}
-
-void store_tensor_memory_strategy(const std::string& opt)
-{
-	if (opt == "union") {
-		options.tensor_memory = tensor_memory_strategy::union_mode;
-		return;
-	}
-	if (opt == "arena") {
-		options.tensor_memory = tensor_memory_strategy::arena_mode;
-		return;
-	}
-	if (opt == "none") {
-		options.tensor_memory = tensor_memory_strategy::none_mode;
-		return;
-	}
-	ERROR("bad command line argument for '--tensor-memory': " << opt);
 }
 
 void parse_cmdline_options(int argc, const char* argv[])
@@ -146,8 +144,6 @@ void parse_cmdline_options(int argc, const char* argv[])
 	args::ValueFlag<int> loglevel(parser, "level", "Logging verbosity. 0(none)-4(all)", {'l', "log"});
 	args::ValueFlag<int> precision(parser, "digits", "Floating-point output precision (default: 20)", {'P', "precision"});
 	args::ValueFlag<std::string> optimizations(parser, "opt[,opt]...", "Specify optimization passes to run. ('help' to list available)", {'p', "optimizations"});
-	args::ValueFlag<std::string> tensorMemory(parser, "strategy", "Intermediate tensor memory strategy: union, arena, or none", {"tensor-memory"});
-	args::ValueFlag<std::string> arenaStrategy(parser, "strategy", "Arena planner strategy (first-fit or memory-schedule)", {"arena-strategy"});
 	args::ValueFlag<std::string> funcName(parser, "func-name", "The name of the forward pass function", {'f', "func-name"});
 	args::Flag help(parser, "help", "Print this help text.", {'h', "help"});
 	args::Flag version(parser, "version", "Print onnx2c version", {'v', "version"});
@@ -205,13 +201,6 @@ void parse_cmdline_options(int argc, const char* argv[])
 	}
 	if (optimizations) {
 		store_optimization_passes(args::get(optimizations));
-	}
-	if (tensorMemory) {
-		store_tensor_memory_strategy(args::get(tensorMemory));
-	}
-	if (arenaStrategy) {
-		toC::parse_arena_strategy(args::get(arenaStrategy));
-		options.arena_strategy = args::get(arenaStrategy);
 	}
 	if (input) {
 		options.input_file = args::get(input);

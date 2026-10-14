@@ -474,7 +474,7 @@ TEST_CASE("graph arena codegen handles fork join and residual lifetimes", "[tens
 		Graph graph(model);
 		graph.assign_tensor_memory_arena();
 		auto metrics = graph.get_tensor_memory_metrics();
-		REQUIRE(metrics.arena_bytes >= 32);
+		REQUIRE(metrics.allocated_bytes >= 32);
 	}
 	{
 		onnx::ModelProto model = make_model_residual();
@@ -482,20 +482,23 @@ TEST_CASE("graph arena codegen handles fork join and residual lifetimes", "[tens
 		Graph graph(model);
 		graph.assign_tensor_memory_arena();
 		auto metrics = graph.get_tensor_memory_metrics();
-		REQUIRE(metrics.arena_bytes >= 32);
+		REQUIRE(metrics.allocated_bytes >= 32);
 	}
 }
 
-TEST_CASE("graph arena reports strict improvement over union baseline", "[tensor_arena][codegen]")
+TEST_CASE("graph arena reuses storage better than unionization", "[tensor_arena][codegen]")
 {
 	onnx::ModelProto model = make_model_arena_advantage();
 	reset_options();
-	Graph graph(model);
-	graph.assign_tensor_memory_arena();
-	const TensorArenaMetrics& metrics = graph.get_tensor_memory_metrics();
-	REQUIRE(metrics.union_baseline_bytes == 1500);
-	REQUIRE(metrics.arena_bytes == 1000);
-	REQUIRE(metrics.arena_bytes < metrics.union_baseline_bytes);
+	Graph union_graph(model);
+	union_graph.assign_tensor_memory_union();
+	const size_t union_bytes = union_graph.get_tensor_memory_metrics().allocated_bytes;
+	Graph arena_graph(model);
+	arena_graph.assign_tensor_memory_arena();
+	const size_t arena_bytes = arena_graph.get_tensor_memory_metrics().allocated_bytes;
+	REQUIRE(union_bytes == 1500);
+	REQUIRE(arena_bytes == 1000);
+	REQUIRE(arena_bytes < union_bytes);
 	std::string source = render_source(model, false);
 	REQUIRE(source.find("data_float[") != std::string::npos);
 }

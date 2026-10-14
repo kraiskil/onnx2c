@@ -1,6 +1,6 @@
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src)
-set(ONNX2C_TEST_TENSOR_MEMORY "union" CACHE STRING "Tensor memory strategy for generated tests")
+set(ONNX2C_TEST_OPTIMIZATIONS "unionize,fold_casts" CACHE STRING "Optimization passes for generated tests")
 
 add_executable(test_tensor_arena test_tensor_arena.cpp)
 target_link_libraries(test_tensor_arena onnx2c_lib ${Protobuf_LIBRARIES} timestamp)
@@ -41,7 +41,7 @@ function( compile_onnx onnx_file c_file )
 		OUTPUT
 			${c_file}
 		COMMAND
-			onnx2c --tensor-memory=${ONNX2C_TEST_TENSOR_MEMORY} ${ARGN} -l 0 ${onnx_file} > ${c_file}
+			onnx2c --optimizations=${ONNX2C_TEST_OPTIMIZATIONS} ${ARGN} -l 0 ${onnx_file} > ${c_file}
 		DEPENDS 
 			${onnx_file}
 			onnx2c
@@ -109,7 +109,7 @@ function( ONNXtype_test_singlefile node_name data_dir test_ctest_name accuracy t
 		OUTPUT
 		${test_c}
 		COMMAND
-		testgen_singlefile ${data_dir} ${accuracy} ${test_data_set} ${ONNX2C_TEST_TENSOR_MEMORY} > ${test_c}
+		testgen_singlefile ${data_dir} ${accuracy} ${test_data_set} ${ONNX2C_TEST_OPTIMIZATIONS} > ${test_c}
 		DEPENDS
 		#TODO also depends on test data -> don't depend, always run
 		testgen_singlefile
