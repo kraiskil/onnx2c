@@ -41,6 +41,11 @@ class Node {
 	unsigned get_number_of_inputs(void) const;
 	unsigned get_number_of_outputs(void) const;
 
+	/* Number of outputs the ONNX node declares in the graph.
+	 * Unlike get_number_of_outputs(), this is available (and meaningful)
+	 * already during resolve(), before the node has registered its outputs. */
+	unsigned get_number_of_declared_outputs(void) const { return (unsigned)output_used.size(); }
+
 	// Run caller provided lambda for each output Tensor.
 	void forEachOutput(std::function<void(Tensor*)> caller_lambda)
 	{

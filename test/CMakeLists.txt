@@ -908,11 +908,24 @@ ONNX_backend_node_test(softplus_example)
 ONNX_backend_node_test(softsign)
 ONNX_backend_node_test(softsign_example)
 
-# TODO these three tests fail now because there is no
-# TODO way to infer the number of outputs from graph in 'resolve'
-#ONNX_backend_node_test_singlefile(split_equal_parts_1d)
-#ONNX_backend_node_test_singlefile(split_equal_parts_2d)
-#ONNX_backend_node_test_singlefile(split_equal_parts_default_axis)
+# Split, equal-parts form. In opset 13 the number of outputs is only declared
+# in the graph; in opset 18 it is given by the 'num_outputs' attribute.
+ONNX_backend_node_test_singlefile(split_equal_parts_1d_opset13)
+ONNX_backend_node_test_singlefile(split_equal_parts_2d_opset13)
+ONNX_backend_node_test_singlefile(split_equal_parts_default_axis_opset13)
+ONNX_backend_node_test_singlefile(split_equal_parts_1d_opset18)
+ONNX_backend_node_test_singlefile(split_equal_parts_2d)
+ONNX_backend_node_test_singlefile(split_equal_parts_default_axis_opset18)
+# Uneven splits (opset 18 'num_outputs'): the last part is smaller.
+ONNX_backend_node_test_singlefile(split_1d_uneven_split_opset18)
+ONNX_backend_node_test_singlefile(split_2d_uneven_split_opset18)
+# Explicit per-output split sizes passed as the 'split' input.
+ONNX_backend_node_test_singlefile(split_variable_parts_1d_opset13)
+ONNX_backend_node_test_singlefile(split_variable_parts_1d_opset18)
+ONNX_backend_node_test_singlefile(split_variable_parts_2d_opset13)
+ONNX_backend_node_test_singlefile(split_variable_parts_2d_opset18)
+ONNX_backend_node_test_singlefile(split_variable_parts_default_axis_opset13)
+ONNX_backend_node_test_singlefile(split_variable_parts_default_axis_opset18)
 
 ONNX_backend_node_test(sqrt)
 ONNX_backend_node_test(sqrt_example)
