@@ -17,12 +17,9 @@ class Im2Col : public Node {
 	};
 
 	Im2Col();
-	std::string c_name(void) const;
-	std::string c_output_decl(void);
 	void print_node(std::ostream& dst) const;
 	void print_implicit_node(std::ostream& dst) const;
 	void print_explicit_node(std::ostream& dst) const;
-	void resolve_datatypes(void);
 	void print(std::ostream& destination) const override;
 	void print_accumulator_init(std::ostream& dst) const;
 	void print_accumulator_calc(std::ostream& dst, const std::string& x_idx, const std::string& w_idx) const;

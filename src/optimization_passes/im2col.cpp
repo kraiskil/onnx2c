@@ -90,7 +90,6 @@ struct Im2ColDecision {
 	int64_t im2col_bytes = 0;
 	double expansion_ratio = 0.0;
 	double utilization = 0.0;
-	int score = 0;
 	ConvImplementation implementation = ConvImplementation::Direct;
 	std::string reason;
 };
@@ -190,7 +189,6 @@ static void log_im2col_decision(SpatialFilter* conv, Tensor* X, Tensor* W, Tenso
 	           << " im2col_bytes=" << d.im2col_bytes
 	           << " expansion_ratio=" << d.expansion_ratio
 	           << " utilization=" << d.utilization
-	           << " score=" << d.score
 	           << " implementation=" << implementation_name(d.implementation)
 	           << " selected=" << (d.implementation == ConvImplementation::Direct ? "no" : "yes")
 	           << " reason=\"" << d.reason << "\""

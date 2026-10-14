@@ -2,35 +2,12 @@
 
 #include "../tensor.h"
 #include <iostream>
-#include <sstream>
 
 namespace toC {
 
 Im2Col::Im2Col()
 {
 	op_name = "Im2Col";
-}
-
-std::string Im2Col::c_name(void) const
-{
-	return "node_" + onnx_name;
-}
-
-std::string Im2Col::c_output_decl(void)
-{
-	std::stringstream ss;
-	const Tensor* X = get_input_tensor(0);
-	const Tensor* W = get_input_tensor(arithmetic_mode == QLinearConv ? 3 : 1);
-	const Tensor* Y = get_output_tensor(0);
-	int64_t in_ch_per_group = in_ch / group;
-	ss << "FUNC_PREFIX void " << c_name() << "(const " << X->data_type_str() << " x[" << batch << "][" << in_ch << "][" << in_h << "][" << in_w << "], ";
-	ss << "const " << W->data_type_str() << " w[" << out_ch << "][" << in_ch_per_group << "][" << kernel_h << "][" << kernel_w << "]";
-	if (has_bias && arithmetic_mode == Conv) {
-		const Tensor* B = get_input_tensor(2);
-		ss << ", const " << B->data_type_str() << " bias[" << out_ch << "]";
-	}
-	ss << ", " << Y->data_type_str() << " y[" << batch << "][" << out_ch << "][" << out_h << "][" << out_w << "])";
-	return ss.str();
 }
 
 void Im2Col::print_node(std::ostream& dst) const
@@ -264,10 +241,6 @@ void Im2Col::print_accumulator_finalize(std::ostream& dst) const
 	}
 
 	dst << "\t        y[b][m][oy][ox] = acc;" << std::endl;
-}
-
-void Im2Col::resolve_datatypes(void)
-{
 }
 
 void Im2Col::print(std::ostream& dst) const
