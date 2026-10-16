@@ -207,13 +207,14 @@ void Reduce::resolve(void)
 			t->data_dim[axis] = 1;
 		}
 
-		// If keepdims is 0, remove the dimensions set to 1 from the shape
+		// If keepdims is 0, remove the reduced axes from the shape. Match on the
+		// axis, not on size 1: a non-reduced axis may also have size 1.
 		if (!keepdims) {
 			// ERROR("Reduce with keepdims=0 not implemented yet");
 			std::vector<int> new_shape;
-			for (int dim_size : t->data_dim) {
-				if (dim_size != 1) {
-					new_shape.push_back(dim_size);
+			for (size_t r = 0; r < t->data_dim.size(); r++) {
+				if (std::find(norm_axes.begin(), norm_axes.end(), r) == norm_axes.end()) {
+					new_shape.push_back(t->data_dim[r]);
 				}
 			}
 			// If all dimensions were reduced, output is a scalar
