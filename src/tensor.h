@@ -1,11 +1,19 @@
 #pragma once
 #include "error.h"
 #include "onnx.pb.h"
+#include <cstddef>
 #include <string>
 
 namespace toC {
 
 class Node;
+
+enum class TensorStorageKind {
+	Dedicated,
+	Union,
+	Arena,
+};
+
 // A entity that implements ONNX graph edges,
 // i.e. the data buffers a ONNX node produces or consumes
 class Tensor {
@@ -24,7 +32,12 @@ class Tensor {
 	std::string doc;
 
 	std::vector<Node*> consumers;
+	Node* producer;
+	TensorStorageKind storage_kind;
 	int32_t union_no; // negative for no union
+	size_t arena_offset;
+	size_t arena_size;
+	size_t arena_alignment;
 
 	Tensor() : generate(true),
 	           initialize(false),
@@ -32,7 +45,12 @@ class Tensor {
 	           isIO(false),
 	           isRecursive(false),
 	           data_buffer(NULL),
-	           union_no(-1)
+	           producer(nullptr),
+	           storage_kind(TensorStorageKind::Dedicated),
+	           union_no(-1),
+	           arena_offset(0),
+	           arena_size(0),
+	           arena_alignment(1)
 	{
 	}
 
@@ -44,6 +62,12 @@ class Tensor {
 	/* Number of bytes of one data element */
 	int data_elem_size(void) const;
 
+	/* Total tensor storage size in bytes with overflow checks. */
+	size_t data_size_bytes(void) const;
+
+	/* Required alignment for typed C access. */
+	size_t required_alignment(void) const;
+
 	/* Number of elements in data.
 	 * I.e. the product of the data dimensions */
 	int data_num_elem(void) const;
@@ -52,6 +76,8 @@ class Tensor {
 	 * Is zero for scalars*/
 	unsigned rank(void) const;
 	bool is_scalar(void) const { return rank() == 0; }
+
+	bool eligible_for_arena(void) const;
 
 	/* A string with the the C type for this tensor's data element. E.g. "float" */
 	std::string data_type_str(void) const;
@@ -81,6 +107,8 @@ class Tensor {
 	{
 		return print_tensor("", true, false);
 	}
+	std::string print_tensor_callsite_const(void) const;
+	std::string arena_storage_member(void) const;
 	std::string print_tensor_as_const(std::string alternate_name = "") const
 	{
 		return print_tensor(alternate_name, false, true);
@@ -89,6 +117,7 @@ class Tensor {
 	{
 		return print_tensor(alternate_name, false, false, true);
 	}
+	std::string print_arena_alias(void) const;
 
 	/* Print a tensor's initialization to output stream.
 	 * i.e. everything after the "=" in "float foo[43] = { 42, 42, ... };"
@@ -111,10 +140,29 @@ class Tensor {
 	int64_t get_data_element(uint64_t i) const;
 	float get_data_element_float(uint64_t i) const;
 
+	void clear_storage(void)
+	{
+		storage_kind = TensorStorageKind::Dedicated;
+		union_no = -1;
+		arena_offset = 0;
+		arena_size = 0;
+		arena_alignment = 1;
+	}
+
 	void assign_union(uint32_t u)
 	{
 		LOG(DEBUG) << "Assigning tensor " << cname() << " to union " << u << std::endl;
+		storage_kind = TensorStorageKind::Union;
 		union_no = u;
+	}
+
+	void assign_arena(size_t offset, size_t size, size_t alignment)
+	{
+		storage_kind = TensorStorageKind::Arena;
+		union_no = -1;
+		arena_offset = offset;
+		arena_size = size;
+		arena_alignment = alignment;
 	}
 
 	std::string print_trace_dump(void) const;

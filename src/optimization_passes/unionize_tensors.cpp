@@ -38,12 +38,17 @@ void Graph::mark_union_unoccupied(uint32_t u)
 // in a temporal fashion
 void Graph::unionize_tensors(void)
 {
+	clear_tensor_memory_assignments();
 	LOG(INFO) << "Running Unionize optimization pass" << std::endl;
 	for( auto n : nodes ) {
 		n->isResolved = false;
 	}
 
 	for( auto n : nodes ) {
+		if (n->op_name == "graph_io") {
+			n->isResolved = true;
+			continue;
+		}
 
 		LOG(TRACE) << "\tunionizing outputs of node: " << n->onnx_name << std::endl;
 		// TODO: research out a nice code layout rule for calling lambdas.
@@ -94,4 +99,3 @@ void Graph::unionize_tensors(void)
 
 	LOG(TRACE) << "Unionize optimization pass finished" << std::endl;
 }
-

@@ -77,6 +77,8 @@ void print_optimization_passes(void)
 {
 	std::cout << "Available optimization passes:" << std::endl;
 	std::cout << " - 'unionize' (defaut:on)" << std::endl;
+	std::cout << " - 'tensor_arena' (default:off)" << std::endl;
+	std::cout << " - 'memory_schedule' (default:off, requires tensor_arena)" << std::endl;
 	std::cout << " - 'fold_casts' (defaut:on)" << std::endl;
 	std::cout << " - 'none' (disable all optimization passes)" << std::endl;
 }
@@ -88,6 +90,8 @@ void store_optimization_passes(const std::string& opt)
 	// disable all optimizations (i.e. override the default settings)
 	// then enable those that were requested
 	options.opt_unionize = false;
+	options.opt_tensor_arena = false;
+	options.opt_memory_schedule = false;
 	options.opt_fold_casts = false;
 	if (opt == "none") {
 		LOG(TRACE) << "Disabling all optimizations: " << opt << std::endl;
@@ -106,6 +110,14 @@ void store_optimization_passes(const std::string& opt)
 			LOG(DEBUG) << "Enabling 'Unionize tensors' optimization pass" << std::endl;
 			options.opt_unionize = true;
 		}
+		else if (item == "tensor_arena") {
+			LOG(DEBUG) << "Enabling 'Tensor arena' optimization pass" << std::endl;
+			options.opt_tensor_arena = true;
+		}
+		else if (item == "memory_schedule") {
+			LOG(DEBUG) << "Enabling 'Memory schedule' optimization pass" << std::endl;
+			options.opt_memory_schedule = true;
+		}
 		else if (item == "fold_casts") {
 			LOG(DEBUG) << "Enabling 'Fold casts' optimization pass" << std::endl;
 			options.opt_fold_casts = true;
@@ -114,6 +126,10 @@ void store_optimization_passes(const std::string& opt)
 			LOG(WARNING) << "Optimization pass " << item << " does not exist" << std::endl;
 		}
 	}
+	if (options.opt_unionize && options.opt_tensor_arena)
+		ERROR("'unionize' and 'tensor_arena' are alternative memory allocation passes");
+	if (options.opt_memory_schedule && !options.opt_tensor_arena)
+		ERROR("'memory_schedule' requires 'tensor_arena'");
 	LOG(TRACE) << "That was all optimizations" << std::endl;
 }
 

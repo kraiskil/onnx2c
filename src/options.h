@@ -16,6 +16,8 @@ struct onnx2c_opts {
 	bool extern_init = false;
 	bool only_init = false;
 	bool opt_unionize = true;
+	bool opt_tensor_arena = false;
+	bool opt_memory_schedule = false;
 	bool opt_fold_casts = true;
 	int output_precision = 20;
 /*
