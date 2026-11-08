@@ -77,7 +77,7 @@ class LSTM : public Node {
 	const Tensor* get_P(void) const { return get_optional(7); }
 
 	void print_activation(std::ostream& dst, const std::string& activation, const std::string& var) const;
-	void print_lstm_kernel(std::ostream& dst, bool forward) const;
+	void print_lstm_kernel(std::ostream& dst, int dir, const std::string& si) const;
 	void calculate_data_dimensions();
 };
 } // namespace toC
