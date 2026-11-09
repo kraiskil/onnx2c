@@ -99,7 +99,7 @@ class Unsqueeze : public Node {
 		unsigned di, ai;
 		di = ai = 0;
 		for (unsigned i = 0; i < expanded_rank; i++) {
-			if (cleaned_axes[ai] == i) {
+			if (ai < cleaned_axes.size() && cleaned_axes[ai] == i) {
 				t->data_dim[i] = 1;
 				ai++;
 			}
