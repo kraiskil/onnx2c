@@ -57,6 +57,21 @@ bool load_input_data(const std::string &filename, onnx::TensorProto &result)
 	return result.ParseFromCodedStream(&coded_stream);
 }
 
+
+void apply_tensor_memory_strategy(Graph& graph, const std::string& strategy)
+{
+	if (strategy.find("tensor_arena") != std::string::npos) {
+		options.opt_memory_schedule = strategy.find("memory_schedule") != std::string::npos;
+		graph.assign_tensor_memory_arena();
+		return;
+	}
+	if (strategy == "none" || strategy == "fold_casts") {
+		graph.assign_tensor_memory_none();
+		return;
+	}
+	graph.unionize_tensors();
+}
+
 Tensor * get_input_from_file( std::string &partial_path, int input_number )
 {
 	onnx::TensorProto tensor;
@@ -157,6 +172,8 @@ int main(int argc, char *argv[])
 	// can mark IO tensors as 'initialized'.
 	// This helps with unittests where the node expects input to be
 	// a compile time constant (e.g. Unsqueeze)
+	std::string tensor_memory_strategy = argc >= 5 ? argv[4] : "unionize,fold_casts";
+
 	std::vector <Tensor *> tensors_to_parser;
 	for( auto i : inputs) tensors_to_parser.push_back(i);
 
@@ -173,7 +190,7 @@ int main(int argc, char *argv[])
 	// constants)
 #if defined TESTGEN_SINGLEFILE
 	std::cout.precision(20);
-	toCgraph.unionize_tensors();
+	apply_tensor_memory_strategy(toCgraph, tensor_memory_strategy);
 	toCgraph.print_source(std::cout, "entry");
 	std::cout << std::endl << std::endl;
 	std::cout << "/////////////////////////////////////"<<std::endl;

@@ -33,6 +33,8 @@ add_library(onnx2c_lib STATIC
 	src/tensor.cc
 	src/util.cc
 	src/optimization_passes/fold_casts.cpp
+	src/optimization_passes/tensor_lifetime.cpp
+	src/optimization_passes/tensor_arena_planner.cpp
 	src/optimization_passes/unionize_tensors.cpp
 	${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc
 	src/nodes/cast.cc

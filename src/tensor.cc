@@ -4,6 +4,17 @@
 #include <limits>
 
 using namespace toC;
+
+namespace {
+
+size_t checked_multiply_size_t(size_t lhs, size_t rhs, const std::string& context)
+{
+	if (lhs != 0 && rhs > SIZE_MAX / lhs)
+		ERROR(context);
+	return lhs * rhs;
+}
+
+} // namespace
 void Tensor::parse_onnx_tensor(const onnx::TensorProto& tensor)
 {
 
@@ -83,7 +94,8 @@ void Tensor::parse_onnx_tensor(const onnx::TensorProto& tensor)
 			ERROR("Error: data size does not match dimensions, and no raw data");
 	}
 
-	data_buffer = malloc(data_num_elem() * data_elem_size());
+	size_t tensor_bytes = data_size_bytes();
+	data_buffer = malloc(tensor_bytes);
 	if (data_buffer == NULL)
 		ERROR("memory allocation failed for tensor " << tensor.name());
 
@@ -160,45 +172,77 @@ int Tensor::data_elem_size(void) const
 	switch (data_type) {
 		case onnx::TensorProto_DataType_FLOAT:
 			return sizeof(float);
-			break;
 		case onnx::TensorProto_DataType_DOUBLE:
 			return sizeof(double);
-			break;
 		case onnx::TensorProto_DataType_FLOAT16:
 		case onnx::TensorProto_DataType_BFLOAT16:
 			return sizeof(uint16_t);
-			break;
 		case onnx::TensorProto_DataType_INT8:
 			return sizeof(int8_t);
-			break;
 		case onnx::TensorProto_DataType_UINT8:
 			return sizeof(uint8_t);
-			break;
 		case onnx::TensorProto_DataType_INT16:
 			return sizeof(int16_t);
-			break;
 		case onnx::TensorProto_DataType_UINT16:
 			return sizeof(uint16_t);
-			break;
 		case onnx::TensorProto_DataType_INT32:
 			return sizeof(int32_t);
-			break;
 		case onnx::TensorProto_DataType_UINT32:
 			return sizeof(uint32_t);
-			break;
 		case onnx::TensorProto_DataType_INT64:
 			return sizeof(int64_t);
-			break;
 		case onnx::TensorProto_DataType_UINT64:
 			return sizeof(uint64_t);
-			break;
 		case onnx::TensorProto_DataType_BOOL:
 			return sizeof(bool);
-			break;
 		default:
 			ERROR("unhandled tensor data type in tensor " << name);
-			break;
-	};
+	}
+}
+
+size_t Tensor::data_size_bytes(void) const
+{
+	size_t element_count = 1;
+	for (int dim : data_dim) {
+		if (dim < 0)
+			ERROR("negative tensor dimension in tensor " << name);
+		element_count = checked_multiply_size_t(element_count, static_cast<size_t>(dim), "tensor element count overflow in tensor " + name);
+	}
+
+	return checked_multiply_size_t(element_count, static_cast<size_t>(data_elem_size()), "tensor byte size overflow in tensor " + name);
+}
+
+size_t Tensor::required_alignment(void) const
+{
+	switch (data_type) {
+		case onnx::TensorProto_DataType_FLOAT:
+			return alignof(float);
+		case onnx::TensorProto_DataType_DOUBLE:
+			return alignof(double);
+		case onnx::TensorProto_DataType_FLOAT16:
+		case onnx::TensorProto_DataType_BFLOAT16:
+			return alignof(uint16_t);
+		case onnx::TensorProto_DataType_INT8:
+			return alignof(int8_t);
+		case onnx::TensorProto_DataType_UINT8:
+			return alignof(uint8_t);
+		case onnx::TensorProto_DataType_INT16:
+			return alignof(int16_t);
+		case onnx::TensorProto_DataType_UINT16:
+			return alignof(uint16_t);
+		case onnx::TensorProto_DataType_INT32:
+			return alignof(int32_t);
+		case onnx::TensorProto_DataType_UINT32:
+			return alignof(uint32_t);
+		case onnx::TensorProto_DataType_INT64:
+			return alignof(int64_t);
+		case onnx::TensorProto_DataType_UINT64:
+			return alignof(uint64_t);
+		case onnx::TensorProto_DataType_BOOL:
+			return alignof(bool);
+		default:
+			ERROR("unhandled tensor data type in tensor " << name);
+	}
 }
 
 std::string Tensor::data_type_str(void) const
@@ -505,7 +549,7 @@ std::string Tensor::print_tensor(
 			rv += "const ";
 		rv += data_type_str() + " ";
 	}
-	else if (union_no >= 0) {
+	else if (storage_kind == TensorStorageKind::Union && union_no >= 0) {
 		rv += "tu" + std::to_string(union_no) + ".";
 	}
 
@@ -537,6 +581,49 @@ std::string Tensor::print_tensor(
 	return rv;
 }
 
+std::string Tensor::print_arena_alias(void) const
+{
+	if (storage_kind != TensorStorageKind::Arena)
+		return "";
+
+	std::string type = data_type_str();
+	std::string member = arena_storage_member();
+	std::string offset = std::to_string(arena_offset / static_cast<size_t>(data_elem_size()));
+	std::string shape;
+	for (int dim : data_dim)
+		shape += "[" + std::to_string(dim) + "]";
+
+	std::stringstream alias;
+	alias << "#define " << cname() << " \\" << std::endl;
+	if (is_scalar())
+		alias << "    tensor_arena_storage." << member << "[" << offset << "]";
+	else
+		alias << "    (*( " << type << " (*)" << shape << ")(&tensor_arena_storage." << member << "[" << offset << "]))";
+	return alias.str();
+}
+
+std::string Tensor::print_tensor_callsite_const(void) const
+{
+	if (storage_kind != TensorStorageKind::Arena)
+		return print_tensor_callsite();
+
+	std::string type = data_type_str();
+	std::string member = arena_storage_member();
+	std::string offset = std::to_string(arena_offset / static_cast<size_t>(data_elem_size()));
+	std::string shape;
+	for (int dim : data_dim)
+		shape += "[" + std::to_string(dim) + "]";
+
+	if (is_scalar())
+		return "(&tensor_arena_storage." + member + "[" + offset + "])";
+	return "(*(const " + type + " (*)" + shape + ") (&tensor_arena_storage." + member + "[" + offset + "]))";
+}
+
+std::string Tensor::arena_storage_member(void) const
+{
+	return "data_" + data_type_str();
+}
+
 int Tensor::data_num_elem(void) const
 {
 	int dim = 1;
@@ -549,6 +636,11 @@ int Tensor::data_num_elem(void) const
 unsigned Tensor::rank(void) const
 {
 	return data_dim.size();
+}
+
+bool Tensor::eligible_for_arena(void) const
+{
+	return is_used() && !isIO && !isConst && !initialize && !isRecursive;
 }
 
 std::string Tensor::str_dimensions(void) const
