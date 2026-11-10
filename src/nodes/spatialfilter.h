@@ -157,6 +157,7 @@ class SpatialFilter : public Node {
 
 	void print_header_info_comment(std::ostream& dst) const
 	{
+		INDT_1 << "/* Direct Conv */" << std::endl;
 		INDT_1 << "/* " << op_name << std::endl;
 		INDT_1 << " *" << std::endl;
 		INDT_1 << " * auto_pad: " << auto_pad << std::endl;
@@ -245,7 +246,7 @@ class SpatialFilter : public Node {
 		if (direct_channel_map())
 			;
 		else if (get_W() && group > 1)
-			INDT_3 << "for( int32_t c=gi*g; c<gi*(g+1); c++ ) {" << std::endl;
+			INDT_3 << "for( uint32_t c=gi*g; c<gi*(g+1); c++ ) {" << std::endl;
 		else // same as above, just cleaner to read :)
 			INDT_3 << "for( int32_t c=0; c<" << channels << "; c++ ) {" << std::endl;
 

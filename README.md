@@ -86,7 +86,20 @@ See the [GCC wiki on floating point maths](https://gcc.gnu.org/wiki/FloatingPoin
 Onnx2c has a few optimization passes that modify the generated output:
  - Tensor unionization to wrap intermediate tensors in unions to help the compiler re-use the heap memory.
  - Removing `Cast` nodes, by modifying their predecessor node's output tensor.
+ - `im2col` optimization for convolution layers.
  - Optimization for AVR processors to put constants into instruction memory.
+
+The `im2col` pass is opt-in and lowers `Conv`/`ConvInteger`/`QLinearConv` to a
+fused `Im2Col` node using one of three strategies: **direct** (original Conv, no
+im2col matrix), **implicit** (fused loops indexing input patches on demand; no
+matrix or separate GEMM), or **explicit** (materializes `x_col[K][P]` and
+accumulates with generated GEMM-style loops; `FLOAT`/`DOUBLE` only, no BLAS).
+
+`-p` selects the mode: `im2col`/`heuristic`/`im2col_heuristic` (per-layer
+heuristic), `implicit`/`im2col_all`/`im2col_implicit_all` (force implicit),
+`explicit`/`im2col_explicit_all` (force explicit where supported), `direct`
+(keep the original Conv), or `none`. The heuristic uses only static shape
+parameters and ignores workspace size; quantized convs always use implicit.
 
 Floating-point output precision can be configured with `--precision N`.
 If omitted, onnx2c uses a precision of `20`.

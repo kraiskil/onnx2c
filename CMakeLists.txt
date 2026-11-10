@@ -34,6 +34,7 @@ add_library(onnx2c_lib STATIC
 	src/util.cc
 	src/optimization_passes/fold_casts.cpp
 	src/optimization_passes/unionize_tensors.cpp
+	src/optimization_passes/im2col.cpp
 	${CMAKE_CURRENT_BINARY_DIR}/onnx.pb.cc
 	src/nodes/cast.cc
 	src/nodes/constantofshape.cc
@@ -42,6 +43,7 @@ add_library(onnx2c_lib STATIC
 	src/nodes/gru.cc
 	src/nodes/instancenorm.cc
 	src/nodes/lstm.cc
+	src/nodes/im2col.cc
 	src/nodes/pad.cc
 	src/nodes/reduce.cc
 	src/nodes/scatternd.cc

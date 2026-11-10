@@ -78,6 +78,10 @@ void print_optimization_passes(void)
 	std::cout << "Available optimization passes:" << std::endl;
 	std::cout << " - 'unionize' (defaut:on)" << std::endl;
 	std::cout << " - 'fold_casts' (defaut:on)" << std::endl;
+	std::cout << " - 'direct' (force original generated Conv implementation)" << std::endl;
+	std::cout << " - 'implicit' (force implicit/fused im2col for every supported Conv-like node)" << std::endl;
+	std::cout << " - 'explicit' (force explicit/materialized im2col for supported floating-point Conv nodes)" << std::endl;
+	std::cout << " - 'im2col' / 'heuristic' (per-Conv heuristic choosing direct, implicit, or explicit)" << std::endl;
 	std::cout << " - 'none' (disable all optimization passes)" << std::endl;
 }
 
@@ -89,6 +93,8 @@ void store_optimization_passes(const std::string& opt)
 	// then enable those that were requested
 	options.opt_unionize = false;
 	options.opt_fold_casts = false;
+	options.opt_im2col = false;
+	options.opt_im2col_mode = im2col_mode::HEURISTIC;
 	if (opt == "none") {
 		LOG(TRACE) << "Disabling all optimizations: " << opt << std::endl;
 		return;
@@ -109,6 +115,32 @@ void store_optimization_passes(const std::string& opt)
 		else if (item == "fold_casts") {
 			LOG(DEBUG) << "Enabling 'Fold casts' optimization pass" << std::endl;
 			options.opt_fold_casts = true;
+		}
+		else if (item == "direct") {
+			LOG(DEBUG) << "Forcing direct Conv implementation" << std::endl;
+			options.opt_im2col = false;
+			options.opt_im2col_mode = im2col_mode::DIRECT;
+		}
+		else if (item == "im2col" || item == "heuristic" || item == "im2col_heuristic") {
+			LOG(DEBUG) << "Enabling im2col optimization pass in heuristic mode" << std::endl;
+			options.opt_im2col = true;
+			options.opt_im2col_mode = im2col_mode::HEURISTIC;
+		}
+		else if (item == "implicit" || item == "im2col_all" || item == "im2col_implicit_all") {
+			LOG(DEBUG) << "Forcing implicit/fused im2col optimization pass" << std::endl;
+			options.opt_im2col = true;
+			options.opt_im2col_mode = im2col_mode::IMPLICIT;
+		}
+		else if (item == "explicit" || item == "im2col_explicit_all") {
+			LOG(DEBUG) << "Forcing explicit/materialized im2col optimization pass" << std::endl;
+			options.opt_im2col = true;
+			options.opt_im2col_mode = im2col_mode::EXPLICIT;
+		}
+		else if (item == "im2col_implicit_heuristic") {
+			ERROR("optimization pass 'im2col_implicit_heuristic' was replaced by 'heuristic'");
+		}
+		else if (item == "im2col_explicit_heuristic") {
+			ERROR("optimization pass 'im2col_explicit_heuristic' was removed; use 'heuristic' for the three-way selector or 'explicit' to force materialized im2col");
 		}
 		else {
 			LOG(WARNING) << "Optimization pass " << item << " does not exist" << std::endl;

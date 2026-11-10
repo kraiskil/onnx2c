@@ -31,6 +31,8 @@ int main(int argc, const char* argv[])
 	toC::Graph toCgraph(onnx_model);
 	if (options.opt_fold_casts)
 		toCgraph.fold_casts();
+	if (options.opt_im2col)
+		toCgraph.im2col();
 	if (options.opt_unionize)
 		toCgraph.unionize_tensors();
 	toCgraph.set_no_globals(options.no_globals);
